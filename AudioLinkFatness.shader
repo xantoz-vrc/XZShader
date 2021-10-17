@@ -1,4 +1,4 @@
-﻿Shader "Xantoz/AudiolinkUnlitShader"
+﻿Shader "Xantoz/AudiolinkFatness"
 {
     Properties
     {
