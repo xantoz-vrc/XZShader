@@ -1,4 +1,4 @@
-﻿    Shader "Xantoz/AudioLinkVis"
+﻿    Shader "Xantoz/AudioLinkPCMLine"
     {
         Properties
         {
@@ -7,7 +7,6 @@
         SubShader
         {
             Tags { "Queue"="Transparent" "RenderType"="Transparent" "IgnoreProjector"="True" }
-            //Tags { "RenderType"="Opaque" }
             LOD 100
 
             Pass
@@ -54,45 +53,18 @@
                     return lerp(_AudioTexture[int2(xy.x, xy.y)], _AudioTexture[int2(xy.x, xy.y) + int2(1,0)], frac(xy.x));
                 }
 
-                float dist_to_line(float a, float b)
-                {
-                    return clamp((1.0-pow(0.1/abs(a - b), .1)), -200, 0);
-                }
-
-                float get_value_horiz_line(float2 xy)
-                {
-                    float4 pcm_value = AudioLinkLerp(float2(frac(xy.x)*127, 6));
-                    float dist = xy.y;
-
-                    return dist_to_line(dist - 0.5, pcm_value.r);
-                }
-
-                float get_value_circle(float2 xy)
-                {
-                    float2 cdist = (xy - float2(0.5,0.5))*2;
-                    float dist = sqrt(cdist.x*cdist.x + cdist.y*cdist.y);
-                    float angle = atan2(cdist.x, cdist.y);
-
-                    float4 pcm_value = AudioLinkLerp(float2(frac((angle+UNITY_PI)/(2*UNITY_PI))*127, 6));       
-
-                    return dist_to_line(dist - 0.5, pcm_value.r*0.5);
-                }
-
-                float get_value_xy(float2 xy)
-                {
-                    // TODO
-                    return 0.0;
-                }
-
                 float4 frag (v2f i) : SV_Target
-                {
+                {   
                     float4 col = float4(0,0,0,0);
 
                     uint w, h;
                     _AudioTexture.GetDimensions(w,h);
                     if (w > 16)
                     {
-                        float val = get_value_circle(i.uv.xy);
+                        float4 pcm_value = AudioLinkLerp(float2(i.uv.x*127, 6));                    
+
+                        // TODO: figure out how to make look good w/o negative alpha
+                        float val = clamp((1.0-pow(0.1/abs(frac(i.uv.y)-0.5 - pcm_value.r), .1)), -200, 0);
                         col = float4(1,1,1,1)*val;
                     }
 
