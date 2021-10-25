@@ -49,10 +49,28 @@
                     return o;
                 }
 
+                #define AUDIOLINK_WIDTH 128
+
+                float4 AudioLinkData(uint2 xycoord)
+                { 
+                    return _AudioTexture[uint2(xycoord.x, xycoord.y)]; 
+                }
+
+                float4 AudioLinkDataMultiline(uint2 xycoord)
+                { 
+                    return _AudioTexture[uint2(xycoord.x % AUDIOLINK_WIDTH, xycoord.y + xycoord.x/AUDIOLINK_WIDTH)]; 
+                }
+
+                float4 AudioLinkLerpMultiline(float2 xy) 
+                {
+                    return lerp(AudioLinkDataMultiline(xy), AudioLinkDataMultiline(xy+float2(1,0)), frac(xy.x)); 
+                }
+
                 float4 AudioLinkLerp(float2 xy)
                 {
-                    return lerp(_AudioTexture[int2(xy.x, xy.y)], _AudioTexture[int2(xy.x, xy.y) + int2(1,0)], frac(xy.x));
+                    return lerp(AudioLinkData(uint2(xy.x, xy.y)), AudioLinkData(uint2(xy.x, xy.y) + uint2(1,0)), frac(xy.x));
                 }
+
 
                 float dist_to_line(float a, float b)
                 {
@@ -80,8 +98,19 @@
 
                 float get_value_xy(float2 xy)
                 {
-                    // TODO
-                    return 0.0;
+                    float2 cdist = (xy - float2(0.5,0.5))*2;
+                    float index = xy.x + xy,y;
+
+                    //float4 pcm_value = AudioLinkLerp(float2(frac(index*0.5)*127, 6));
+                    float4 pcm_value = AudioLinkLerpMultiline(float2(frac(index*0.5)*2045, 6)); 
+                    float l = pcm_value.r + pcm_value.a;
+                    float r = pcm_value.r - pcm_value.a;
+                    float distx = cdist.x - l;
+                    float disty = cdist.y - r;
+
+                    float dist = sqrt(distx*distx + disty*disty);
+
+                    return dist_to_line(dist*0.25, 0);
                 }
 
                 float4 frag (v2f i) : SV_Target
@@ -93,6 +122,7 @@
                     if (w > 16)
                     {
                         float val = get_value_circle(i.uv.xy);
+                        //float val = get_value_xy(i.uv.xy);
                         col = float4(1,1,1,1)*val;
                     }
 
