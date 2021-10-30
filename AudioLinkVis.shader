@@ -105,8 +105,42 @@
                     float4 pcm_value = AudioLinkLerpMultiline(float2(frac(index*0.5)*2045, 6)); 
                     float l = pcm_value.r + pcm_value.a;
                     float r = pcm_value.r - pcm_value.a;
-                    float distx = cdist.x - l;
-                    float disty = cdist.y - r;
+                    float distx = r - cdist.x;
+                    float disty = l - cdist.y;
+
+                    float dist = sqrt(distx*distx + disty*disty);
+
+                    return dist_to_line(dist*0.25, 0);
+                }
+
+                float get_value_xy3(float2 xy)
+                {
+                    float2 cdist = (xy - float2(0.5,0.5))*2;
+                    float index = xy.x + xy,y;
+
+                    //float4 pcm_value = AudioLinkLerp(float2(frac(index*0.5)*127, 6));
+                    float4 pcm_value = AudioLinkLerpMultiline(float2(frac(index*0.5)*2045, 6)); 
+                    float l = pcm_value.r + pcm_value.a;
+                    float r = pcm_value.r - pcm_value.a;
+                    float distx = r - cdist.x;
+                    float disty = l - cdist.y;
+
+                    float dist = sqrt(distx*distx + disty*disty);
+
+                    return dist_to_line(dist*0.25, 0);
+                }
+
+                float get_value_xy2(float2 xy)
+                {
+                    float2 cdist = (xy - float2(0.5,0.5))*2;
+
+                    //float4 pcm_value = AudioLinkLerp(float2(frac(index*0.5)*127, 6));
+                    float4 pcm_value_x = AudioLinkLerpMultiline(float2(frac(xy.x)*2045, 6)); 
+                    float4 pcm_value_y = AudioLinkLerpMultiline(float2(frac(xy.y)*2045, 6)); 
+                    float2 l = float2(pcm_value_x.r + pcm_value_x.a, pcm_value_y.r + pcm_value_y.a);
+                    float2 r = float2(pcm_value_x.r - pcm_value_x.a, pcm_value_y.r - pcm_value_y.a);
+                    float distx = cdist.x - r.x;
+                    float disty = cdist.y - l.y;
 
                     float dist = sqrt(distx*distx + disty*disty);
 
@@ -121,8 +155,8 @@
                     _AudioTexture.GetDimensions(w,h);
                     if (w > 16)
                     {
-                        float val = get_value_circle(i.uv.xy);
-                        //float val = get_value_xy(i.uv.xy);
+                        //float val = get_value_circle(i.uv.xy);
+                        float val = get_value_xy(i.uv.xy);
                         col = float4(1,1,1,1)*val;
                     }
 
