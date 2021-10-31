@@ -71,7 +71,6 @@
                     return lerp(AudioLinkData(uint2(xy.x, xy.y)), AudioLinkData(uint2(xy.x, xy.y) + uint2(1,0)), frac(xy.x));
                 }
 
-
                 float dist_to_line(float a, float b)
                 {
                     return clamp((1.0-pow(0.1/abs(a - b), .1)), -200, 0);
@@ -80,14 +79,14 @@
                 float get_value_horiz_line(float2 xy)
                 {
                     float4 pcm_value = AudioLinkLerp(float2(frac(xy.x)*127, 6));
-                    float dist = xy.y;
+                    float dist = frac(xy.y);
 
                     return dist_to_line(dist - 0.5, pcm_value.r);
                 }
 
                 float get_value_circle(float2 xy)
                 {
-                    float2 cdist = (xy - float2(0.5,0.5))*2;
+                    float2 cdist = (frac(xy) - float2(0.5,0.5))*2;
                     float dist = sqrt(cdist.x*cdist.x + cdist.y*cdist.y);
                     float angle = atan2(cdist.x, cdist.y);
 
