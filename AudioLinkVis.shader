@@ -95,6 +95,38 @@
                     return dist_to_line(dist - 0.5, pcm_value.r*0.5);
                 }
 
+                float get_value_xy_scatter(float2 xy, uint nsamples) 
+                {
+                    float2 cpos = (frac(xy) - float2(0.5, 0.5))*2;
+                    float dist = 1.0/0.0;  // Inifinity
+                    for (uint i = 0; i < nsamples; ++i)
+                    {
+                        float4 pcm_value = AudioLinkDataMultiline(uint2(i, 6));
+                        float2 pcm_lr = float2(pcm_value.r + pcm_value.a, pcm_value.r - pcm_value.a);
+                        // float ndist = length(cpos - pcm_lr)*0.25;
+                        float ndist = length(pcm_lr - cpos)*0.5;
+
+                        dist = min(dist, ndist);
+                    }
+
+                    return dist_to_line(dist, 0);
+                }
+
+                float get_value_xy_scatter_add(float2 xy, uint nsamples) 
+                {
+                    float2 cpos = (frac(xy) - float2(0.5, 0.5))*2;
+                    float val = 0.0;
+                    for (uint i = 0; i < nsamples; ++i)
+                    {
+                        float4 pcm_value = AudioLinkDataMultiline(uint2(i, 6));
+                        float2 pcm_lr = float2(pcm_value.r + pcm_value.a, pcm_value.r - pcm_value.a);
+                        float ndist = length(pcm_lr - cpos)*0.5;
+                        val = val + dist_to_line(ndist, 0.0)/(nsamples/100);
+                    }
+
+                    return val;
+                }
+
                 float get_value_xy(float2 xy)
                 {
                     float2 cdist = (xy - float2(0.5,0.5))*2;
@@ -150,8 +182,9 @@
                     _AudioTexture.GetDimensions(w,h);
                     if (w > 16)
                     {
-                        //float val = get_value_circle(i.uv.xy);
-                        float val = get_value_xy(i.uv.xy);
+                        // float val = get_value_circle(i.uv.xy);
+                        float val = get_value_xy_scatter(i.uv.xy, 2045);
+                        //float val = get_value_xy3(i.uv.xy);
                         col = float4(1,1,1,1)*val;
                     }
 
