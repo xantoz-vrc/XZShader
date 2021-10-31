@@ -104,8 +104,8 @@
                     float4 pcm_value = AudioLinkLerpMultiline(float2(frac(index*0.5)*2045, 6)); 
                     float l = pcm_value.r + pcm_value.a;
                     float r = pcm_value.r - pcm_value.a;
-                    float distx = r - cdist.x;
-                    float disty = l - cdist.y;
+                    float distx = l - cdist.x;
+                    float disty = r - cdist.y;
 
                     float dist = sqrt(distx*distx + disty*disty);
 
@@ -114,19 +114,15 @@
 
                 float get_value_xy3(float2 xy)
                 {
-                    float2 cdist = (xy - float2(0.5,0.5))*2;
+                    float2 cpos = (frac(xy) - float2(0.5,0.5))*2;
                     float index = xy.x + xy,y;
 
                     //float4 pcm_value = AudioLinkLerp(float2(frac(index*0.5)*127, 6));
-                    float4 pcm_value = AudioLinkLerpMultiline(float2(frac(index*0.5)*2045, 6)); 
-                    float l = pcm_value.r + pcm_value.a;
-                    float r = pcm_value.r - pcm_value.a;
-                    float distx = r - cdist.x;
-                    float disty = l - cdist.y;
+                    float4 pcm_value = AudioLinkLerpMultiline(float2(index*0.5*2045, 6));
+                    float2 pcm_lr = float2(pcm_value.r + pcm_value.a, pcm_value.r - pcm_value.a);
+                    float dist = length(pcm_lr - cpos)*0.5;
 
-                    float dist = sqrt(distx*distx + disty*disty);
-
-                    return dist_to_line(dist*0.25, 0);
+                    return dist_to_line(dist, 0);
                 }
 
                 float get_value_xy2(float2 xy)
