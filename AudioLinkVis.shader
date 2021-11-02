@@ -79,13 +79,20 @@
                     frac(xy.x));
             }
 
-            // Index 0 to 2048
+            // Index 0 to 2048 when using .g
+            //       0 to 2046 when using .r and .a
+            //       0 to 1023 when using .b
+            // Index 0 to 2047 when using .g
+            //       0 to 2045 when using .r and .a
+            //       0 to 1022 when using .b
             float4 AudioLinkPCMData(uint i)
             {
                 return AudioLinkDataMultiline(uint2(i, 6));
             }
 
-            // Index 0 to 2048
+            // Index 0 to 2047 when using .g
+            //       0 to 2045 when using .r and .a
+            //       0 to 1022 when using .b
             float4 AudioLinkPCMLerp(float i)
             {
                 return AudioLinkLerpMultiline(float2(i, 6.0));
