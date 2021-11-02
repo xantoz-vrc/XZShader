@@ -134,7 +134,13 @@
                 return linefn(dist);
             }
 
-            float get_value_circle(float2 xy, float nsamples)
+            float get_value_vert_line(float2 xy, uint nsamples, uint lr)
+            {
+                float4 pcm_val = PCMConditional(AudioLinkPCMLerp(frac(xy.y)*(nsamples-1)), lr);
+                float dist = (frac(xy.x) - 0.5) - pcm_val;
+                return linefn(dist);
+            }
+
             float get_value_circle(float2 xy, float nsamples, uint lr)
             {
                 float2 cpos = (frac(xy) - float2(0.5,0.5))*2;
