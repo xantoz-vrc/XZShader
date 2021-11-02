@@ -95,7 +95,8 @@
             // lr == 0: both channels (24 kHz red)
             // lr == 1: left channel
             // lr == 2: right channel
-            float PCMConditional(float4 pcm_value, uint lr) {
+            float PCMConditional(float4 pcm_value, uint lr)
+            {
                 float result = pcm_value.r;
                 if (lr == 1) {
                     result = pcm_value.r + pcm_value.a;
@@ -111,7 +112,8 @@
             }
 
             // --- distance to line segment with caps (From: https://shadertoyunofficial.wordpress.com/2019/01/02/programming-tricks-in-shadertoy-glsl/)
-            float dist_to_line(float2 p, float2 a, float2 b) {
+            float dist_to_line(float2 p, float2 a, float2 b)
+            {
                 p -= a, b -= a;
                 float h = clamp(dot(p, b) / dot(b, b), 0.0, 1.0); // proj coord on line
                 return length(p - b * h);                        // dist to segment
