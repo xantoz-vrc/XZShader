@@ -158,47 +158,6 @@
                 return linefn(dist);
             }
 
-            float get_value_xy_scatter_add(float2 xy, uint nsamples) 
-            {
-                float2 cpos = (frac(xy) - float2(0.5, 0.5))*2;
-                float val = 0.0;
-                for (uint i = 0; i < nsamples; ++i)
-                {
-                    float2 pcm_lr = PCMToLR(AudioLinkPCMData(i));
-                    float ndist = length(pcm_lr - cpos)*0.5;
-                    val = val + linefn(ndist)/(nsamples/100);
-                }
-
-                return val;
-            }
-
-            float get_value_xy1(float2 xy, uint nsamples)
-            {
-                float2 cpos = (frac(xy) - float2(0.5,0.5))*2;
-                float index = xy.x + xy,y;
-
-                float2 pcm_lr = PCMToLR(AudioLinkPCMLerp(index*0.5*(nsamples-1)));
-                float dist = length(pcm_lr - cpos)*0.5;
-
-                return linefn(dist);
-            }
-
-            float get_value_xy2(float2 xy)
-            {
-                float2 cdist = (xy - float2(0.5,0.5))*2;
-
-                float4 pcm_value_x = AudioLinkLerpMultiline(float2(frac(xy.x)*2045, 6)); 
-                float4 pcm_value_y = AudioLinkLerpMultiline(float2(frac(xy.y)*2045, 6)); 
-                float2 l = float2(pcm_value_x.r + pcm_value_x.a, pcm_value_y.r + pcm_value_y.a);
-                float2 r = float2(pcm_value_x.r - pcm_value_x.a, pcm_value_y.r - pcm_value_y.a);
-                float distx = cdist.x - r.x;
-                float disty = cdist.y - l.y;
-
-                float dist = sqrt(distx*distx + disty*disty);
-
-                return linefn(dist*0.25);
-            }
-
             float4 frag(v2f i) : SV_Target
             {
                 float4 col = float4(0,0,0,0);
@@ -207,9 +166,9 @@
                 _AudioTexture.GetDimensions(w,h);
                 if (w > 16)
                 {
-                    // float val = get_value_circle(i.uv.xy, 128);
+                    float val = get_value_circle(i.uv.xy, 128);
                     // float val = get_value_xy_scatter(i.uv.xy, 256);
-                    float val = get_value_xy_line(i.uv.xy, 512);
+                    // float val = get_value_xy_line(i.uv.xy, 512);
                     //float val = get_value_xy3(i.uv.xy);
                     col = float4(1,1,1,1)*val;
                 }
