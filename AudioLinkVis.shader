@@ -3,6 +3,8 @@
     Properties
     {
         _MainTex ("Texture", 2D) = "white" {}
+        [HDR]_Color1 ("Color 1", Color) = (1,1,1,1)
+        [HDR]_Color2 ("Color 2", Color) = (1,1,1,1)
     }
     SubShader
     {
@@ -39,6 +41,9 @@
             sampler2D _MainTex;
             float4 _MainTex_ST;
             Texture2D<float4> _AudioTexture;
+
+            float4 _Color1;
+            float4 _Color2;
 
             v2f vert (appdata v)
             {
