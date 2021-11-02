@@ -189,8 +189,8 @@
                 float cdist = length(cpos);
                 float angle = atan2(cpos.x, cpos.y);
                 // TODO: maybe instead round down and round up, then use the line drawing function
-                float dft_val = AudioLinkDFTLerp(frac((angle+UNITY_PI)/(2*UNITY_PI))*(nsamples-1));
-                float dft_val = (cdist - 0.5) - pcm_val*0.5;
+                float4 dft_val = AudioLinkDFTLerp(frac((angle+UNITY_PI)/(2*UNITY_PI))*(nsamples-1));
+                float dist = (cdist - 0.5) - dft_val.r*0.5;
                 return linefn(dist);
             }
 
