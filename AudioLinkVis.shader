@@ -146,7 +146,7 @@
                 return get_value_horiz_line(xy, nsamples, 1) + get_value_vert_line(xy, nsamples, 2);
             }
 
-            float get_value_circle(float2 xy, float nsamples, uint lr)
+            float get_value_circle(float2 xy, uint nsamples, uint lr)
             {
                 float2 cpos = (frac(xy) - float2(0.5,0.5))*2;
                 float cdist = length(cpos);
