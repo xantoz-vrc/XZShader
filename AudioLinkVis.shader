@@ -91,6 +91,20 @@
                 return AudioLinkLerpMultiline(float2(i, 6.0));
             }
 
+            // Pick one of:
+            // lr == 0: both channels (24 kHz red)
+            // lr == 1: left channel
+            // lr == 2: right channel
+            float PCMConditional(float4 pcm_value, uint lr) {
+                float result = pcm_value.r;
+                if (lr == 1) {
+                    result = pcm_value.r + pcm_value.a;
+                } else if (lr == 2) {
+                    result = pcm_value.r - pcm_value.a;
+                }
+                return result;
+            }
+
             float2 PCMToLR(float4 pcm_value)
             {
                 return float2(pcm_value.r + pcm_value.a, pcm_value.r - pcm_value.a);
@@ -111,20 +125,23 @@
                 return clamp((1.0-pow(0.1/abs(a), .1)), -200, 0);
             }
 
-            float get_value_horiz_line(float2 xy, uint nsamples)
+            float get_value_horiz_line(float2 xy, uint nsamples, uint lr)
             {
-                float4 pcm_value = AudioLinkPCMLerp(frac(xy.x)*(nsamples-1));
-                float dist = (frac(xy.y) - 0.5) - pcm_value.r;
+                float pcm_val = PCMConditional(AudioLinkPCMLerp(frac(xy.x)*(nsamples-1)), lr);
+                float dist = (frac(xy.y) - 0.5) - pcm_val;
                 return linefn(dist);
             }
 
             float get_value_circle(float2 xy, float nsamples)
+            float get_value_circle(float2 xy, float nsamples, uint lr)
             {
                 float2 cpos = (frac(xy) - float2(0.5,0.5))*2;
                 float cdist = length(cpos);
                 float angle = atan2(cpos.x, cpos.y);
-                float4 pcm_value = AudioLinkPCMLerp(frac((angle+UNITY_PI)/(2*UNITY_PI))*(nsamples-1));       
-                float dist = (cdist - 0.5) - pcm_value.r*0.5;
+                float pcm_val = PCMConditional(
+                    AudioLinkPCMLerp(frac((angle+UNITY_PI)/(2*UNITY_PI))*(nsamples-1)),
+                    lr);
+                float dist = (cdist - 0.5) - pcm_val*0.5;
                 return linefn(dist);
             }
 
@@ -166,7 +183,7 @@
                 _AudioTexture.GetDimensions(w,h);
                 if (w > 16)
                 {
-                    float val = get_value_circle(i.uv.xy, 128);
+                    float val = get_value_circle(i.uv.xy, 128, 0);
                     // float val = get_value_xy_scatter(i.uv.xy, 256);
                     // float val = get_value_xy_line(i.uv.xy, 512);
                     //float val = get_value_xy3(i.uv.xy);
