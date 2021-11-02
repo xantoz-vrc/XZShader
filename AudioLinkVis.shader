@@ -56,6 +56,10 @@
 
             #define AUDIOLINK_WIDTH 128
 
+            #define AUDIOLINK_EXPBINS               24
+            #define AUDIOLINK_EXPOCT                10
+            #define AUDIOLINK_ETOTALBINS            (AUDIOLINK_EXPBINS * AUDIOLINK_EXPOCT)
+
             float4 AudioLinkData(uint2 xycoord)
             { 
                 return _AudioTexture[uint2(xycoord.x, xycoord.y)]; 
@@ -84,9 +88,18 @@
                     frac(xy.x));
             }
 
-            // Index 0 to 2048 when using .g
-            //       0 to 2046 when using .r and .a
-            //       0 to 1023 when using .b
+            // Index 0 to 255
+            float4 AudioLinkDFTData(uint i)
+            {
+                return AudioLinkDataMultiline(uint2(i, 4));
+            }
+
+            // Index 0 to 255
+            float4 AudioLinkDFTLerp(float i)
+            {
+                return AudioLinkLerpMultiline(float2(i, 4.0));
+            }
+
             // Index 0 to 2047 when using .g
             //       0 to 2045 when using .r and .a
             //       0 to 1022 when using .b
@@ -167,6 +180,17 @@
                     AudioLinkPCMLerp(frac((angle+UNITY_PI)/(2*UNITY_PI))*(nsamples-1)),
                     lr);
                 float dist = (cdist - 0.5) - pcm_val*0.5;
+                return linefn(dist);
+            }
+
+            float get_value_spectrum_circle(float2 xy, uint nsamples)
+            {
+                float2 cpos = (frac(xy) - float2(0.5,0.5))*2;
+                float cdist = length(cpos);
+                float angle = atan2(cpos.x, cpos.y);
+                // TODO: maybe instead round down and round up, then use the line drawing function
+                float dft_val = AudioLinkDFTLerp(frac((angle+UNITY_PI)/(2*UNITY_PI))*(nsamples-1));
+                float dft_val = (cdist - 0.5) - pcm_val*0.5;
                 return linefn(dist);
             }
 
