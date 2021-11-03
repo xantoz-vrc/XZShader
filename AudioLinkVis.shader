@@ -80,6 +80,14 @@
                     frac(xy.x)); 
             }
 
+            float4 AudioLinkLerpMultilineWrap(float2 xy, float wrap) 
+            {
+                return lerp(
+                    AudioLinkDataMultiline(float2(xy.x % wrap, xy.y)),
+                    AudioLinkDataMultiline(float2((xy.x + 1) % wrap, xy.y)),
+                    frac(xy.x)); 
+            }
+
             float4 AudioLinkLerp(float2 xy)
             {
                 return lerp(
@@ -98,6 +106,11 @@
             float4 AudioLinkDFTLerp(float i)
             {
                 return AudioLinkLerpMultiline(float2(i, 4.0));
+            }
+
+            float4 AudioLinkDFTLerpWrap(float i, float wrap)
+            {
+                return AudioLinkLerpMultilineWrap(float2(i, 4.0), wrap);
             }
 
             // Index 0 to 2047 when using .g
@@ -189,8 +202,29 @@
                 float cdist = length(cpos);
                 float angle = atan2(cpos.x, cpos.y);
                 // TODO: maybe instead round down and round up, then use the line drawing function
-                float4 dft_val = AudioLinkDFTLerp(frac((angle+UNITY_PI)/(2*UNITY_PI))*(nsamples-1));
+                float4 dft_val = AudioLinkDFTLerpWrap(frac((angle+UNITY_PI)/(2*UNITY_PI))*(nsamples-1), nsamples-1);
                 float dist = (cdist - 0.5) - dft_val.r*0.5;
+                return linefn(dist);
+            }
+
+            float get_value_spectrum_circle2(float2 xy)
+            {
+                float2 cpos = (frac(xy) - float2(0.5,0.5))*2;
+                float cdist = length(cpos);
+                float angle = atan2(cpos.x, cpos.y);
+                float4 dft_val = AudioLinkDFTLerpWrap(frac((angle+UNITY_PI)/(2*UNITY_PI))*255*2, 255);
+                float dist = (cdist - 0.5) - dft_val.r*0.5;
+                return linefn(dist);
+            }
+
+            float get_value_spectrum_circle3(float2 xy)
+            {
+                float2 cpos = (frac(xy) - float2(0.5,0.5))*2;
+                float cdist = length(cpos);
+                float angle = atan2(cpos.x, cpos.y);
+                float index = (angle < 0) ? (-angle)/(UNITY_PI)*255 : (angle)/(UNITY_PI)*255;
+                float4 dft_val = AudioLinkDFTLerpWrap(index, 255);
+                float dist = (cdist - 0.5) - dft_val.r*0.25;
                 return linefn(dist);
             }
 
@@ -232,7 +266,11 @@
                 _AudioTexture.GetDimensions(w,h);
                 if (w > 16)
                 {
-                    float val = get_value_circle(i.uv.xy, 128, 0);
+                    // float val = get_value_circle(i.uv.xy, 128, 0);
+                    //float val = get_value_lr_lines(i.uv.xy, 128);
+                    // float val = get_value_spectrum_circle(i.uv.xy, 256);
+                    float val = get_value_spectrum_circle3(i.uv.xy);
+
                     // float val = get_value_xy_scatter(i.uv.xy, 256);
                     // float val = get_value_xy_line(i.uv.xy, 512);
                     //float val = get_value_xy3(i.uv.xy);
