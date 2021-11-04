@@ -304,21 +304,20 @@
                 float2 cpos = (frac(xy) - float2(0.5,0.5))*2;
                 float cdist = length(cpos);
                 float angle = atan2(cpos.x, cpos.y);
-                uint wrap = nsamples;
-                float index = ((angle)/(2*UNITY_PI))*wrap;
+                float index = ((angle)/(2*UNITY_PI))*nsamples;
 
                 // Quantize our index. Get the angles out, then figure out what xy coords we will have
                 float index_1 = floor(index/bin)*bin;
                 float index_2 = ceil(index/bin)*bin;
 
                 // calculate the angles backwards from the indices;
-                float angle_1 = (index_1/wrap)*(2*UNITY_PI);
-                float angle_2 = (index_2/wrap)*(2*UNITY_PI);
+                float angle_1 = (index_1/nsamples)*(2*UNITY_PI);
+                float angle_2 = (index_2/nsamples)*(2*UNITY_PI);
                 float2 sc1 = float2(sin(angle_1), cos(angle_1));
                 float2 sc2 = float2(sin(angle_2), cos(angle_2));
 
-                float dft_1 = AudioLinkDFTData(mod(index_1, wrap-bin)).g*0.2;
-                float dft_2 = AudioLinkDFTData(mod(index_2, wrap-bin)).g*0.2;
+                float dft_1 = AudioLinkDFTData(mod(index_1, nsamples - (nsamples % bin))).g*0.25;
+                float dft_2 = AudioLinkDFTData(mod(index_2, nsamples - (nsamples % bin))).g*0.25;
 
                 float r1 = clamp(dft_1 + 0.75, 0.0, 1.0);
                 float r2 = clamp(dft_2 + 0.75, 0.0, 1.0);
