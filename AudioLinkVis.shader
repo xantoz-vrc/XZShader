@@ -88,6 +88,20 @@
                     frac(xy.x)); 
             }
 
+            float fmirror(float x, float wrap)
+            {
+                float x_wrap = x % (wrap*2);
+                return (x_wrap > wrap) ? (wrap*2 - x_wrap) : x_wrap;
+            }
+
+            float4 AudioLinkLerpMultilineMirror(float2 xy, float wrap)
+            {
+                return lerp(
+                    AudioLinkDataMultiline(float2(fmirror(xy.x, wrap), xy.y)),
+                    AudioLinkDataMultiline(float2(fmirror(xy.x + 1, wrap), xy.y)),
+                    frac(xy.x));
+            }
+
             float4 AudioLinkLerp(float2 xy)
             {
                 return lerp(
@@ -113,6 +127,11 @@
                 return AudioLinkLerpMultilineWrap(float2(i, 4.0), wrap);
             }
 
+            float4 AudioLinkDFTLerpMirror(float i, float wrap)
+            {
+                return AudioLinkLerpMultilineMirror(float2(i, 4.0), wrap);
+            }
+
             // Index 0 to 2047 when using .g
             //       0 to 2045 when using .r and .a
             //       0 to 1022 when using .b
@@ -132,6 +151,11 @@
             float4 AudioLinkPCMLerpWrap(float i, float wrap)
             {
                 return AudioLinkLerpMultilineWrap(float2(i, 6.0), wrap);
+            }
+
+            float4 AudioLinkPCMLerpMirror(float i, float wrap)
+            {
+                return AudioLinkLerpMultilineMirror(float2(i, 6.0), wrap);
             }
 
             // Pick one of:
