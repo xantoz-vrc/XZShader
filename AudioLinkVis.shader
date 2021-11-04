@@ -294,6 +294,50 @@
                 return linefn(dist);
             }
 
+            float mod(float x, float y)
+            {
+                return x - y * floor(x/y);
+            }
+
+            float get_value_spectrum_fancy(float2 xy, uint nsamples, uint bin)
+            {
+                float2 cpos = (frac(xy) - float2(0.5,0.5))*2;
+                float cdist = length(cpos);
+                float angle = atan2(cpos.x, cpos.y);
+                uint wrap = nsamples;
+                float index = ((angle)/(2*UNITY_PI))*wrap;
+
+                // Quantize our index. Get the angles out, then figure out what xy coords we will have
+                float index_1 = floor(index/bin)*bin;
+                float index_2 = ceil(index/bin)*bin;
+
+                // calculate the angles backwards from the indices;
+                float angle_1 = (index_1/wrap)*(2*UNITY_PI);
+                float angle_2 = (index_2/wrap)*(2*UNITY_PI);
+                float2 sc1 = float2(sin(angle_1), cos(angle_1));
+                float2 sc2 = float2(sin(angle_2), cos(angle_2));
+
+                float dft_1 = AudioLinkDFTData(mod(index_1, wrap-bin)).g*0.2;
+                float dft_2 = AudioLinkDFTData(mod(index_2, wrap-bin)).g*0.2;
+
+                float r1 = clamp(dft_1 + 0.75, 0.0, 1.0);
+                float r2 = clamp(dft_2 + 0.75, 0.0, 1.0);
+                float r3 = clamp(0.5 - dft_1, 0.0, 1.0);
+                float r4 = clamp(0.5 - dft_2, 0.0, 1.0);
+                
+                float2 p1 = r1*sc1;
+                float2 p2 = r2*sc2;
+                float2 p3 = r3*sc1;
+                float2 p4 = r4*sc2;
+
+                float val = 0.0;
+                val += linefn(dist_to_line(cpos, p1, p2));
+                val += linefn(dist_to_line(cpos, p3, p4));
+                val += linefn(dist_to_line(cpos, p1, p3));
+                val += linefn(dist_to_line(cpos, p2, p4));
+                return val*0.6;
+            }
+
             float get_value_xy_scatter(float2 xy, uint nsamples)
             {
                 float2 cpos = (frac(xy) - float2(0.5, 0.5))*2;
@@ -330,17 +374,22 @@
 
                 uint w, h;
                 _AudioTexture.GetDimensions(w,h);
+                float val = 0.0;
                 if (w > 16)
                 {
-                    float val = get_value_circle_mirror(i.uv.xy, 128, 0);
-                    //float val = get_value_lr_lines(i.uv.xy, 128);
-                    // float val = get_value_spectrum_circle(i.uv.xy, 256);
-                    // float val = get_value_spectrum_circle2(i.uv.xy);
-                    // float val = get_value_spectrum_circle3(i.uv.xy);
+                    // val += get_value_circle(i.uv.xy, 128, 0);
+                    // val += get_value_circle_mirror(i.uv.xy, 128, 0);
+                    // val += get_value_circle_mirror_lr(i.uv.xy, 128);
+                    // val += get_value_lr_lines(i.uv.xy, 128);
+                    // val += get_value_spectrum_circle(i.uv.xy, 256);
+                    // val += get_value_spectrum_circle2(i.uv.xy);
+                    // val += get_value_spectrum_circle3(i.uv.xy);
 
-                    // float val = get_value_xy_scatter(i.uv.xy, 256);
-                    // float val = get_value_xy_line(i.uv.xy, 512);
-                    //float val = get_value_xy3(i.uv.xy);
+                    val += get_value_spectrum_fancy(i.uv.xy, 256, 4);
+
+                    // val += get_value_xy_scatter(i.uv.xy, 256);
+                    // val += get_value_xy_line(i.uv.xy, 512);
+                    // val += get_value_xy3(i.uv.xy);
                     col = float4(1,1,1,1)*val;
                 }
 
