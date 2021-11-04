@@ -225,6 +225,18 @@
                 return linefn(dist);
             }
 
+            float get_value_circle_mirror(float2 xy, uint nsamples, uint lr)
+            {
+                float2 cpos = (frac(xy) - float2(0.5,0.5))*2;
+                float cdist = length(cpos);
+                float angle = atan2(cpos.x, cpos.y);
+                float pcm_val = PCMConditional(
+                    AudioLinkPCMLerpMirror(frac((angle+UNITY_PI)/(2*UNITY_PI))*(nsamples-1)*2, nsamples-1),
+                    lr);
+                float dist = (cdist - 0.5) - pcm_val*0.5;
+                return linefn(dist);
+            }
+
             float get_value_spectrum_circle(float2 xy, uint nsamples)
             {
                 float2 cpos = (frac(xy) - float2(0.5,0.5))*2;
@@ -296,7 +308,7 @@
                 _AudioTexture.GetDimensions(w,h);
                 if (w > 16)
                 {
-                    float val = get_value_circle(i.uv.xy, 128, 0);
+                    float val = get_value_circle_mirror(i.uv.xy, 128, 0);
                     //float val = get_value_lr_lines(i.uv.xy, 128);
                     // float val = get_value_spectrum_circle(i.uv.xy, 256);
                     // float val = get_value_spectrum_circle2(i.uv.xy);
