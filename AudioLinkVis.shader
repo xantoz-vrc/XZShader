@@ -178,6 +178,17 @@
                 return float2(pcm_value.r + pcm_value.a, pcm_value.r - pcm_value.a);
             }
 
+            // This is basically just a helper function for get_value_circle_mirror_lr
+            float AudioLinkPCMLerpMirrorLR(float i, float wrap)
+            {
+                uint lr_1 = ((i % (wrap*2)) > wrap) ? 1 : 2;
+                uint lr_2 = (((i + 1) % (wrap*2)) > wrap) ? 1 : 2;
+                return lerp(
+                    PCMConditional(AudioLinkPCMData(fmirror(i, wrap)), lr_1),
+                    PCMConditional(AudioLinkPCMData(fmirror(i + 1, wrap)), lr_2),
+                    frac(i));
+            }
+
             // --- distance to line segment with caps (From: https://shadertoyunofficial.wordpress.com/2019/01/02/programming-tricks-in-shadertoy-glsl/)
             float dist_to_line(float2 p, float2 a, float2 b)
             {
@@ -233,6 +244,19 @@
                 float pcm_val = PCMConditional(
                     AudioLinkPCMLerpMirror(frac((angle+UNITY_PI)/(2*UNITY_PI))*(nsamples-1)*2, nsamples-1),
                     lr);
+                float dist = (cdist - 0.5) - pcm_val*0.5;
+                return linefn(dist);
+            }
+
+            float get_value_circle_mirror_lr(float2 xy, uint nsamples)
+            {
+                float2 cpos = (frac(xy) - float2(0.5,0.5))*2;
+                float cdist = length(cpos);
+                float angle = atan2(cpos.x, cpos.y);
+                float index = frac((angle+UNITY_PI)/(2*UNITY_PI))*(nsamples-1)*2;
+
+                float pcm_val = AudioLinkPCMLerpMirrorLR(index, (nsamples-1));
+
                 float dist = (cdist - 0.5) - pcm_val*0.5;
                 return linefn(dist);
             }
