@@ -129,6 +129,11 @@
                 return AudioLinkLerpMultiline(float2(i, 6.0));
             }
 
+            float4 AudioLinkPCMLerpWrap(float i, float wrap)
+            {
+                return AudioLinkLerpMultilineWrap(float2(i, 6.0), wrap);
+            }
+
             // Pick one of:
             // lr == 0: both channels (24 kHz red)
             // lr == 1: left channel
@@ -190,7 +195,7 @@
                 float cdist = length(cpos);
                 float angle = atan2(cpos.x, cpos.y);
                 float pcm_val = PCMConditional(
-                    AudioLinkPCMLerp(frac((angle+UNITY_PI)/(2*UNITY_PI))*(nsamples-1)),
+                    AudioLinkPCMLerpWrap(frac((angle+UNITY_PI)/(2*UNITY_PI))*(nsamples-1), nsamples-1),
                     lr);
                 float dist = (cdist - 0.5) - pcm_val*0.5;
                 return linefn(dist);
@@ -267,11 +272,11 @@
                 _AudioTexture.GetDimensions(w,h);
                 if (w > 16)
                 {
-                    // float val = get_value_circle(i.uv.xy, 128, 0);
+                    float val = get_value_circle(i.uv.xy, 128, 0);
                     //float val = get_value_lr_lines(i.uv.xy, 128);
                     // float val = get_value_spectrum_circle(i.uv.xy, 256);
                     // float val = get_value_spectrum_circle2(i.uv.xy);
-                    float val = get_value_spectrum_circle3(i.uv.xy);
+                    // float val = get_value_spectrum_circle3(i.uv.xy);
 
                     // float val = get_value_xy_scatter(i.uv.xy, 256);
                     // float val = get_value_xy_line(i.uv.xy, 512);
