@@ -317,8 +317,8 @@
                 float2 sc1 = float2(sin(angle_1), cos(angle_1));
                 float2 sc2 = float2(sin(angle_2), cos(angle_2));
 
-                float dft_1 = AudioLinkDFTData(mod(index_1, nsamples - (nsamples % bin))).g*0.25;
-                float dft_2 = AudioLinkDFTData(mod(index_2, nsamples - (nsamples % bin))).g*0.25;
+                float dft_1 = AudioLinkDFTData(mod(index_1, nsamples - (nsamples % bin))).r*0.25;
+                float dft_2 = AudioLinkDFTData(mod(index_2, nsamples - (nsamples % bin))).r*0.25;
 
                 float r1 = clamp(dft_1 + 0.75, 0.0, 1.0);
                 float r2 = clamp(dft_2 + 0.75, 0.0, 1.0);
