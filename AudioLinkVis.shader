@@ -257,9 +257,7 @@
                 float cdist = length(cpos);
                 float angle = atan2(cpos.x, cpos.y);
                 float index = frac((angle+UNITY_PI)/(2*UNITY_PI))*(nsamples-1)*2;
-
                 float pcm_val = AudioLinkPCMLerpMirrorLR(index, (nsamples-1));
-
                 float dist = (cdist - 0.5) - pcm_val*0.25;
                 return linefn(dist);
             }
