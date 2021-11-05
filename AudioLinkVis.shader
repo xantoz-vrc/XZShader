@@ -256,7 +256,7 @@ Shader "Xantoz/AudioLinkVis"
                 float cdist = length(cpos);
                 float angle = atan2(cpos.x, cpos.y);
                 float pcm_val = PCMConditional(
-                    AudioLinkPCMLerpWrap(((angle+UNITY_PI)/(2*UNITY_PI))*(nsamples-1), nsamples-1), // Intentional off-by-one
+                    AudioLinkPCMLerpWrap(((angle+UNITY_PI)/(2*UNITY_PI))*nsamples, nsamples),
                     lr);
                 float dist = (cdist - 0.5) - pcm_val*0.25;
                 return linefn(dist);
@@ -268,7 +268,7 @@ Shader "Xantoz/AudioLinkVis"
                 float cdist = length(cpos);
                 float angle = atan2(cpos.x, cpos.y);
                 float pcm_val = PCMConditional(
-                    AudioLinkPCMLerpMirror(((angle+UNITY_PI)/(2*UNITY_PI))*(nsamples-1)*2, nsamples),
+                    AudioLinkPCMLerpMirror(((angle+UNITY_PI)/(2*UNITY_PI))*nsamples*2, nsamples),
                     lr);
                 float dist = (cdist - 0.5) - pcm_val*0.25;
                 return linefn(dist);
@@ -279,8 +279,8 @@ Shader "Xantoz/AudioLinkVis"
                 float2 cpos = (frac(xy) - float2(0.5,0.5))*2;
                 float cdist = length(cpos);
                 float angle = atan2(cpos.x, cpos.y);
-                float index = ((angle+UNITY_PI)/(2*UNITY_PI))*(nsamples-1)*2;
-                float pcm_val = AudioLinkPCMLerpMirrorLR(index, (nsamples-1)); // Intentional off-by-one
+                float index = ((angle+UNITY_PI)/(2*UNITY_PI))*nsamples*2;
+                float pcm_val = AudioLinkPCMLerpMirrorLR(index, nsamples);
                 float dist = (cdist - 0.5) - pcm_val*0.25;
                 return linefn(dist);
             }
@@ -290,7 +290,7 @@ Shader "Xantoz/AudioLinkVis"
                 float2 cpos = (frac(xy) - float2(0.5,0.5))*2;
                 float cdist = length(cpos);
                 float angle = atan2(cpos.x, cpos.y);
-                float4 dft_val = AudioLinkDFTLerpWrap(((angle+UNITY_PI)/(2*UNITY_PI))*(nsamples-1), nsamples-1); // Intentional off-by-one
+                float4 dft_val = AudioLinkDFTLerpWrap(((angle+UNITY_PI)/(2*UNITY_PI))*nsamples, nsamples);
                 float dist = (cdist - 0.5) - dft_val.r*0.25;
                 return linefn(dist);
             }
