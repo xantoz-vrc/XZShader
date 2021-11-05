@@ -291,6 +291,7 @@ Shader "Xantoz/AudioLinkVis"
                 float cdist = length(cpos);
                 float angle = atan2(cpos.x, cpos.y);
                 float4 dft_val = AudioLinkDFTLerpWrap(((angle+UNITY_PI)/(2*UNITY_PI))*nsamples, nsamples);
+                dft_val = clamp(dft_val, 0.0, 2);
                 float dist = (cdist - 0.5) - dft_val.r*0.25;
                 return linefn(dist);
             }
@@ -301,6 +302,7 @@ Shader "Xantoz/AudioLinkVis"
                 float cdist = length(cpos);
                 float angle = atan2(cpos.x, cpos.y);
                 float4 dft_val = AudioLinkDFTLerpMirror((angle+UNITY_PI)/(2*UNITY_PI)*255*2, 256);
+                dft_val = clamp(dft_val, 0.0, 2);
                 float dist = (cdist - 0.5) - dft_val.g*0.25;
                 return linefn(dist);
             }
