@@ -238,7 +238,7 @@
                 float cdist = length(cpos);
                 float angle = atan2(cpos.x, cpos.y);
                 float pcm_val = PCMConditional(
-                    AudioLinkPCMLerpWrap(frac((angle+UNITY_PI)/(2*UNITY_PI))*(nsamples-1), nsamples-1),
+                    AudioLinkPCMLerpWrap(((angle+UNITY_PI)/(2*UNITY_PI))*(nsamples-1), nsamples-1), // Intentional off-by-one
                     lr);
                 float dist = (cdist - 0.5) - pcm_val*0.25;
                 return linefn(dist);
@@ -250,7 +250,7 @@
                 float cdist = length(cpos);
                 float angle = atan2(cpos.x, cpos.y);
                 float pcm_val = PCMConditional(
-                    AudioLinkPCMLerpMirror(frac((angle+UNITY_PI)/(2*UNITY_PI))*(nsamples-1)*2, nsamples-1),
+                    AudioLinkPCMLerpMirror(((angle+UNITY_PI)/(2*UNITY_PI))*(nsamples-1)*2, nsamples),
                     lr);
                 float dist = (cdist - 0.5) - pcm_val*0.25;
                 return linefn(dist);
@@ -261,8 +261,8 @@
                 float2 cpos = (frac(xy) - float2(0.5,0.5))*2;
                 float cdist = length(cpos);
                 float angle = atan2(cpos.x, cpos.y);
-                float index = frac((angle+UNITY_PI)/(2*UNITY_PI))*(nsamples-1)*2;
-                float pcm_val = AudioLinkPCMLerpMirrorLR(index, (nsamples-1));
+                float index = ((angle+UNITY_PI)/(2*UNITY_PI))*(nsamples-1)*2;
+                float pcm_val = AudioLinkPCMLerpMirrorLR(index, (nsamples-1)); // Intentional off-by-one
                 float dist = (cdist - 0.5) - pcm_val*0.25;
                 return linefn(dist);
             }
@@ -272,7 +272,7 @@
                 float2 cpos = (frac(xy) - float2(0.5,0.5))*2;
                 float cdist = length(cpos);
                 float angle = atan2(cpos.x, cpos.y);
-                float4 dft_val = AudioLinkDFTLerpWrap(frac((angle+UNITY_PI)/(2*UNITY_PI))*(nsamples-1), nsamples-1);
+                float4 dft_val = AudioLinkDFTLerpWrap(((angle+UNITY_PI)/(2*UNITY_PI))*(nsamples-1), nsamples-1); // Intentional off-by-one
                 float dist = (cdist - 0.5) - dft_val.r*0.25;
                 return linefn(dist);
             }
