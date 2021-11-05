@@ -20,7 +20,8 @@ Shader "Xantoz/AudioLinkVis"
 {
     Properties
     {
-        _MainTex ("Texture", 2D) = "white" {}
+        _ST ("UV tiling and offset", Vector) = (1,1,0,0)
+
         [HDR]_Color1 ("Color 1", Color) = (1,1,1,1)
         [HDR]_Color2 ("Color 2", Color) = (1,1,1,1)
         // [Enum(PCM_Horizontal,0, PCM_Vertical,1, PCM_LR,2, PCM_Circle,3, PCM_Circle_Mirror,4, PCM_Circle_LR,5, PCM_XY_Scatter,6, PCM_XY_Line,7, Spectrum_Circle,8, Spectrum_Circle_Mirror,9, Spectrum_Ribbon,10)] _Mode("Mode", Int) = 0
@@ -58,8 +59,7 @@ Shader "Xantoz/AudioLinkVis"
                 float4 vertex : SV_POSITION;
             };
 
-            sampler2D _MainTex;
-            float4 _MainTex_ST;
+            float4 _ST;
             Texture2D<float4> _AudioTexture;
 
             float4 _Color1;
@@ -70,7 +70,7 @@ Shader "Xantoz/AudioLinkVis"
             {
                 v2f o;
                 o.vertex = UnityObjectToClipPos(v.vertex);
-                o.uv = TRANSFORM_TEX(v.uv, _MainTex);
+                o.uv = v.uv*_ST.xy + _ST.zw;
                 UNITY_TRANSFER_FOG(o,o.vertex);
                 return o;
             }
