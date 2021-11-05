@@ -63,9 +63,22 @@
             #define AUDIOLINK_EXPOCT                10
             #define AUDIOLINK_ETOTALBINS            (AUDIOLINK_EXPBINS * AUDIOLINK_EXPOCT)
 
+            float mod(float x, float y)
+            {
+                return x - y * floor(x/y);
+            }
+
             float4 AudioLinkData(uint2 xycoord)
             { 
                 return _AudioTexture[uint2(xycoord.x, xycoord.y)]; 
+            }
+
+            float4 AudioLinkLerp(float2 xy)
+            {
+                return lerp(
+                    AudioLinkData(uint2(xy.x, xy.y)),
+                    AudioLinkData(uint2(xy.x, xy.y) + uint2(1,0)),
+                    frac(xy.x));
             }
 
             float4 AudioLinkDataMultiline(uint2 xycoord)
@@ -86,14 +99,14 @@
             float4 AudioLinkLerpMultilineWrap(float2 xy, float wrap) 
             {
                 return lerp(
-                    AudioLinkDataMultiline(float2(xy.x % wrap, xy.y)),
-                    AudioLinkDataMultiline(float2((xy.x + 1) % wrap, xy.y)),
-                    frac(xy.x)); 
+                    AudioLinkDataMultiline(float2(mod(xy.x, wrap), xy.y)),
+                    AudioLinkDataMultiline(float2(mod(xy.x + 1, wrap), xy.y)),
+                    frac(xy.x));
             }
 
             float fmirror(float x, float wrap)
             {
-                float x_wrap = x % (wrap*2);
+                float x_wrap = mod(x, wrap*2);
                 return (x_wrap > wrap) ? (wrap*2 - x_wrap) : x_wrap;
             }
 
@@ -102,14 +115,6 @@
                 return lerp(
                     AudioLinkDataMultiline(float2(fmirror(xy.x, wrap), xy.y)),
                     AudioLinkDataMultiline(float2(fmirror(xy.x + 1, wrap), xy.y)),
-                    frac(xy.x));
-            }
-
-            float4 AudioLinkLerp(float2 xy)
-            {
-                return lerp(
-                    AudioLinkData(uint2(xy.x, xy.y)),
-                    AudioLinkData(uint2(xy.x, xy.y) + uint2(1,0)),
                     frac(xy.x));
             }
 
@@ -184,8 +189,8 @@
             // This is basically just a helper function for get_value_circle_mirror_lr
             float AudioLinkPCMLerpMirrorLR(float i, float wrap)
             {
-                uint lr_1 = ((i % (wrap*2)) > wrap) ? 1 : 2;
-                uint lr_2 = (((i + 1) % (wrap*2)) > wrap) ? 1 : 2;
+                uint lr_1 = (mod(i, wrap*2) > wrap) ? 1 : 2;
+                uint lr_2 = (mod(i + 1, wrap*2) > wrap) ? 1 : 2;
                 return lerp(
                     PCMConditional(AudioLinkPCMData(fmirror(i, wrap)), lr_1),
                     PCMConditional(AudioLinkPCMData(fmirror(i + 1, wrap)), lr_2),
