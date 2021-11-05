@@ -5,6 +5,8 @@
         _MainTex ("Texture", 2D) = "white" {}
         [HDR]_Color1 ("Color 1", Color) = (1,1,1,1)
         [HDR]_Color2 ("Color 2", Color) = (1,1,1,1)
+        // [Enum(PCM_Horizontal,0, PCM_Vertical,1, PCM_LR,2, PCM_Circle,3, PCM_Circle_Mirror,4, PCM_Circle_LR,5, PCM_XY_Scatter,6, PCM_XY_Line,7, Spectrum_Circle,8, Spectrum_Circle_Mirror,9, Spectrum_Ribbon,10)] _Mode("Mode", Int) = 0
+        [Enum(PCM_Horizontal,0,  PCM_LR,2, PCM_Circle,3, PCM_Circle_LR,5, PCM_XY_Line,7, Spectrum_Ribbon,10)] _Mode("Mode", Int) = 0
     }
     SubShader
     {
@@ -44,6 +46,7 @@
 
             float4 _Color1;
             float4 _Color2;
+            int _Mode;
 
             v2f vert (appdata v)
             {
@@ -374,23 +377,28 @@
 
                 uint w, h;
                 _AudioTexture.GetDimensions(w,h);
-                float val = 0.0;
                 if (w > 16)
                 {
-                    // val += get_value_circle(i.uv.xy, 128, 0);
-                    // val += get_value_circle_mirror(i.uv.xy, 128, 0);
-                    // val += get_value_circle_mirror_lr(i.uv.xy, 128);
-                    // val += get_value_lr_lines(i.uv.xy, 128);
-                    // val += get_value_spectrum_circle(i.uv.xy, 256);
-                    // val += get_value_spectrum_circle2(i.uv.xy);
-                    // val += get_value_spectrum_circle3(i.uv.xy);
+                    float val = 0.0;
 
-                    val += get_value_spectrum_fancy(i.uv.xy, 256, 4);
+                    switch (_Mode) {
+                        case 0: val = get_value_horiz_line(i.uv.xy, 256, 0); break;
+                        case 1: val = get_value_vert_line(i.uv.xy, 256, 0); break;
+                        case 2: val = get_value_lr_lines(i.uv.xy, 256); break;
+                        case 3: val = get_value_circle(i.uv.xy, 128, 0); break;
+                        case 4: val = get_value_circle_mirror(i.uv.xy, 128, 0); break;
+                        case 5: val = get_value_circle_mirror_lr(i.uv.xy, 128); break;
+                        case 6: val = get_value_xy_scatter(i.uv.xy, 512); break;
+                        case 7: val = get_value_xy_line(i.uv.xy, 512); break;
+                        case 8: val = get_value_spectrum_circle(i.uv.xy, 256); break;
+                        case 9: val = get_value_spectrum_circle3(i.uv.xy); break;
+                        case 10: val = get_value_spectrum_fancy(i.uv.xy, 256, 4); break;
+                    }
 
-                    // val += get_value_xy_scatter(i.uv.xy, 256);
-                    // val += get_value_xy_line(i.uv.xy, 512);
-                    // val += get_value_xy3(i.uv.xy);
-                    col = float4(1,1,1,1)*val;
+                    // TODO: Have each function return the color
+                    // pre-applied so they can choose where they would
+                    // like to apply first and second color
+                    col = _Color1*val;
                 }
 
                 // apply fog
