@@ -208,14 +208,14 @@
             float get_value_horiz_line(float2 xy, uint nsamples, uint lr)
             {
                 float pcm_val = PCMConditional(AudioLinkPCMLerp(frac(xy.x)*(nsamples-1)), lr);
-                float dist = (frac(xy.y) - 0.5) - pcm_val;
+                float dist = (frac(xy.y) - 0.5) - pcm_val*0.5;
                 return linefn(dist);
             }
 
             float get_value_vert_line(float2 xy, uint nsamples, uint lr)
             {
                 float4 pcm_val = PCMConditional(AudioLinkPCMLerp(frac(xy.y)*(nsamples-1)), lr);
-                float dist = (frac(xy.x) - 0.5) - pcm_val;
+                float dist = (frac(xy.x) - 0.5) - pcm_val*0.5;
                 return linefn(dist);
             }
 
@@ -232,7 +232,7 @@
                 float pcm_val = PCMConditional(
                     AudioLinkPCMLerpWrap(frac((angle+UNITY_PI)/(2*UNITY_PI))*(nsamples-1), nsamples-1),
                     lr);
-                float dist = (cdist - 0.5) - pcm_val*0.5;
+                float dist = (cdist - 0.5) - pcm_val*0.25;
                 return linefn(dist);
             }
 
@@ -244,7 +244,7 @@
                 float pcm_val = PCMConditional(
                     AudioLinkPCMLerpMirror(frac((angle+UNITY_PI)/(2*UNITY_PI))*(nsamples-1)*2, nsamples-1),
                     lr);
-                float dist = (cdist - 0.5) - pcm_val*0.5;
+                float dist = (cdist - 0.5) - pcm_val*0.25;
                 return linefn(dist);
             }
 
@@ -257,7 +257,7 @@
 
                 float pcm_val = AudioLinkPCMLerpMirrorLR(index, (nsamples-1));
 
-                float dist = (cdist - 0.5) - pcm_val*0.5;
+                float dist = (cdist - 0.5) - pcm_val*0.25;
                 return linefn(dist);
             }
 
@@ -287,6 +287,7 @@
                 float2 cpos = (frac(xy) - float2(0.5,0.5))*2;
                 float cdist = length(cpos);
                 float angle = atan2(cpos.x, cpos.y);
+
                 float index = (angle < 0) ? (-angle)/(UNITY_PI)*255 : (angle)/(UNITY_PI)*255;
                 float4 dft_val = AudioLinkDFTLerp(index);
 
