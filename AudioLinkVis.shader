@@ -509,7 +509,7 @@ Shader "Xantoz/AudioLinkVis"
                 return linefn(dist);
             }
 
-            v2f vert (appdata v)
+            v2f vert(appdata v)
             {
                 v2f o;
                 o.vertex = UnityObjectToClipPos(v.vertex);
