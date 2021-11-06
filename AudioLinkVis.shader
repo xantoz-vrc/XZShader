@@ -21,16 +21,38 @@ Shader "Xantoz/AudioLinkVis"
     Properties
     {
         _ST ("UV tiling and offset", Vector) = (1,1,0,0)
-
+        
         [HDR]_Color1 ("Color 1", Color) = (1,1,1,1)
         [HDR]_Color2 ("Color 2", Color) = (1,1,1,1)
-        // [Enum(PCM_Horizontal,0, PCM_Vertical,1, PCM_LR,2, PCM_Circle,3, PCM_Circle_Mirror,4, PCM_Circle_LR,5, PCM_XY_Scatter,6, PCM_XY_Line,7, Spectrum_Circle,8, Spectrum_Circle_Mirror,9, Spectrum_Ribbon,10)] _Mode("Mode", Int) = 0
-        [Enum(PCM_Horizontal,0,  PCM_LR,2, PCM_Circle,3, PCM_Circle_LR,5, PCM_XY_Line,7, Spectrum_Ribbon,10)] _Mode("Mode", Int) = 0
+        [Enum(PCM_Horizontal,0, PCM_Vertical,1, PCM_LR,2, PCM_Circle,3, PCM_Circle_Mirror,4, PCM_Circle_LR,5, PCM_XY_Scatter,6, PCM_XY_Line,7, Spectrum_Circle,8, Spectrum_Circle_Mirror,9, Spectrum_Ribbon,10)] _Mode("Mode", Int) = 0
+        // [Enum(PCM_Horizontal,0,  PCM_LR,2, PCM_Circle,3, PCM_Circle_LR,5, PCM_XY_Line,7, Spectrum_Ribbon,10)] _Mode("Mode", Int) = 0
+
+        _Chronotensity_ST_Band0 ("Chronotensity Bass", Vector) = (0,0,0,0)
+        _Chronotensity_ST_Band1 ("Chronotensity Low Mid", Vector) = (0,0,0,0)
+        _Chronotensity_ST_Band2 ("Chronotensity High Mid", Vector) = (0,0,0,0)
+        _Chronotensity_ST_Band3 ("Chronotensity Treble", Vector) = (0,0,0,0)
+        
+        _Chronotensity_Effect_Band0 ("Chronotensity Effect Bass", Int) = 1
+        _Chronotensity_Effect_Band1 ("Chronotensity Effect Low Mid", Int) = 1
+        _Chronotensity_Effect_Band2 ("Chronotensity Effect High Mid", Int) = 1
+        _Chronotensity_Effect_Band3 ("Chronotensity Effect Treble", Int) = 1
+
+        // When the tiling value goes above these we will wrap around
+        // and start shrinking back to starting point again using our
+        // custom fmirror function (see below)
+        _Chronotensity_Tiling_Wrap_U ("Chronotensity Tiling Wrap U", Float) = 10.0
+        _Chronotensity_Tiling_Wrap_V ("Chronotensity Tiling Wrap V", Float) = 10.0
+
+        // Added so we can have a nice slider in ShaderFes 2021 (Normally you would just modify each of _Chronotensity_ST_BandX)
+        _Chronotensity_Tiling_Scale ("Chronotensity Tiling Scale (ShaderFes 2021)", Range(0.0, 10.0)) = 0.0
+        _Chronotensity_Offset_Scale ("Chronotensity Offset Scale (ShaderFes 2021)", Range(0.0, 10.0)) = 0.0
+        _Chronotensity_Scale ("Chronotensity Scale (ShaderFes 2021)", Range(0.0, 1.0)) = 0.0   // This one affects the values as theycome out of AudioLink
+        // Also added so we can have a nice slider in ShaderFes 2021 (normally you would just modify _ST)
+        _Tiling_Scale ("UV Tiling scale (ShaderFes 2021)", Range(0.0, 10.0)) = 1.0
     }
     SubShader
     {
         Tags { "Queue"="Transparent" "RenderType"="Transparent" "IgnoreProjector"="True" }
-        //Tags { "RenderType"="Opaque" }
         LOD 100
 
         Pass
@@ -62,18 +84,30 @@ Shader "Xantoz/AudioLinkVis"
             float4 _ST;
             Texture2D<float4> _AudioTexture;
 
+            float4 _Chronotensity_ST_Band0;
+            float4 _Chronotensity_ST_Band1;
+            float4 _Chronotensity_ST_Band2;
+            float4 _Chronotensity_ST_Band3;
+            float _Chronotensity_Effect_Band0;
+            float _Chronotensity_Effect_Band1;
+            float _Chronotensity_Effect_Band2;
+            float _Chronotensity_Effect_Band3;
+
+            float _Chronotensity_Tiling_Wrap_U;
+            float _Chronotensity_Tiling_Wrap_V;
+
+            float _Chronotensity_Tiling_Scale;
+            float _Chronotensity_Offset_Scale;
+            float _Chronotensity_Scale;
+            float _Tiling_Scale;
+
             float4 _Color1;
             float4 _Color2;
             int _Mode;
 
-            v2f vert (appdata v)
-            {
-                v2f o;
-                o.vertex = UnityObjectToClipPos(v.vertex);
-                o.uv = v.uv*_ST.xy + _ST.zw;
-                UNITY_TRANSFER_FOG(o,o.vertex);
-                return o;
-            }
+            #define ALPASS_DFT            uint2(0,4)   //Size: 128, 2
+            #define ALPASS_WAVEFORM       uint2(0,6)   //Size: 128, 16
+            #define ALPASS_CHRONOTENSITY  uint2(16,28) //Size: 8, 4
 
             #define AUDIOLINK_WIDTH 128
 
@@ -89,6 +123,17 @@ Shader "Xantoz/AudioLinkVis"
             float4 AudioLinkData(uint2 xycoord)
             { 
                 return _AudioTexture[uint2(xycoord.x, xycoord.y)]; 
+            }
+
+            uint AudioLinkDecodeDataAsUInt(uint2 indexloc)
+            {
+                uint4 rpx = AudioLinkData(indexloc);
+                return rpx.r + rpx.g*1024 + rpx.b * 1048576 + rpx.a * 1073741824;
+            }
+
+            uint AudioLinkGetChronotensity(uint effect, uint band)
+            {
+                return AudioLinkDecodeDataAsUInt(ALPASS_CHRONOTENSITY + uint2(effect, band));
             }
 
             float4 AudioLinkLerp(float2 xy)
@@ -126,6 +171,12 @@ Shader "Xantoz/AudioLinkVis"
             {
                 float x_wrap = mod(x, wrap*2);
                 return (x_wrap > wrap) ? (wrap*2 - x_wrap) : x_wrap;
+            }
+
+            float2 f2mirror(float2 x, float2 wrap)
+            {
+                // TODO: this could probably be optimized to use vector operations
+                return float2(fmirror(x[0], wrap[0]), fmirror(x[1], wrap[1]));
             }
 
             float4 AudioLinkLerpMultilineMirror(float2 xy, float wrap)
@@ -373,6 +424,49 @@ Shader "Xantoz/AudioLinkVis"
                 }
 
                 return linefn(dist);
+            }
+
+            v2f vert (appdata v)
+            {
+                v2f o;
+                o.vertex = UnityObjectToClipPos(v.vertex);
+                float chronotensity_band[4] = {
+                    // TODO: Maybe these need to loop every once in a while to avoid instability.
+                    AudioLinkGetChronotensity(_Chronotensity_Effect_Band0, 0)/1000000.0, 
+                    AudioLinkGetChronotensity(_Chronotensity_Effect_Band1, 1)/1000000.0, 
+                    AudioLinkGetChronotensity(_Chronotensity_Effect_Band2, 2)/1000000.0, 
+                    AudioLinkGetChronotensity(_Chronotensity_Effect_Band3, 3)/1000000.0
+                };
+                float4 chronotensity_ST_band[4] = {
+                    _Chronotensity_ST_Band0,
+                    _Chronotensity_ST_Band1,
+                    _Chronotensity_ST_Band2,
+                    _Chronotensity_ST_Band3
+                };
+                for (uint i = 0; i < 4; ++i) {
+                    chronotensity_band[i] *= _Chronotensity_Scale;
+                    chronotensity_ST_band[i].xy *= _Chronotensity_Tiling_Scale;
+                    chronotensity_ST_band[i].zw *= _Chronotensity_Offset_Scale;
+                }
+                float4 chronotensity_ST;
+                chronotensity_ST.xy = f2mirror(
+                    chronotensity_band[0]*chronotensity_ST_band[0].xy +
+                    chronotensity_band[1]*chronotensity_ST_band[1].xy +
+                    chronotensity_band[2]*chronotensity_ST_band[2].xy +
+                    chronotensity_band[3]*chronotensity_ST_band[3].xy,
+                    float2(_Chronotensity_Tiling_Wrap_U, _Chronotensity_Tiling_Wrap_V));
+                chronotensity_ST.zw = frac(
+                    chronotensity_band[0]*chronotensity_ST_band[0].zw +
+                    chronotensity_band[1]*chronotensity_ST_band[1].zw +
+                    chronotensity_band[2]*chronotensity_ST_band[2].zw +
+                    chronotensity_band[3]*chronotensity_ST_band[3].zw);
+
+
+                float4 new_ST = _ST * float4(_Tiling_Scale, _Tiling_Scale, 1, 1) + chronotensity_ST;
+                // o.uv = v.uv*new_ST.xy + new_ST.zw;
+                o.uv = (v.uv - float2(0.5, 0.5))*new_ST.xy + float2(0.5, 0.5) + new_ST.zw;
+                UNITY_TRANSFER_FOG(o,o.vertex);
+                return o;
             }
 
             float4 frag(v2f i) : SV_Target
