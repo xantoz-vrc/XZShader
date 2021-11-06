@@ -24,7 +24,7 @@ Shader "Xantoz/AudioLinkVis"
         
         [HDR]_Color1 ("Color 1", Color) = (1,1,1,1)
         [HDR]_Color2 ("Color 2", Color) = (1,1,1,1)
-        [Enum(PCM_Horizontal,0, PCM_Vertical,1, PCM_LR,2, PCM_Circle,3, PCM_Circle_Mirror,4, PCM_Circle_LR,5, PCM_XY_Scatter,6, PCM_XY_Line,7, Spectrum_Circle,8, Spectrum_Circle_Mirror,9, Spectrum_Ribbon,10, Auto,11)] _Mode("Mode", Int) = 0
+        [Enum(PCM_Horizontal,0, PCM_Vertical,1, PCM_LR,2, PCM_Circle,3, PCM_Circle_Mirror,4, PCM_Circle_LR,5, PCM_XY_Scatter,6, PCM_XY_Line,7, PCM_Ribbon,8, Spectrum_Circle_Mirror,9, Spectrum_Ribbon,10, Auto,11)] _Mode("Mode", Int) = 0
         // [Enum(PCM_Horizontal,0,  PCM_LR,2, PCM_Circle,3, PCM_Circle_LR,5, PCM_XY_Line,7, Spectrum_Ribbon,10)] _Mode("Mode", Int) = 0
 
         [HDR]_Color_Mul_Band0 ("Color Bass", Color) = (0,0,0,0)
@@ -441,6 +441,44 @@ Shader "Xantoz/AudioLinkVis"
                 return val*0.6;
             }
 
+            float get_value_pcm_fancy(float2 xy, uint nsamples, uint bin)
+            {
+                float2 cpos = (frac(xy) - float2(0.5,0.5))*2;
+                float cdist = length(cpos);
+                float angle = atan2(cpos.x, cpos.y);
+                float index = ((angle)/(2*UNITY_PI))*nsamples;
+
+                // Quantize our index. Get the angles out, then figure out what xy coords we will have
+                float index_1 = floor(index/bin)*bin;
+                float index_2 = ceil(index/bin)*bin;
+
+                // calculate the angles backwards from the indices;
+                float angle_1 = (index_1/nsamples)*(2*UNITY_PI);
+                float angle_2 = (index_2/nsamples)*(2*UNITY_PI);
+                float2 sc1 = float2(sin(angle_1), cos(angle_1));
+                float2 sc2 = float2(sin(angle_2), cos(angle_2));
+
+                float2 pcm_1 = PCMToLR(AudioLinkPCMData(mod(index_1, nsamples - (nsamples % bin))))*0.2;
+                float2 pcm_2 = PCMToLR(AudioLinkPCMData(mod(index_2, nsamples - (nsamples % bin))))*0.2;
+
+                float r1 = clamp(pcm_1.x + 0.75, 0.0, 1.0);
+                float r2 = clamp(pcm_2.x + 0.75, 0.0, 1.0);
+                float r3 = clamp(0.5 - pcm_1.y, 0.0, 1.0);
+                float r4 = clamp(0.5 - pcm_2.y, 0.0, 1.0);
+                
+                float2 p1 = r1*sc1;
+                float2 p2 = r2*sc2;
+                float2 p3 = r3*sc1;
+                float2 p4 = r4*sc2;
+
+                float val = 0.0;
+                val += linefn(dist_to_line(cpos, p1, p2));
+                val += linefn(dist_to_line(cpos, p3, p4));
+                val += linefn(dist_to_line(cpos, p1, p3));
+                val += linefn(dist_to_line(cpos, p2, p4));
+                return val*0.6;
+            }
+
             float get_value_xy_scatter(float2 xy, uint nsamples)
             {
                 float2 cpos = (frac(xy) - float2(0.5, 0.5))*2;
@@ -540,7 +578,7 @@ Shader "Xantoz/AudioLinkVis"
                     case 5: val = get_value_circle_mirror_lr(xy, 128); break;
                     case 6: val = get_value_xy_scatter(xy, 512); break;
                     case 7: val = get_value_xy_line(xy, 512); break;
-                    case 8: val = get_value_spectrum_circle(xy, 256); break;
+                    case 8: val = get_value_pcm_fancy(xy, 1024, 8); break;
                     case 9: val = get_value_spectrum_circle_mirror(xy); break;
                     case 10: val = get_value_spectrum_fancy(xy, 256, 4); break;
                 }
