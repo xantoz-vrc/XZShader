@@ -24,7 +24,7 @@ Shader "Xantoz/AudioLinkVis"
         
         [HDR]_Color1 ("Color 1", Color) = (1,1,1,1)
         [HDR]_Color2 ("Color 2", Color) = (1,1,1,1)
-        [Enum(PCM_Horizontal,0, PCM_Vertical,1, PCM_LR,2, PCM_Circle,3, PCM_Circle_Mirror,4, PCM_Circle_LR,5, PCM_XY_Scatter,6, PCM_XY_Line,7, Spectrum_Circle,8, Spectrum_Circle_Mirror,9, Spectrum_Ribbon,10)] _Mode("Mode", Int) = 0
+        [Enum(PCM_Horizontal,0, PCM_Vertical,1, PCM_LR,2, PCM_Circle,3, PCM_Circle_Mirror,4, PCM_Circle_LR,5, PCM_XY_Scatter,6, PCM_XY_Line,7, Spectrum_Circle,8, Spectrum_Circle_Mirror,9, Spectrum_Ribbon,10, Auto,11)] _Mode("Mode", Int) = 0
         // [Enum(PCM_Horizontal,0,  PCM_LR,2, PCM_Circle,3, PCM_Circle_LR,5, PCM_XY_Line,7, Spectrum_Ribbon,10)] _Mode("Mode", Int) = 0
 
         [HDR]_Color_Mul_Band0 ("Color Bass", Color) = (0,0,0,0)
@@ -283,6 +283,33 @@ Shader "Xantoz/AudioLinkVis"
                     frac(i));
             }
 
+            // From: https://stackoverflow.com/questions/5149544/can-i-generate-a-random-number-inside-a-pixel-shader
+            float random(float2 p)
+            {
+                // We need irrationals for pseudo randomness.
+                // Most (all?) known transcendental numbers will (generally) work.
+                const float2 r = float2(
+                    23.1406926327792690,  // e^pi (Gelfond's constant)
+                    2.6651441426902251); // 2^sqrt(2) (Gelfond–Schneider constant)
+                return frac(cos(mod(123456789.0, 1e-7 + 256.0 * dot(p,r))));  
+            }
+
+            // A random value that should be the same for a few seconds or so.
+            // TODO: Write fallback version using Time_T (might be better: this isn't the most lightweight thing to be calling each pixel)
+            float get_rarely_changing_random()
+            {
+                // Get a seed that changes very rarely by getting an int value
+                // out of chronotensity that very rarely increments. Why
+                // chronotensity? That way when we switch mode is also somewhat
+                // random, and also by accident it might be correlated to the
+                // music.
+                uint2 seed = uint2(
+                    AudioLinkGetChronotensity(5, 0) + AudioLinkGetChronotensity(2, 2),
+                    AudioLinkGetChronotensity(0, 1) + AudioLinkGetChronotensity(5, 3))/2000000.0;
+
+                return random(seed);
+            }
+
             // --- distance to line segment with caps (From: https://shadertoyunofficial.wordpress.com/2019/01/02/programming-tricks-in-shadertoy-glsl/)
             float dist_to_line(float2 p, float2 a, float2 b)
             {
@@ -450,6 +477,17 @@ Shader "Xantoz/AudioLinkVis"
 
                 float4 chronotensity_ST = float4(0,0,0,0);
                 if (AudioLinkIsAvailable()) {
+
+                    float chronotensity_scale = _Chronotensity_Scale;
+                    // In auto mode, in addition to switching visualization mode, we also randomly switch chronotensity on and off
+                    if (_Mode > 10) {
+                        // We need to pass the gotten number again into the random function to
+                        // make the current visualization and the decision on whether to use
+                        // chronotensity scrolling be non-correlated
+                        float seed = get_rarely_changing_random();
+                        chronotensity_scale = (random(float2(seed, seed)) > 0.5) ? 1.0 : 0.0;
+                    }
+
                     float chronotensity_band[4] = {
                         // TODO: Maybe these need to loop every once in a while to avoid instability.
                         AudioLinkGetChronotensity(_Chronotensity_Effect_Band0, 0)/1000000.0, 
@@ -464,7 +502,7 @@ Shader "Xantoz/AudioLinkVis"
                         _Chronotensity_ST_Band3
                     };
                     for (uint i = 0; i < 4; ++i) {
-                        chronotensity_band[i] *= _Chronotensity_Scale;
+                        chronotensity_band[i] *= chronotensity_scale;
                         chronotensity_ST_band[i].xy *= _Chronotensity_Tiling_Scale;
                         chronotensity_ST_band[i].zw *= _Chronotensity_Offset_Scale;
                     }
@@ -523,13 +561,24 @@ Shader "Xantoz/AudioLinkVis"
                 // place as well?
                 return (_Color1 + _Color2*al_color_mult)*val;
             }
+ 
+            float4 get_color_auto(float2 xy)
+            {
+                // Get random number and convert to an integer between 0 and 10
+                uint mode = ceil(get_rarely_changing_random()*10.0);
+                return get_color(mode, xy);
+            }
 
             float4 frag(v2f i) : SV_Target
             {
                 float4 col = float4(0,0,0,0);
 
                 if (AudioLinkIsAvailable()) {
-                    col = get_color(_Mode, i.uv.xy);
+                    if (_Mode > 10) {
+                        col = get_color_auto(i.uv.xy);
+                    } else {
+                        col = get_color(_Mode, i.uv.xy);
+                    }
                 }
 
                 // apply fog
