@@ -524,7 +524,7 @@ Shader "Xantoz/AudioLinkVis"
                         // make the current visualization and the decision on whether to use
                         // chronotensity scrolling be non-correlated
                         float seed = get_rarely_changing_random();
-                        chronotensity_scale = (random(float2(seed, seed)) > 0.5) ? 1.0 : 0.0;
+                        chronotensity_scale = (random(float2(seed, seed)) > 0.4) ? 1.0 : 0.0;
                     }
 
                     float chronotensity_band[4] = {
