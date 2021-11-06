@@ -53,7 +53,7 @@ Shader "Xantoz/AudioLinkVis"
         _Chronotensity_Offset_Scale ("Chronotensity Offset Scale (ShaderFes 2021)", Range(0.0, 10.0)) = 0.0
         _Chronotensity_Scale ("Chronotensity Scale (ShaderFes 2021)", Range(0.0, 1.0)) = 0.0   // This one affects the values as theycome out of AudioLink
         // Also added so we can have a nice slider in ShaderFes 2021 (normally you would just modify _ST)
-        _Tiling_Scale ("UV Tiling scale (ShaderFes 2021)", Range(0.0, 10.0)) = 1.0
+        _Tiling_Scale ("UV Tiling scale (ShaderFes 2021)", Range(0.1, 10.0)) = 1.0
     }
     SubShader
     {
