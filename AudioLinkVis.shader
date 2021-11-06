@@ -576,8 +576,8 @@ Shader "Xantoz/AudioLinkVis"
                     case 3: val = get_value_circle(xy, 128, 0); break;
                     case 4: val = get_value_circle_mirror(xy, 128, 0); break;
                     case 5: val = get_value_circle_mirror_lr(xy, 128); break;
-                    case 6: val = get_value_xy_scatter(xy, 512); break;
-                    case 7: val = get_value_xy_line(xy, 512); break;
+                    case 6: val = get_value_xy_scatter(xy, 256); break;
+                    case 7: val = get_value_xy_line(xy, 384); break;
                     case 8: val = get_value_pcm_fancy(xy, 1024, 8); break;
                     case 9: val = get_value_spectrum_circle_mirror(xy); break;
                     case 10: val = get_value_spectrum_fancy(xy, 256, 4); break;
