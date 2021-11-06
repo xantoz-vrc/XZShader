@@ -114,6 +114,7 @@ Shader "Xantoz/AudioLinkVis"
             float4 _Color1;
             float4 _Color2;
             int _Mode;
+            #define NUMBER_OF_MODES 10
 
             #define ALPASS_DFT            uint2(0,4)   //Size: 128, 2
             #define ALPASS_WAVEFORM       uint2(0,6)   //Size: 128, 16
@@ -304,7 +305,7 @@ Shader "Xantoz/AudioLinkVis"
                 // random, and also by accident it might be correlated to the
                 // music.
                 uint2 seed = uint2(
-                    AudioLinkGetChronotensity(5, 0) + AudioLinkGetChronotensity(2, 2),
+                    AudioLinkGetChronotensity(1, 0) + AudioLinkGetChronotensity(2, 2),
                     AudioLinkGetChronotensity(0, 1) + AudioLinkGetChronotensity(5, 3))/2000000.0;
 
                 return random(seed);
@@ -480,7 +481,7 @@ Shader "Xantoz/AudioLinkVis"
 
                     float chronotensity_scale = _Chronotensity_Scale;
                     // In auto mode, in addition to switching visualization mode, we also randomly switch chronotensity on and off
-                    if (_Mode > 10) {
+                    if (_Mode > NUMBER_OF_MODES) {
                         // We need to pass the gotten number again into the random function to
                         // make the current visualization and the decision on whether to use
                         // chronotensity scrolling be non-correlated
@@ -565,7 +566,7 @@ Shader "Xantoz/AudioLinkVis"
             float4 get_color_auto(float2 xy)
             {
                 // Get random number and convert to an integer between 0 and 10
-                uint mode = ceil(get_rarely_changing_random()*10.0);
+                uint mode = ceil(get_rarely_changing_random()*NUMBER_OF_MODES);
                 return get_color(mode, xy);
             }
 
@@ -574,7 +575,7 @@ Shader "Xantoz/AudioLinkVis"
                 float4 col = float4(0,0,0,0);
 
                 if (AudioLinkIsAvailable()) {
-                    if (_Mode > 10) {
+                    if (_Mode > NUMBER_OF_MODES) {
                         col = get_color_auto(i.uv.xy);
                     } else {
                         col = get_color(_Mode, i.uv.xy);
