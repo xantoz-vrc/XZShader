@@ -27,6 +27,11 @@ Shader "Xantoz/AudioLinkVis"
         [Enum(PCM_Horizontal,0, PCM_Vertical,1, PCM_LR,2, PCM_Circle,3, PCM_Circle_Mirror,4, PCM_Circle_LR,5, PCM_XY_Scatter,6, PCM_XY_Line,7, Spectrum_Circle,8, Spectrum_Circle_Mirror,9, Spectrum_Ribbon,10)] _Mode("Mode", Int) = 0
         // [Enum(PCM_Horizontal,0,  PCM_LR,2, PCM_Circle,3, PCM_Circle_LR,5, PCM_XY_Line,7, Spectrum_Ribbon,10)] _Mode("Mode", Int) = 0
 
+        [HDR]_Color_Mul_Band0 ("Color Bass", Color) = (0,0,0,0)
+        [HDR]_Color_Mul_Band1 ("Color Low Mid", Color) = (0,0,0,0)
+        [HDR]_Color_Mul_Band2 ("Color High Mid", Color) = (0,0,0,0)
+        [HDR]_Color_Mul_Band3 ("Color Treble", Color) = (0,0,0,0)
+        
         _Chronotensity_ST_Band0 ("Chronotensity Bass", Vector) = (0,0,0,0)
         _Chronotensity_ST_Band1 ("Chronotensity Low Mid", Vector) = (0,0,0,0)
         _Chronotensity_ST_Band2 ("Chronotensity High Mid", Vector) = (0,0,0,0)
@@ -83,6 +88,11 @@ Shader "Xantoz/AudioLinkVis"
 
             float4 _ST;
             Texture2D<float4> _AudioTexture;
+
+            float4 _Color_Mul_Band0;
+            float4 _Color_Mul_Band1;
+            float4 _Color_Mul_Band2;
+            float4 _Color_Mul_Band3;
 
             float4 _Chronotensity_ST_Band0;
             float4 _Chronotensity_ST_Band1;
@@ -469,34 +479,50 @@ Shader "Xantoz/AudioLinkVis"
                 return o;
             }
 
+            float4 get_color(uint mode, float2 xy)
+            {
+                float val = 0.0;
+
+                switch (mode) {
+                    case 0: val = get_value_horiz_line(xy, 256, 0); break;
+                    case 1: val = get_value_vert_line(xy, 256, 0); break;
+                    case 2: val = get_value_lr_lines(xy, 256); break;
+                    case 3: val = get_value_circle(xy, 128, 0); break;
+                    case 4: val = get_value_circle_mirror(xy, 128, 0); break;
+                    case 5: val = get_value_circle_mirror_lr(xy, 128); break;
+                    case 6: val = get_value_xy_scatter(xy, 512); break;
+                    case 7: val = get_value_xy_line(xy, 512); break;
+                    case 8: val = get_value_spectrum_circle(xy, 256); break;
+                    case 9: val = get_value_spectrum_circle_mirror(xy); break;
+                    case 10: val = get_value_spectrum_fancy(xy, 256, 4); break;
+                }
+
+                float al_beat[4] = {
+                    AudioLinkData(uint2(0,0)).r,
+                    AudioLinkData(uint2(0,1)).r,
+                    AudioLinkData(uint2(0,2)).r,
+                    AudioLinkData(uint2(0,3)).r
+                };
+                float4 al_color_mult =
+                _Color_Mul_Band0*al_beat[0] +
+                _Color_Mul_Band1*al_beat[1] +
+                _Color_Mul_Band2*al_beat[2] +
+                _Color_Mul_Band3*al_beat[3];
+
+                // TODO: Maybe each function should have a way to
+                // tell if they want a certain color in a certain
+                // place as well?
+                return (_Color1 + _Color2*al_color_mult)*val;
+            }
+
             float4 frag(v2f i) : SV_Target
             {
                 float4 col = float4(0,0,0,0);
 
                 uint w, h;
                 _AudioTexture.GetDimensions(w,h);
-                if (w > 16)
-                {
-                    float val = 0.0;
-
-                    switch (_Mode) {
-                        case 0: val = get_value_horiz_line(i.uv.xy, 256, 0); break;
-                        case 1: val = get_value_vert_line(i.uv.xy, 256, 0); break;
-                        case 2: val = get_value_lr_lines(i.uv.xy, 256); break;
-                        case 3: val = get_value_circle(i.uv.xy, 128, 0); break;
-                        case 4: val = get_value_circle_mirror(i.uv.xy, 128, 0); break;
-                        case 5: val = get_value_circle_mirror_lr(i.uv.xy, 128); break;
-                        case 6: val = get_value_xy_scatter(i.uv.xy, 512); break;
-                        case 7: val = get_value_xy_line(i.uv.xy, 512); break;
-                        case 8: val = get_value_spectrum_circle(i.uv.xy, 256); break;
-                        case 9: val = get_value_spectrum_circle_mirror(i.uv.xy); break;
-                        case 10: val = get_value_spectrum_fancy(i.uv.xy, 256, 4); break;
-                    }
-
-                    // TODO: Have each function return the color
-                    // pre-applied so they can choose where they would
-                    // like to apply first and second color
-                    col = _Color1*val;
+                if (w > 16) {
+                    col = get_color(_Mode, i.uv.xy);
                 }
 
                 // apply fog
