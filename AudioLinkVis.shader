@@ -324,7 +324,7 @@ Shader "Xantoz/AudioLinkVis"
             // TODO: Fix the above (might need changing what blending mode we use)
             float linefn(float a)
             {
-                return clamp((1.0-pow(0.1/abs(a), .1)), -200, 0);
+                return clamp((1.0-pow(0.1/abs(a), .1)), -2, 0);
             }
 
             float get_value_horiz_line(float2 xy, uint nsamples, uint lr)
