@@ -130,6 +130,13 @@ Shader "Xantoz/AudioLinkVis"
                 return x - y * floor(x/y);
             }
 
+            bool AudioLinkIsAvailable()
+            {
+                int width, height;
+                _AudioTexture.GetDimensions(width, height);
+                return width > 16;
+            }
+
             float4 AudioLinkData(uint2 xycoord)
             { 
                 return _AudioTexture[uint2(xycoord.x, xycoord.y)]; 
@@ -440,37 +447,39 @@ Shader "Xantoz/AudioLinkVis"
             {
                 v2f o;
                 o.vertex = UnityObjectToClipPos(v.vertex);
-                float chronotensity_band[4] = {
-                    // TODO: Maybe these need to loop every once in a while to avoid instability.
-                    AudioLinkGetChronotensity(_Chronotensity_Effect_Band0, 0)/1000000.0, 
-                    AudioLinkGetChronotensity(_Chronotensity_Effect_Band1, 1)/1000000.0, 
-                    AudioLinkGetChronotensity(_Chronotensity_Effect_Band2, 2)/1000000.0, 
-                    AudioLinkGetChronotensity(_Chronotensity_Effect_Band3, 3)/1000000.0
-                };
-                float4 chronotensity_ST_band[4] = {
-                    _Chronotensity_ST_Band0,
-                    _Chronotensity_ST_Band1,
-                    _Chronotensity_ST_Band2,
-                    _Chronotensity_ST_Band3
-                };
-                for (uint i = 0; i < 4; ++i) {
-                    chronotensity_band[i] *= _Chronotensity_Scale;
-                    chronotensity_ST_band[i].xy *= _Chronotensity_Tiling_Scale;
-                    chronotensity_ST_band[i].zw *= _Chronotensity_Offset_Scale;
-                }
-                float4 chronotensity_ST;
-                chronotensity_ST.xy = f2mirror(
-                    chronotensity_band[0]*chronotensity_ST_band[0].xy +
-                    chronotensity_band[1]*chronotensity_ST_band[1].xy +
-                    chronotensity_band[2]*chronotensity_ST_band[2].xy +
-                    chronotensity_band[3]*chronotensity_ST_band[3].xy,
-                    float2(_Chronotensity_Tiling_Wrap_U, _Chronotensity_Tiling_Wrap_V));
-                chronotensity_ST.zw = frac(
-                    chronotensity_band[0]*chronotensity_ST_band[0].zw +
-                    chronotensity_band[1]*chronotensity_ST_band[1].zw +
-                    chronotensity_band[2]*chronotensity_ST_band[2].zw +
-                    chronotensity_band[3]*chronotensity_ST_band[3].zw);
 
+                float4 chronotensity_ST = float4(0,0,0,0);
+                if (AudioLinkIsAvailable()) {
+                    float chronotensity_band[4] = {
+                        // TODO: Maybe these need to loop every once in a while to avoid instability.
+                        AudioLinkGetChronotensity(_Chronotensity_Effect_Band0, 0)/1000000.0, 
+                        AudioLinkGetChronotensity(_Chronotensity_Effect_Band1, 1)/1000000.0, 
+                        AudioLinkGetChronotensity(_Chronotensity_Effect_Band2, 2)/1000000.0, 
+                        AudioLinkGetChronotensity(_Chronotensity_Effect_Band3, 3)/1000000.0
+                    };
+                    float4 chronotensity_ST_band[4] = {
+                        _Chronotensity_ST_Band0,
+                        _Chronotensity_ST_Band1,
+                        _Chronotensity_ST_Band2,
+                        _Chronotensity_ST_Band3
+                    };
+                    for (uint i = 0; i < 4; ++i) {
+                        chronotensity_band[i] *= _Chronotensity_Scale;
+                        chronotensity_ST_band[i].xy *= _Chronotensity_Tiling_Scale;
+                        chronotensity_ST_band[i].zw *= _Chronotensity_Offset_Scale;
+                    }
+                    chronotensity_ST.xy = f2mirror(
+                        chronotensity_band[0]*chronotensity_ST_band[0].xy +
+                        chronotensity_band[1]*chronotensity_ST_band[1].xy +
+                        chronotensity_band[2]*chronotensity_ST_band[2].xy +
+                        chronotensity_band[3]*chronotensity_ST_band[3].xy,
+                        float2(_Chronotensity_Tiling_Wrap_U, _Chronotensity_Tiling_Wrap_V));
+                    chronotensity_ST.zw = frac(
+                        chronotensity_band[0]*chronotensity_ST_band[0].zw +
+                        chronotensity_band[1]*chronotensity_ST_band[1].zw +
+                        chronotensity_band[2]*chronotensity_ST_band[2].zw +
+                        chronotensity_band[3]*chronotensity_ST_band[3].zw);
+                }
 
                 float4 new_ST = _ST * float4(_Tiling_Scale, _Tiling_Scale, 1, 1) + chronotensity_ST;
                 // o.uv = v.uv*new_ST.xy + new_ST.zw;
@@ -519,9 +528,7 @@ Shader "Xantoz/AudioLinkVis"
             {
                 float4 col = float4(0,0,0,0);
 
-                uint w, h;
-                _AudioTexture.GetDimensions(w,h);
-                if (w > 16) {
+                if (AudioLinkIsAvailable()) {
                     col = get_color(_Mode, i.uv.xy);
                 }
 
