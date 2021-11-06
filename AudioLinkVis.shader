@@ -598,7 +598,10 @@ Shader "Xantoz/AudioLinkVis"
                 // TODO: Maybe each function should have a way to
                 // tell if they want a certain color in a certain
                 // place as well?
-                return (_Color1 + _Color2*al_color_mult)*val;
+
+                // return (_Color1 + _Color2*al_color_mult)*val;
+                // Emergency clamp added to temper any blinding flicker bugs that might be left.
+                return clamp((_Color1 + _Color2*al_color_mult)*val, -3.0, 0.0);
             }
  
             float4 get_color_auto(float2 xy)
