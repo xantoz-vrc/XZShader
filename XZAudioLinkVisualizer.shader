@@ -48,7 +48,7 @@ Shader "Xantoz/XZAudioLinkVisualizer"
         _Chronotensity_Tiling_Wrap_U ("Chronotensity Tiling Wrap U", Float) = 10.0
         _Chronotensity_Tiling_Wrap_V ("Chronotensity Tiling Wrap V", Float) = 10.0
 
-        _PCM_Scale ("PCM Scale", Range(0.1, 2.0)) = 1.0
+        _Amplitude_Scale ("Amplitude Scale", Range(0.1, 2.0)) = 1.0
 
         // Added so we can have a nice slider in ShaderFes 2021 (Normally you would just modify each of _Chronotensity_ST_BandX)
         _Chronotensity_Tiling_Scale ("Chronotensity Tiling Scale (ShaderFes 2021)", Range(0.0, 10.0)) = 0.0
@@ -108,7 +108,7 @@ Shader "Xantoz/XZAudioLinkVisualizer"
             float _Chronotensity_Tiling_Wrap_U;
             float _Chronotensity_Tiling_Wrap_V;
 
-            float _PCM_Scale;
+            float _Amplitude_Scale;
 
             float _Chronotensity_Tiling_Scale;
             float _Chronotensity_Offset_Scale;
@@ -212,23 +212,23 @@ Shader "Xantoz/XZAudioLinkVisualizer"
             // Index 0 to 255
             float4 AudioLinkDFTData(uint i)
             {
-                return AudioLinkDataMultiline(uint2(i, 4))*_PCM_Scale;
+                return AudioLinkDataMultiline(uint2(i, 4))*_Amplitude_Scale;
             }
 
             // Index 0 to 255
             float4 AudioLinkDFTLerp(float i)
             {
-                return AudioLinkLerpMultiline(float2(i, 4.0))*_PCM_Scale;
+                return AudioLinkLerpMultiline(float2(i, 4.0))*_Amplitude_Scale;
             }
 
             float4 AudioLinkDFTLerpWrap(float i, float wrap)
             {
-                return AudioLinkLerpMultilineWrap(float2(i, 4.0), wrap)*_PCM_Scale;
+                return AudioLinkLerpMultilineWrap(float2(i, 4.0), wrap)*_Amplitude_Scale;
             }
 
             float4 AudioLinkDFTLerpMirror(float i, float wrap)
             {
-                return AudioLinkLerpMultilineMirror(float2(i, 4.0), wrap)*_PCM_Scale;
+                return AudioLinkLerpMultilineMirror(float2(i, 4.0), wrap)*_Amplitude_Scale;
             }
 
             // Index 0 to 2047 when using .g
@@ -236,7 +236,7 @@ Shader "Xantoz/XZAudioLinkVisualizer"
             //       0 to 1022 when using .b
             float4 AudioLinkPCMData(uint i)
             {
-                return AudioLinkDataMultiline(uint2(i, 6))*_PCM_Scale;
+                return AudioLinkDataMultiline(uint2(i, 6))*_Amplitude_Scale;
             }
 
             // Index 0 to 2047 when using .g
@@ -244,17 +244,17 @@ Shader "Xantoz/XZAudioLinkVisualizer"
             //       0 to 1022 when using .b
             float4 AudioLinkPCMLerp(float i)
             {
-                return AudioLinkLerpMultiline(float2(i, 6.0))*_PCM_Scale;
+                return AudioLinkLerpMultiline(float2(i, 6.0))*_Amplitude_Scale;
             }
 
             float4 AudioLinkPCMLerpWrap(float i, float wrap)
             {
-                return AudioLinkLerpMultilineWrap(float2(i, 6.0), wrap)*_PCM_Scale;
+                return AudioLinkLerpMultilineWrap(float2(i, 6.0), wrap)*_Amplitude_Scale;
             }
 
             float4 AudioLinkPCMLerpMirror(float i, float wrap)
             {
-                return AudioLinkLerpMultilineMirror(float2(i, 6.0), wrap)*_PCM_Scale;
+                return AudioLinkLerpMultilineMirror(float2(i, 6.0), wrap)*_Amplitude_Scale;
             }
 
             // Pick one of:
