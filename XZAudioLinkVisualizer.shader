@@ -59,7 +59,7 @@ Shader "Xantoz/XZAudioLinkVisualizer"
     }
     SubShader
     {
-        Tags { "Queue"="Transparent" "RenderType"="Transparent" "IgnoreProjector"="True" }
+        Tags { "Queue"="Transparent" "RenderType"="Transparent" "IgnoreProjector"="True" "VRCFallback"="Hidden" }
         LOD 100
 
         Pass
