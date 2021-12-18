@@ -24,7 +24,8 @@ Shader "Xantoz/XZAudioLinkVisualizer"
         
         [HDR]_Color1 ("Color 1", Color) = (1,1,1,1)
         [HDR]_Color2 ("Color 2", Color) = (1,1,1,1)
-        [Enum(PCM_Horizontal,0, PCM_Vertical,1, PCM_LR,2, PCM_Circle,3, PCM_Circle_Mirror,4, PCM_Circle_LR,5, PCM_XY_Scatter,6, PCM_XY_Line,7, PCM_Ribbon,8, Spectrum_Circle_Mirror,9, Spectrum_Ribbon,10, Auto,11)] _Mode("Mode", Int) = 0
+        //[Enum(PCM_Horizontal,0, PCM_Vertical,1, PCM_LR,2, PCM_Circle,3, PCM_Circle_Mirror,4, PCM_Circle_LR,5, PCM_XY_Scatter,6, PCM_XY_Line,7, PCM_Ribbon,8, Spectrum_Circle_Mirror,9, Spectrum_Ribbon,10, Auto,11)] _Mode("Mode", Int) = 0
+        [Enum(XZAudioLinkVisualizerMode)] _Mode("Mode", Int) = 0
         // [Enum(PCM_Horizontal,0,  PCM_LR,2, PCM_Circle,3, PCM_Circle_LR,5, PCM_XY_Line,7, Spectrum_Ribbon,10)] _Mode("Mode", Int) = 0
 
         [HDR]_Color_Mul_Band0 ("Color Bass", Color) = (0,0,0,0)
