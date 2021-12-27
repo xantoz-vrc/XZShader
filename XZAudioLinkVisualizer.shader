@@ -27,6 +27,8 @@ Shader "Xantoz/XZAudioLinkVisualizer"
         _ST ("UV tiling and offset", Vector) = (1,1,0,0)
         _Tiling_Scale ("UV Tiling scale", Range(0.1, 10.0)) = 1.0 // First added so we could have a nice slider in ShaderFes 2021 (normally you could also just modify _ST)
 
+        _Rotation ("Rotation", Range(0,360)) = 0.0
+
         _Amplitude_Scale ("Amplitude Scale", Range(0.1, 2.0)) = 1.0  // Scale amplitude of PCM & DFT data in plots
         // Originally added so we can have a nice slider in ShaderFes 2021 (You could also just modify each of _Chronotensity_ST_BandX)
         _Chronotensity_Scale ("Chronotensity Scale (Toggle Chronotensity)", Range(0.0, 1.0)) = 0.0   // This one affects the values as they come out of AudioLink. Can be used to enable/disable chronotensity.
@@ -123,6 +125,8 @@ Shader "Xantoz/XZAudioLinkVisualizer"
             float4 _Color2;
             int _Mode;
             #define MAX_MODE 10
+
+            float _Rotation;
 
             #define ALPASS_DFT            uint2(0,4)   //Size: 128, 2
             #define ALPASS_WAVEFORM       uint2(0,6)   //Size: 128, 16
@@ -567,8 +571,14 @@ Shader "Xantoz/XZAudioLinkVisualizer"
                 }
 
                 float4 new_ST = _ST * float4(_Tiling_Scale, _Tiling_Scale, 1, 1) + chronotensity_ST;
-                // o.uv = v.uv*new_ST.xy + new_ST.zw;
-                o.uv = (v.uv - float2(0.5, 0.5))*new_ST.xy + float2(0.5, 0.5) + new_ST.zw;
+                float2 centered_uv = (v.uv - float2(0.5, 0.5))*new_ST.xy;
+
+                float sinX = sin(radians(_Rotation));
+                float cosX = cos(radians(_Rotation));
+                float sinY = sin(radians(_Rotation));
+                float2x2 rotationMatrix = float2x2(cosX, -sinX, sinY, cosX);
+                o.uv = mul(centered_uv, rotationMatrix) + float2(0.5, 0.5) + new_ST.zw;
+
                 UNITY_TRANSFER_FOG(o,o.vertex);
                 return o;
             }
