@@ -29,7 +29,7 @@ Shader "Xantoz/XZAudioLinkVisualizer"
 
         _Rotation ("Rotation", Range(-360,360)) = 0.0
 
-        _Amplitude_Scale ("Amplitude Scale", Range(0.1, 2.0)) = 1.0  // Scale amplitude of PCM & DFT data in plots
+        _Amplitude_Scale ("Amplitude Scale", Range(0.0, 2.0)) = 1.0  // Scale amplitude of PCM & DFT data in plots
 
         [Space(10)]
         [Header(Vignette)]
