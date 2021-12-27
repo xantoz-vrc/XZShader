@@ -31,7 +31,7 @@ Shader "Xantoz/XZAudioLinkVisualizer"
 
         _Amplitude_Scale ("Amplitude Scale", Range(0.1, 2.0)) = 1.0  // Scale amplitude of PCM & DFT data in plots
         // Originally added so we can have a nice slider in ShaderFes 2021 (You could also just modify each of _Chronotensity_ST_BandX)
-        _Chronotensity_Scale ("Chronotensity Scale (Toggle Chronotensity)", Range(0.0, 1.0)) = 0.0   // This one affects the values as they come out of AudioLink. Can be used to enable/disable chronotensity.
+        _Chronotensity_Scale ("Chronotensity Scale (Toggle Chronotensity)", Range(0.0, 1.0)) = 1.0   // This one affects the values as they come out of AudioLink. Can be used to enable/disable chronotensity.
 
 
         [Space(10)]
@@ -53,8 +53,8 @@ Shader "Xantoz/XZAudioLinkVisualizer"
         [Enum(AudioLinkChronotensityEnum)]_Chronotensity_Effect_Band3 ("Chronotensity Scroll Type, Treble", Int) = 1
         _Chronotensity_ST_Band3 ("Chronotensity Scroll, Treble", Vector) = (0,0,0,0)
 
-        _Chronotensity_Tiling_Scale ("Chronotensity Tiling Scale", Range(0.0, 10.0)) = 0.0
-        _Chronotensity_Offset_Scale ("Chronotensity Offset Scale", Range(0.0, 10.0)) = 0.0
+        _Chronotensity_Tiling_Scale ("Chronotensity Tiling Scale", Range(0.0, 10.0)) = 1.0
+        _Chronotensity_Offset_Scale ("Chronotensity Offset Scale", Range(0.0, 10.0)) = 1.0
 
         // When the tiling value goes above these we will wrap around
         // and start shrinking back to starting point again using our
