@@ -622,10 +622,10 @@ Shader "Xantoz/XZAudioLinkVisualizer"
                         chronotensity_band[3]*chronotensity_ST_band[3].zw);
 
                     float4 chronorot_band = float4(
-                        AudioLinkGetChronotensity(_ChronoRot_Effect_Band0, 0)/1000000.0,
-                        AudioLinkGetChronotensity(_ChronoRot_Effect_Band1, 1)/1000000.0,
-                        AudioLinkGetChronotensity(_ChronoRot_Effect_Band2, 2)/1000000.0,
-                        AudioLinkGetChronotensity(_ChronoRot_Effect_Band3, 3)/1000000.0
+                        _ChronoRot_Band0 * AudioLinkGetChronotensity(_ChronoRot_Effect_Band0, 0)/1000000.0,
+                        _ChronoRot_Band1 * AudioLinkGetChronotensity(_ChronoRot_Effect_Band1, 1)/1000000.0,
+                        _ChronoRot_Band2 * AudioLinkGetChronotensity(_ChronoRot_Effect_Band2, 2)/1000000.0,
+                        _ChronoRot_Band3 * AudioLinkGetChronotensity(_ChronoRot_Effect_Band3, 3)/1000000.0
                     );
                     chronorot = chronorot_scale * frac(dot(chronorot_band, float4(1,1,1,1))) * 360.0;
                 }
