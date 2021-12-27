@@ -572,13 +572,23 @@ Shader "Xantoz/XZAudioLinkVisualizer"
                 if (AudioLinkIsAvailable()) {
 
                     float chronotensity_scale = _Chronotensity_Scale;
+                    float chronorot_scale = _ChronoRot_Scale;
+
                     // In auto mode, in addition to switching visualization mode, we also randomly switch chronotensity on and off
                     if (_Mode > MAX_MODE) {
+                        float seed = get_rarely_changing_random();
+
                         // We need to pass the gotten number again into the random function to
                         // make the current visualization and the decision on whether to use
-                        // chronotensity scrolling be non-correlated
-                        float seed = get_rarely_changing_random();
-                        chronotensity_scale = (random(float2(seed, seed)) > 0.4) ? 1.0 : 0.0;
+                        // chronotensity scrolling be non-correlated.
+                        float random_scroll = random(float2(seed, seed));
+                        chronotensity_scale = (random_scroll > 0.4) ? 1.0 : 0.0;
+
+                        // Some more mixing up to decouple this
+                        float random_rot = random(float2(seed*seed, 2*seed));
+                        chronorot_scale = (random_rot > 0.666) ?  1.0 :
+                                          (random_rot > 0.333) ? -1.0 : 0.0;
+
                     }
 
                     float chronotensity_band[4] = {
@@ -611,8 +621,6 @@ Shader "Xantoz/XZAudioLinkVisualizer"
                         chronotensity_band[2]*chronotensity_ST_band[2].zw +
                         chronotensity_band[3]*chronotensity_ST_band[3].zw);
 
-                    // TODO: add a reversinng factor. maybe reverse rotation over a few frames in some cases
-                    float chronorot_scale = _ChronoRot_Scale;
                     float4 chronorot_band = float4(
                         AudioLinkGetChronotensity(_ChronoRot_Effect_Band0, 0)/1000000.0,
                         AudioLinkGetChronotensity(_ChronoRot_Effect_Band1, 1)/1000000.0,
