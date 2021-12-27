@@ -30,9 +30,6 @@ Shader "Xantoz/XZAudioLinkVisualizer"
         _Rotation ("Rotation", Range(-360,360)) = 0.0
 
         _Amplitude_Scale ("Amplitude Scale", Range(0.1, 2.0)) = 1.0  // Scale amplitude of PCM & DFT data in plots
-        // Originally added so we can have a nice slider in ShaderFes 2021 (You could also just modify each of _Chronotensity_ST_BandX)
-        _Chronotensity_Scale ("Chronotensity Scale (Toggle Chronotensity)", Range(0.0, 1.0)) = 1.0   // This one affects the values as they come out of AudioLink. Can be used to enable/disable chronotensity.
-
 
         [Space(10)]
         [Header(Vignette)]
@@ -52,6 +49,9 @@ Shader "Xantoz/XZAudioLinkVisualizer"
 
         [Space(10)]
         [Header(Chronotensity Scroll (Tiling and Offset))]
+        // This one affects the values as they come out of AudioLink. Can be used to toggle chronotensity scroll.
+        _Chronotensity_Scale ("Chronotensity Scroll Scale (Toggle Scroll)", Range(0.0, 1.0)) = 1.0
+
         [Enum(AudioLinkChronotensityEnum)]_Chronotensity_Effect_Band0 ("Chronotensity Scroll Type, Bass", Int) = 1
         _Chronotensity_ST_Band0 ("Chronotensity Scroll, Bass", Vector) = (0,0,0,0)
         [Enum(AudioLinkChronotensityEnum)]_Chronotensity_Effect_Band1 ("Chronotensity Scroll Type, Low Mid", Int) = 1
@@ -60,6 +60,7 @@ Shader "Xantoz/XZAudioLinkVisualizer"
         _Chronotensity_ST_Band2 ("Chronotensity Scroll, High Mid", Vector) = (0,0,0,0)
         [Enum(AudioLinkChronotensityEnum)]_Chronotensity_Effect_Band3 ("Chronotensity Scroll Type, Treble", Int) = 1
         _Chronotensity_ST_Band3 ("Chronotensity Scroll, Treble", Vector) = (0,0,0,0)
+
 
         _Chronotensity_Tiling_Scale ("Chronotensity Tiling Scale", Range(0.0, 10.0)) = 1.0
         _Chronotensity_Offset_Scale ("Chronotensity Offset Scale", Range(0.0, 10.0)) = 1.0
@@ -611,14 +612,14 @@ Shader "Xantoz/XZAudioLinkVisualizer"
                         chronotensity_band[3]*chronotensity_ST_band[3].zw);
 
                     // TODO: add a reversinng factor. maybe reverse rotation over a few frames in some cases
-                    float chronorot_scale = _Chronotensity_Scale;
-                    float4 chronorot_band = chronotensity_scale * chronorot_scale * float4(
+                    float chronorot_scale = _ChronoRot_Scale;
+                    float4 chronorot_band = float4(
                         AudioLinkGetChronotensity(_ChronoRot_Effect_Band0, 0)/1000000.0,
                         AudioLinkGetChronotensity(_ChronoRot_Effect_Band1, 1)/1000000.0,
                         AudioLinkGetChronotensity(_ChronoRot_Effect_Band2, 2)/1000000.0,
                         AudioLinkGetChronotensity(_ChronoRot_Effect_Band3, 3)/1000000.0
                     );
-                    chronorot = dot(chronorot_band, float4(360,360,360,360));
+                    chronorot = chronorot_scale * frac(dot(chronorot_band, float4(1,1,1,1))) * 360.0;
                 }
 
                 float4 new_ST = _ST * float4(_Tiling_Scale, _Tiling_Scale, 1, 1) + chronotensity_ST;
