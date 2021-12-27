@@ -20,43 +20,46 @@ Shader "Xantoz/XZAudioLinkVisualizer"
 {
     Properties
     {
-        _ST ("UV tiling and offset", Vector) = (1,1,0,0)
-        
+        [Header(Basic Setings)]
+        [Enum(XZAudioLinkVisualizerMode)] _Mode("Visualizer Mode", Int) = 0
         [HDR]_Color1 ("Color 1 (Base Color)", Color) = (1,1,1,1)
-        [HDR]_Color2 ("Color 2 (Blink Base Color)", Color) = (1,1,1,1)
-        //[Enum(PCM_Horizontal,0, PCM_Vertical,1, PCM_LR,2, PCM_Circle,3, PCM_Circle_Mirror,4, PCM_Circle_LR,5, PCM_XY_Scatter,6, PCM_XY_Line,7, PCM_Ribbon,8, Spectrum_Circle_Mirror,9, Spectrum_Ribbon,10, Auto,11)] _Mode("Mode", Int) = 0
-        [Enum(XZAudioLinkVisualizerMode)] _Mode("Mode", Int) = 0
-        // [Enum(PCM_Horizontal,0,  PCM_LR,2, PCM_Circle,3, PCM_Circle_LR,5, PCM_XY_Line,7, Spectrum_Ribbon,10)] _Mode("Mode", Int) = 0
 
+        _ST ("UV tiling and offset", Vector) = (1,1,0,0)
+        _Tiling_Scale ("UV Tiling scale", Range(0.1, 10.0)) = 1.0 // First added so we could have a nice slider in ShaderFes 2021 (normally you could also just modify _ST)
+
+        _Amplitude_Scale ("Amplitude Scale", Range(0.1, 2.0)) = 1.0  // Scale amplitude of PCM & DFT data in plots
+
+
+        [Space(10)]
+        [Header(Color Blink)]
+        [HDR]_Color2 ("Color 2 (Blink Base Color)", Color) = (1,1,1,1)
         [HDR]_Color_Mul_Band0 ("Color Bass", Color) = (0,0,0,0)
         [HDR]_Color_Mul_Band1 ("Color Low Mid", Color) = (0,0,0,0)
         [HDR]_Color_Mul_Band2 ("Color High Mid", Color) = (0,0,0,0)
         [HDR]_Color_Mul_Band3 ("Color Treble", Color) = (0,0,0,0)
-        
-        _Chronotensity_ST_Band0 ("Chronotensity Bass", Vector) = (0,0,0,0)
-        _Chronotensity_ST_Band1 ("Chronotensity Low Mid", Vector) = (0,0,0,0)
-        _Chronotensity_ST_Band2 ("Chronotensity High Mid", Vector) = (0,0,0,0)
-        _Chronotensity_ST_Band3 ("Chronotensity Treble", Vector) = (0,0,0,0)
-        
-        [Enum(AudioLinkChronotensityEnum)]_Chronotensity_Effect_Band0 ("Chronotensity Effect Bass", Int) = 1
-        [Enum(AudioLinkChronotensityEnum)]_Chronotensity_Effect_Band1 ("Chronotensity Effect Low Mid", Int) = 1
-        [Enum(AudioLinkChronotensityEnum)]_Chronotensity_Effect_Band2 ("Chronotensity Effect High Mid", Int) = 1
-        [Enum(AudioLinkChronotensityEnum)]_Chronotensity_Effect_Band3 ("Chronotensity Effect Treble", Int) = 1
+
+        [Space(10)]
+        [Header(Chronotensity Scroll (Tiling and Offset))]
+        [Enum(AudioLinkChronotensityEnum)]_Chronotensity_Effect_Band0 ("Chronotensity Scroll Type, Bass", Int) = 1
+        _Chronotensity_ST_Band0 ("Chronotensity Scroll, Bass", Vector) = (0,0,0,0)
+        [Enum(AudioLinkChronotensityEnum)]_Chronotensity_Effect_Band1 ("Chronotensity Scroll Type, Low Mid", Int) = 1
+        _Chronotensity_ST_Band1 ("Chronotensity Scroll, Low Mid", Vector) = (0,0,0,0)
+        [Enum(AudioLinkChronotensityEnum)]_Chronotensity_Effect_Band2 ("Chronotensity Scroll Type, High Mid", Int) = 1
+        _Chronotensity_ST_Band2 ("Chronotensity Scroll, High Mid", Vector) = (0,0,0,0)
+        [Enum(AudioLinkChronotensityEnum)]_Chronotensity_Effect_Band3 ("Chronotensity Scroll Type, Treble", Int) = 1
+        _Chronotensity_ST_Band3 ("Chronotensity Scroll, Treble", Vector) = (0,0,0,0)
+
+        // Originall added so we can have a nice slider in ShaderFes 2021 (You could also just modify each of _Chronotensity_ST_BandX)
+        _Chronotensity_Scale ("Scroll Scale (Toggle Scroll)", Range(0.0, 1.0)) = 0.0   // This one affects the values as they come out of AudioLink. Can be used to enable/disable chronotensity.
+        _Chronotensity_Tiling_Scale ("Chronotensity Tiling Scale", Range(0.0, 10.0)) = 0.0
+        _Chronotensity_Offset_Scale ("Chronotensity Offset Scale", Range(0.0, 10.0)) = 0.0
 
         // When the tiling value goes above these we will wrap around
         // and start shrinking back to starting point again using our
         // custom fmirror function (see below)
-        _Chronotensity_Tiling_Wrap_U ("Chronotensity Tiling Wrap U", Float) = 10.0
-        _Chronotensity_Tiling_Wrap_V ("Chronotensity Tiling Wrap V", Float) = 10.0
+        _Chronotensity_Tiling_Wrap_U ("Chronotensity Tiling Wrap U", Float) = 3.0
+        _Chronotensity_Tiling_Wrap_V ("Chronotensity Tiling Wrap V", Float) = 3.0
 
-        _Amplitude_Scale ("Amplitude Scale", Range(0.1, 2.0)) = 1.0
-
-        // Added so we can have a nice slider in ShaderFes 2021 (Normally you would just modify each of _Chronotensity_ST_BandX)
-        _Chronotensity_Tiling_Scale ("Chronotensity Tiling Scale", Range(0.0, 10.0)) = 0.0
-        _Chronotensity_Offset_Scale ("Chronotensity Offset Scale", Range(0.0, 10.0)) = 0.0
-        _Chronotensity_Scale ("Chronotensity Scale", Range(0.0, 1.0)) = 0.0   // This one affects the values as they come out of AudioLink
-        // Also added so we can have a nice slider in ShaderFes 2021 (normally you would just modify _ST)
-        _Tiling_Scale ("UV Tiling scale", Range(0.1, 10.0)) = 1.0
     }
     SubShader
     {
