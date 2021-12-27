@@ -28,6 +28,8 @@ Shader "Xantoz/XZAudioLinkVisualizer"
         _Tiling_Scale ("UV Tiling scale", Range(0.1, 10.0)) = 1.0 // First added so we could have a nice slider in ShaderFes 2021 (normally you could also just modify _ST)
 
         _Rotation ("Rotation", Range(-360,360)) = 0.0
+        // When enabled should randomly reverse the direction of rotation at times
+        [IntRange]_Rotation_Reversing ("[Experimental] Random Rotation Reversing (Chronotensity)", Range(0,1)) = 0
 
         _Amplitude_Scale ("Amplitude Scale", Range(0.0, 2.0)) = 1.0  // Scale amplitude of PCM & DFT data in plots
 
@@ -60,7 +62,6 @@ Shader "Xantoz/XZAudioLinkVisualizer"
         _Chronotensity_ST_Band2 ("Chronotensity Scroll, High Mid", Vector) = (0,0,0,0)
         [Enum(AudioLinkChronotensityEnum)]_Chronotensity_Effect_Band3 ("Chronotensity Scroll Type, Treble", Int) = 1
         _Chronotensity_ST_Band3 ("Chronotensity Scroll, Treble", Vector) = (0,0,0,0)
-
 
         _Chronotensity_Tiling_Scale ("Chronotensity Tiling Scale", Range(0.0, 10.0)) = 1.0
         _Chronotensity_Offset_Scale ("Chronotensity Offset Scale", Range(0.0, 10.0)) = 1.0
@@ -152,6 +153,7 @@ Shader "Xantoz/XZAudioLinkVisualizer"
             #define MAX_MODE 10
 
             float _Rotation;
+            int _Rotation_Reversing;
 
             float _Vignette_Intensity;
             float _Vignette_Inner_Radius;
@@ -363,6 +365,42 @@ Shader "Xantoz/XZAudioLinkVisualizer"
                 return random(seed);
             }
 
+            // Smoothly switches between an old random value and a new one at some point in time
+            // Or at least that's the idea, but this still needs some work.
+            float get_rarely_changing_random_smooth()
+            {
+                float seed_base = 
+                    AudioLinkGetChronotensity(1, 0) + AudioLinkGetChronotensity(2, 2) +
+                    AudioLinkGetChronotensity(0, 1) + AudioLinkGetChronotensity(5, 3);
+                // float seed_base = AudioLinkGetChronotensity(5, 0);
+
+                const float fdivisor = 3000000.0;
+                const float next = fdivisor/60000.0;
+                // const float next = fdivisor/6000.0;
+                // const float next = 5.0;
+                // const float next = fdivisor/60.0;
+
+                // float seed_base1 = seed_base - next;
+                float seed_base1 = seed_base;
+                float seed_base2 = seed_base + next;
+                float seed1 = floor(seed_base1/fdivisor); 
+                float seed2 = ceil(seed_base2/fdivisor);
+
+                float now = seed1*fdivisor;
+                float future = seed2*fdivisor;
+                float factor = (future - seed_base)/(future - now);
+                // float factor = (future - seed_base)/next;
+                // float factor = frac(seed_base/fdivisor);
+
+                // TODO: maybe use a different random algorithm to ensure we are more independent from get_rarely_changing_random
+                float random1 = random(float2(seed1, seed1))*2 - 1;
+                float random2 = random(float2(seed2, seed2))*2 - 1;
+                // float random1 = step(random(float2(seed1, seed1)), 0.5)*2 - 1;
+                // float random2 = step(random(float2(seed2, seed2)), 0.5)*2 - 1;
+
+                return lerp(random1, random2, factor);
+            }
+
             // --- distance to line segment with caps (From: https://shadertoyunofficial.wordpress.com/2019/01/02/programming-tricks-in-shadertoy-glsl/)
             float dist_to_line(float2 p, float2 a, float2 b)
             {
@@ -568,7 +606,7 @@ Shader "Xantoz/XZAudioLinkVisualizer"
                 o.unmodified_uv = v.uv;
 
                 float4 chronotensity_ST = float4(0,0,0,0);
-                float chronorot = 0.0;
+                float rot = _Rotation;
                 if (AudioLinkIsAvailable()) {
 
                     float chronotensity_scale = _Chronotensity_Scale;
@@ -628,13 +666,16 @@ Shader "Xantoz/XZAudioLinkVisualizer"
                         _ChronoRot_Band2 * AudioLinkGetChronotensity(_ChronoRot_Effect_Band2, 2)/1000000.0,
                         _ChronoRot_Band3 * AudioLinkGetChronotensity(_ChronoRot_Effect_Band3, 3)/1000000.0
                     );
-                    chronorot = chronorot_scale * frac(dot(chronorot_band, float4(1,1,1,1))) * 360.0;
+                    rot += chronorot_scale * frac(dot(chronorot_band, float4(1,1,1,1))) * 360.0;
+
+                    if (_Rotation_Reversing != 0) {
+                        rot *= get_rarely_changing_random_smooth();
+                    }
                 }
 
                 float4 new_ST = _ST * float4(_Tiling_Scale, _Tiling_Scale, 1, 1) + chronotensity_ST;
                 float2 centered_uv = (v.uv - float2(0.5, 0.5))*new_ST.xy;
 
-                float rot = _Rotation + chronorot;
                 float sinX = sin(radians(rot));
                 float cosX = cos(radians(rot));
                 float sinY = sin(radians(rot));
