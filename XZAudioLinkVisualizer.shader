@@ -70,6 +70,21 @@ Shader "Xantoz/XZAudioLinkVisualizer"
         _Chronotensity_Tiling_Wrap_U ("Chronotensity Tiling Wrap U", Float) = 3.0
         _Chronotensity_Tiling_Wrap_V ("Chronotensity Tiling Wrap V", Float) = 3.0
 
+
+        [Space(10)]
+        [Header(Chronotensity Rotation)]
+        // Can be used to toggle chronotensity rotation on/off, and to reverse it
+        _ChronoRot_Scale ("Chronotensity Rotation Scale", Range(-1.0, 1.0)) = 1.0
+
+        [Enum(AudioLinkChronotensityEnum)]_ChronoRot_Effect_Band0 ("Chronotensity Rotation Type, Bass", Int) = 1
+        _ChronoRot_Band0 ("Chronotensity Rotation, Bass", Float) = 0.0
+        [Enum(AudioLinkChronotensityEnum)]_ChronoRot_Effect_Band1 ("Chronotensity Rotation Type, Low Mid", Int) = 1
+        _ChronoRot_Band1 ("Chronotensity Rotation, Low Mid", Float) = 0.0
+        [Enum(AudioLinkChronotensityEnum)]_ChronoRot_Effect_Band2 ("Chronotensity Rotation Type, High Mid", Int) = 1
+        _ChronoRot_Band2 ("Chronotensity Rotation, High Mid", Float) = 0.0
+        [Enum(AudioLinkChronotensityEnum)]_ChronoRot_Effect_Band3 ("Chronotensity Rotation Type, Treble", Int) = 1
+        _ChronoRot_Band3 ("Chronotensity Rotation, Treble", Float) = 0.0
+
     }
     SubShader
     {
@@ -140,6 +155,17 @@ Shader "Xantoz/XZAudioLinkVisualizer"
             float _Vignette_Intensity;
             float _Vignette_Inner_Radius;
             float _Vignette_Outer_Radius;
+
+            float _ChronoRot_Scale;
+            float _ChronoRot_Band0;
+            float _ChronoRot_Band1;
+            float _ChronoRot_Band2;
+            float _ChronoRot_Band3;
+            float _ChronoRot_Effect_Band0;
+            float _ChronoRot_Effect_Band1;
+            float _ChronoRot_Effect_Band2;
+            float _ChronoRot_Effect_Band3;
+
 
             #define ALPASS_DFT            uint2(0,4)   //Size: 128, 2
             #define ALPASS_WAVEFORM       uint2(0,6)   //Size: 128, 16
@@ -541,6 +567,7 @@ Shader "Xantoz/XZAudioLinkVisualizer"
                 o.unmodified_uv = v.uv;
 
                 float4 chronotensity_ST = float4(0,0,0,0);
+                float chronorot = 0.0;
                 if (AudioLinkIsAvailable()) {
 
                     float chronotensity_scale = _Chronotensity_Scale;
@@ -582,14 +609,25 @@ Shader "Xantoz/XZAudioLinkVisualizer"
                         chronotensity_band[1]*chronotensity_ST_band[1].zw +
                         chronotensity_band[2]*chronotensity_ST_band[2].zw +
                         chronotensity_band[3]*chronotensity_ST_band[3].zw);
+
+                    // TODO: add a reversinng factor. maybe reverse rotation over a few frames in some cases
+                    float chronorot_scale = _Chronotensity_Scale;
+                    float4 chronorot_band = chronotensity_scale * chronorot_scale * float4(
+                        AudioLinkGetChronotensity(_ChronoRot_Effect_Band0, 0)/1000000.0,
+                        AudioLinkGetChronotensity(_ChronoRot_Effect_Band1, 1)/1000000.0,
+                        AudioLinkGetChronotensity(_ChronoRot_Effect_Band2, 2)/1000000.0,
+                        AudioLinkGetChronotensity(_ChronoRot_Effect_Band3, 3)/1000000.0
+                    );
+                    chronorot = dot(chronorot_band, float4(360,360,360,360));
                 }
 
                 float4 new_ST = _ST * float4(_Tiling_Scale, _Tiling_Scale, 1, 1) + chronotensity_ST;
                 float2 centered_uv = (v.uv - float2(0.5, 0.5))*new_ST.xy;
 
-                float sinX = sin(radians(_Rotation));
-                float cosX = cos(radians(_Rotation));
-                float sinY = sin(radians(_Rotation));
+                float rot = _Rotation + chronorot;
+                float sinX = sin(radians(rot));
+                float cosX = cos(radians(rot));
+                float sinY = sin(radians(rot));
                 float2x2 rotationMatrix = float2x2(cosX, -sinX, sinY, cosX);
                 o.uv = mul(centered_uv, rotationMatrix) + float2(0.5, 0.5) + new_ST.zw;
 
