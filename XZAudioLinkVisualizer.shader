@@ -33,6 +33,11 @@ Shader "Xantoz/XZAudioLinkVisualizer"
         // Originally added so we can have a nice slider in ShaderFes 2021 (You could also just modify each of _Chronotensity_ST_BandX)
         _Chronotensity_Scale ("Chronotensity Scale (Toggle Chronotensity)", Range(0.0, 1.0)) = 1.0   // This one affects the values as they come out of AudioLink. Can be used to enable/disable chronotensity.
 
+        [Space(10)]
+        [Header(Vignette)]
+        _Vignette_Intensity ("Vignette Intensity", Range(0.0,1.0)) = 1.0
+        _Vignette_Inner_Radius ("Vignette Inner Radius", Range(0.0, 1.41421356237)) = 0.85
+        _Vignette_Outer_Radius ("Vignette Outer Radius", Range(0.0, 1.41421356237)) = 1.0
 
         [Space(10)]
         [Header(Color Blink)]
@@ -90,6 +95,7 @@ Shader "Xantoz/XZAudioLinkVisualizer"
             struct v2f
             {
                 float2 uv : TEXCOORD0;
+                float2 unmodified_uv : TEXCOORD1;
                 UNITY_FOG_COORDS(1)
                 float4 vertex : SV_POSITION;
             };
@@ -127,6 +133,10 @@ Shader "Xantoz/XZAudioLinkVisualizer"
             #define MAX_MODE 10
 
             float _Rotation;
+
+            float _Vignette_Intensity;
+            float _Vignette_Inner_Radius;
+            float _Vignette_Outer_Radius;
 
             #define ALPASS_DFT            uint2(0,4)   //Size: 128, 2
             #define ALPASS_WAVEFORM       uint2(0,6)   //Size: 128, 16
@@ -525,6 +535,7 @@ Shader "Xantoz/XZAudioLinkVisualizer"
             {
                 v2f o;
                 o.vertex = UnityObjectToClipPos(v.vertex);
+                o.unmodified_uv = v.uv;
 
                 float4 chronotensity_ST = float4(0,0,0,0);
                 if (AudioLinkIsAvailable()) {
@@ -628,6 +639,18 @@ Shader "Xantoz/XZAudioLinkVisualizer"
                 return get_color(mode, xy);
             }
 
+            float get_vignette(float2 xy)
+            {
+                float2 cpos = (frac(xy) - float2(0.5,0.5))*2;
+                float2 cdist = length(cpos);
+
+                float inner_radius = _Vignette_Inner_Radius;
+                float outer_radius = _Vignette_Outer_Radius;
+                float intensity = _Vignette_Intensity;
+
+                return (1.0 - smoothstep(inner_radius, outer_radius, cdist) * intensity);
+            }
+
             float4 frag(v2f i) : SV_Target
             {
                 float4 col = float4(0,0,0,0);
@@ -638,6 +661,8 @@ Shader "Xantoz/XZAudioLinkVisualizer"
                     } else {
                         col = get_color(_Mode, i.uv.xy);
                     }
+
+                    col.a *= get_vignette(i.unmodified_uv.xy);
                 }
 
                 // apply fog
