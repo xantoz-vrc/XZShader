@@ -27,7 +27,7 @@ Shader "Xantoz/XZAudioLinkVisualizer"
         _ST ("UV tiling and offset", Vector) = (1,1,0,0)
         _Tiling_Scale ("UV Tiling scale", Range(0.1, 10.0)) = 1.0 // First added so we could have a nice slider in ShaderFes 2021 (normally you could also just modify _ST)
 
-        _Rotation ("Rotation", Range(0,360)) = 0.0
+        _Rotation ("Rotation", Range(-360,360)) = 0.0
 
         _Amplitude_Scale ("Amplitude Scale", Range(0.1, 2.0)) = 1.0  // Scale amplitude of PCM & DFT data in plots
         // Originally added so we can have a nice slider in ShaderFes 2021 (You could also just modify each of _Chronotensity_ST_BandX)
