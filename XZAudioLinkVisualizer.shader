@@ -33,11 +33,13 @@ Shader "Xantoz/XZAudioLinkVisualizer"
         // Originally added so we can have a nice slider in ShaderFes 2021 (You could also just modify each of _Chronotensity_ST_BandX)
         _Chronotensity_Scale ("Chronotensity Scale (Toggle Chronotensity)", Range(0.0, 1.0)) = 1.0   // This one affects the values as they come out of AudioLink. Can be used to enable/disable chronotensity.
 
+
         [Space(10)]
         [Header(Vignette)]
         _Vignette_Intensity ("Vignette Intensity", Range(0.0,1.0)) = 1.0
         _Vignette_Inner_Radius ("Vignette Inner Radius", Range(0.0, 1.41421356237)) = 0.85
         _Vignette_Outer_Radius ("Vignette Outer Radius", Range(0.0, 1.41421356237)) = 1.0
+
 
         [Space(10)]
         [Header(Color Blink)]
@@ -46,6 +48,7 @@ Shader "Xantoz/XZAudioLinkVisualizer"
         [HDR]_Color_Mul_Band1 ("Color Low Mid", Color) = (0,0,0,0)
         [HDR]_Color_Mul_Band2 ("Color High Mid", Color) = (0,0,0,0)
         [HDR]_Color_Mul_Band3 ("Color Treble", Color) = (0,0,0,0)
+
 
         [Space(10)]
         [Header(Chronotensity Scroll (Tiling and Offset))]
