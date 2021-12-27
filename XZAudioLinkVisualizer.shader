@@ -555,9 +555,9 @@ Shader "Xantoz/XZAudioLinkVisualizer"
 
                     float chronotensity_band[4] = {
                         // TODO: Maybe these need to loop every once in a while to avoid instability.
-                        AudioLinkGetChronotensity(_Chronotensity_Effect_Band0, 0)/1000000.0, 
-                        AudioLinkGetChronotensity(_Chronotensity_Effect_Band1, 1)/1000000.0, 
-                        AudioLinkGetChronotensity(_Chronotensity_Effect_Band2, 2)/1000000.0, 
+                        AudioLinkGetChronotensity(_Chronotensity_Effect_Band0, 0)/1000000.0,
+                        AudioLinkGetChronotensity(_Chronotensity_Effect_Band1, 1)/1000000.0,
+                        AudioLinkGetChronotensity(_Chronotensity_Effect_Band2, 2)/1000000.0,
                         AudioLinkGetChronotensity(_Chronotensity_Effect_Band3, 3)/1000000.0
                     };
                     float4 chronotensity_ST_band[4] = {
