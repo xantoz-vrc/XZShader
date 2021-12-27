@@ -38,10 +38,10 @@ Shader "Xantoz/XZAudioLinkVisualizer"
         _Chronotensity_ST_Band2 ("Chronotensity High Mid", Vector) = (0,0,0,0)
         _Chronotensity_ST_Band3 ("Chronotensity Treble", Vector) = (0,0,0,0)
         
-        _Chronotensity_Effect_Band0 ("Chronotensity Effect Bass", Int) = 1
-        _Chronotensity_Effect_Band1 ("Chronotensity Effect Low Mid", Int) = 1
-        _Chronotensity_Effect_Band2 ("Chronotensity Effect High Mid", Int) = 1
-        _Chronotensity_Effect_Band3 ("Chronotensity Effect Treble", Int) = 1
+        [Enum(AudioLinkChronotensityEnum)]_Chronotensity_Effect_Band0 ("Chronotensity Effect Bass", Int) = 1
+        [Enum(AudioLinkChronotensityEnum)]_Chronotensity_Effect_Band1 ("Chronotensity Effect Low Mid", Int) = 1
+        [Enum(AudioLinkChronotensityEnum)]_Chronotensity_Effect_Band2 ("Chronotensity Effect High Mid", Int) = 1
+        [Enum(AudioLinkChronotensityEnum)]_Chronotensity_Effect_Band3 ("Chronotensity Effect Treble", Int) = 1
 
         // When the tiling value goes above these we will wrap around
         // and start shrinking back to starting point again using our
