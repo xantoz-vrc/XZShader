@@ -50,7 +50,7 @@ Shader "Xantoz/XZAudioLinkVisualizer"
         [Space(10)]
         [Header(Chronotensity Scroll (Tiling and Offset))]
         // This one affects the values as they come out of AudioLink. Can be used to toggle chronotensity scroll.
-        _Chronotensity_Scale ("Chronotensity Scroll Scale (Toggle Scroll)", Range(0.0, 1.0)) = 1.0
+        _Chronotensity_Scale ("Chronotensity Scroll Scale (Toggle Scroll)", Range(-1.0, 1.0)) = 1.0
 
         [Enum(AudioLinkChronotensityEnum)]_Chronotensity_Effect_Band0 ("Chronotensity Scroll Type, Bass", Int) = 1
         _Chronotensity_ST_Band0 ("Chronotensity Scroll, Bass", Vector) = (0,0,0,0)
@@ -582,7 +582,8 @@ Shader "Xantoz/XZAudioLinkVisualizer"
                         // make the current visualization and the decision on whether to use
                         // chronotensity scrolling be non-correlated.
                         float random_scroll = random(float2(seed, seed));
-                        chronotensity_scale = (random_scroll > 0.4) ? 1.0 : 0.0;
+                        chronotensity_scale = (random_scroll > 0.7) ? -1.0 :
+                                              (random_scroll > 0.4) ?  1.0 : 0.0;
 
                         // Some more mixing up to decouple this
                         float random_rot = random(float2(seed*seed, 2*seed));
