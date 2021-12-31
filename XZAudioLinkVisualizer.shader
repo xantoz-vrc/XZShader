@@ -734,7 +734,7 @@ Shader "Xantoz/XZAudioLinkVisualizer"
             float get_vignette(float2 xy)
             {
                 float2 cpos = (frac(xy) - float2(0.5,0.5))*2;
-                float2 cdist = length(cpos);
+                float cdist = length(cpos);
 
                 float inner_radius = _Vignette_Inner_Radius;
                 float outer_radius = _Vignette_Outer_Radius;
