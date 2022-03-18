@@ -1,4 +1,4 @@
-Texture2D<float4> _AudioTexture;
+
 
 #define ALPASS_DFT            uint2(0,4)   //Size: 128, 2
 #define ALPASS_WAVEFORM       uint2(0,6)   //Size: 128, 16
@@ -10,6 +10,21 @@ Texture2D<float4> _AudioTexture;
 #define AUDIOLINK_EXPOCT                10
 #define AUDIOLINK_ETOTALBINS            (AUDIOLINK_EXPBINS * AUDIOLINK_EXPOCT)
 
+
+#ifdef SHADER_TARGET_SURFACE_ANALYSIS
+#define AUDIOLINK_STANDARD_INDEXING
+#endif
+
+// Mechanism to index into texture.
+#ifdef AUDIOLINK_STANDARD_INDEXING
+    sampler2D _AudioTexture;
+    uniform float4 _AudioTexture_TexelSize;
+    #define AudioLinkData(xycoord) tex2Dlod(_AudioTexture, float4(uint2(xycoord) * _AudioTexture_TexelSize.xy, 0, 0))
+#else
+    uniform Texture2D<float4> _AudioTexture;
+    #define AudioLinkData(xycoord) _AudioTexture[uint2(xycoord)]
+#endif
+
 float mod(float x, float y)
 {
     return x - y * floor(x/y);
@@ -17,14 +32,13 @@ float mod(float x, float y)
 
 bool AudioLinkIsAvailable()
 {
-    int width, height;
-    _AudioTexture.GetDimensions(width, height);
-    return width > 16;
-}
-
-float4 AudioLinkData(uint2 xycoord)
-{ 
-    return _AudioTexture[uint2(xycoord.x, xycoord.y)]; 
+    #if !defined(AUDIOLINK_STANDARD_INDEXING)
+        int width, height;
+        _AudioTexture.GetDimensions(width, height);
+        return width > 16;
+    #else
+        return _AudioTexture_TexelSize.z > 16;
+    #endif
 }
 
 uint AudioLinkDecodeDataAsUInt(uint2 indexloc)
@@ -47,10 +61,10 @@ float4 AudioLinkLerp(float2 xy)
 }
 
 float4 AudioLinkDataMultiline(uint2 xycoord)
-{ 
-    return _AudioTexture[uint2(
+{
+    return AudioLinkData(uint2(
             xycoord.x % AUDIOLINK_WIDTH,
-            xycoord.y + xycoord.x/AUDIOLINK_WIDTH)]; 
+            xycoord.y + xycoord.x/AUDIOLINK_WIDTH));
 }
 
 float4 AudioLinkLerpMultiline(float2 xy) 
