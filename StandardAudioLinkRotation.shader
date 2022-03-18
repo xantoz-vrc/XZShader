@@ -66,9 +66,6 @@ ENDCG
         
     CGPROGRAM
         #pragma target 3.0
-        // TEMPORARY: GLES2.0 temporarily disabled to prevent errors spam on devices without textureCubeLodEXT
-        #pragma exclude_renderers gles
- 
  
         #pragma shader_feature _NORMALMAP
         // #pragma shader_feature _ _ALPHATEST_ON _ALPHABLEND_ON _ALPHAPREMULTIPLY_ON
@@ -81,17 +78,13 @@ ENDCG
         // #pragma multi_compile_fwdbase
         // #pragma multi_compile_fog
         #pragma multi_compile_instance
- 
-        #pragma surface surf Standard vertex:vert finalcolor:final fullforwardshadows // Opaque or Cutout
-        // #pragma surface surf Standard vertex:vert finalcolor:final fullforwardshadows alpha:fade // Fade
-        // #pragma surface surf Standard vertex:vert finalcolor:final fullforwardshadows alpha:premul // Transparent
+
+        #pragma surface surf Standard vertex:vert finalcolor:final fullforwardshadows addshadow // Opaque or Cutout
+        // #pragma surface surf Standard vertex:vert finalcolor:final fullforwardshadows addshadow alpha:fade // Fade
+        // #pragma surface surf Standard vertex:vert finalcolor:final fullforwardshadows addshadow alpha:premul // Transparent
  
         #include "StandardSurface.cginc"
     ENDCG
- 
-        // For some reason SHADOWCASTER works. Not ShadowCaster.
-        // UsePass "Standard/ShadowCaster"
-        UsePass "Standard/SHADOWCASTER"
     }
  
     FallBack Off
