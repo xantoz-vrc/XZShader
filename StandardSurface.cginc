@@ -6,7 +6,9 @@
 // LightingStandard(), LightingStandard_GI(), LightingStandard_Deferred() and
 // struct SurfaceOutputStandard are defined here.
 #include "UnityPBSLighting.cginc"
- 
+
+#include "cginc/AudioLinkFuncs.cginc"
+
 struct appdata_vert {
     float4 vertex : POSITION;
     half3 normal : NORMAL;
@@ -27,10 +29,22 @@ struct Input {
     half3 viewDirForParallax;
 #endif
 };
- 
+
+float4 RotateAroundYInDegrees (float4 vertex, float degrees)
+{
+    float alpha = degrees * UNITY_PI / 180.0;
+    float sina, cosa;
+    sincos(alpha, sina, cosa);
+    float2x2 m = float2x2(cosa, -sina, sina, cosa);
+    return float4(mul(m, vertex.xz), vertex.yw).xzyw;
+}
+
 void vert (inout appdata_vert v, out Input o) {
     UNITY_SETUP_INSTANCE_ID(v);
     UNITY_INITIALIZE_OUTPUT(Input, o);
+
+    float ctensity_bass = AudioLinkGetChronotensity(1, 0)/1000.0;
+    v.vertex = RotateAroundYInDegrees(v.vertex, ctensity_bass);
 
     o.texcoords.xy = TRANSFORM_TEX(v.uv0, _MainTex); // Always source from uv0
     o.texcoords.zw = TRANSFORM_TEX(((_UVSec == 0) ? v.uv0 : v.uv1), _DetailAlbedoMap);
