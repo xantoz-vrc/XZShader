@@ -26,14 +26,11 @@ struct Input {
 #if defined(_PARALLAXMAP)
     half3 viewDirForParallax;
 #endif
-    
-    UNITY_VERTEX_OUTPUT_STEREO
 };
  
 void vert (inout appdata_vert v, out Input o) {
     UNITY_SETUP_INSTANCE_ID(v);
     UNITY_INITIALIZE_OUTPUT(Input, o);
-    UNITY_INITIALIZE_VERTEX_OUTPUT_STEREO(o);
 
     o.texcoords.xy = TRANSFORM_TEX(v.uv0, _MainTex); // Always source from uv0
     o.texcoords.zw = TRANSFORM_TEX(((_UVSec == 0) ? v.uv0 : v.uv1), _DetailAlbedoMap);

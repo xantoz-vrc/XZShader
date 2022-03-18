@@ -94,40 +94,6 @@ ENDCG
         UsePass "Standard/SHADOWCASTER"
     }
  
-    SubShader
-    {
-        Tags { "RenderType"="Opaque" "PerformanceChecks"="False" }
-        LOD 150
- 
-        // Blend [_SrcBlend] [_DstBlend]
-        ZWrite [_ZWrite]
- 
-    CGPROGRAM
-        #pragma target 2.0
- 
-        #pragma shader_feature _NORMALMAP
-        // #pragma shader_feature _ _ALPHATEST_ON _ALPHABLEND_ON _ALPHAPREMULTIPLY_ON
-        #pragma shader_feature _ALPHATEST_ON
-        #pragma shader_feature _EMISSION
-        #pragma shader_feature _METALLICGLOSSMAP
-        #pragma shader_feature ___ _DETAIL_MULX2
-        // SM2.0: NOT SUPPORTED shader_feature _PARALLAXMAP
- 
-        #pragma skip_variants SHADOWS_SOFT DIRLIGHTMAP_COMBINED DIRLIGHTMAP_SEPARATE
- 
-        // #pragma multi_compile_fwdbase
-        // #pragma multi_compile_fog
- 
-        #pragma surface surf Standard vertex:vert finalcolor:final // Opaque or Cutout
-        // #pragma surface surf Standard vertex:vert finalcolor:final alpha:fade // Fade
-        // #pragma surface surf Standard vertex:vert finalcolor:final alpha:premul // Transparent
- 
-        #include "StandardSurface.cginc"
-    ENDCG
- 
-        UsePass "Standard/SHADOWCASTER"
-    }
- 
     FallBack Off
     CustomEditor "StandardShaderGUI"
 }
