@@ -105,6 +105,7 @@ Shader "Xantoz/XZAudioLinkVisualizer"
             #pragma multi_compile_instancing
             
             #include "UnityCG.cginc"
+            #include "cginc/AudioLinkFuncs.cginc"
 
             struct appdata
             {
@@ -125,7 +126,6 @@ Shader "Xantoz/XZAudioLinkVisualizer"
             };
 
             float4 _ST;
-            Texture2D<float4> _AudioTexture;
 
             float4 _Color_Mul_Band0;
             float4 _Color_Mul_Band1;
@@ -172,175 +172,6 @@ Shader "Xantoz/XZAudioLinkVisualizer"
             float _ChronoRot_Effect_Band1;
             float _ChronoRot_Effect_Band2;
             float _ChronoRot_Effect_Band3;
-
-
-            #define ALPASS_DFT            uint2(0,4)   //Size: 128, 2
-            #define ALPASS_WAVEFORM       uint2(0,6)   //Size: 128, 16
-            #define ALPASS_CHRONOTENSITY  uint2(16,28) //Size: 8, 4
-
-            #define AUDIOLINK_WIDTH 128
-
-            #define AUDIOLINK_EXPBINS               24
-            #define AUDIOLINK_EXPOCT                10
-            #define AUDIOLINK_ETOTALBINS            (AUDIOLINK_EXPBINS * AUDIOLINK_EXPOCT)
-
-            float mod(float x, float y)
-            {
-                return x - y * floor(x/y);
-            }
-
-            bool AudioLinkIsAvailable()
-            {
-                int width, height;
-                _AudioTexture.GetDimensions(width, height);
-                return width > 16;
-            }
-
-            float4 AudioLinkData(uint2 xycoord)
-            { 
-                return _AudioTexture[uint2(xycoord.x, xycoord.y)]; 
-            }
-
-            uint AudioLinkDecodeDataAsUInt(uint2 indexloc)
-            {
-                uint4 rpx = AudioLinkData(indexloc);
-                return rpx.r + rpx.g*1024 + rpx.b * 1048576 + rpx.a * 1073741824;
-            }
-
-            uint AudioLinkGetChronotensity(uint effect, uint band)
-            {
-                return AudioLinkDecodeDataAsUInt(ALPASS_CHRONOTENSITY + uint2(effect, band));
-            }
-
-            float4 AudioLinkLerp(float2 xy)
-            {
-                return lerp(
-                    AudioLinkData(uint2(xy.x, xy.y)),
-                    AudioLinkData(uint2(xy.x, xy.y) + uint2(1,0)),
-                    frac(xy.x));
-            }
-
-            float4 AudioLinkDataMultiline(uint2 xycoord)
-            { 
-                return _AudioTexture[uint2(
-                        xycoord.x % AUDIOLINK_WIDTH,
-                        xycoord.y + xycoord.x/AUDIOLINK_WIDTH)]; 
-            }
-
-            float4 AudioLinkLerpMultiline(float2 xy) 
-            {
-                return lerp(
-                    AudioLinkDataMultiline(xy),
-                    AudioLinkDataMultiline(xy + float2(1, 0)),
-                    frac(xy.x)); 
-            }
-
-            float4 AudioLinkLerpMultilineWrap(float2 xy, float wrap) 
-            {
-                return lerp(
-                    AudioLinkDataMultiline(float2(mod(xy.x, wrap), xy.y)),
-                    AudioLinkDataMultiline(float2(mod(xy.x + 1, wrap), xy.y)),
-                    frac(xy.x));
-            }
-
-            float fmirror(float x, float wrap)
-            {
-                float x_wrap = mod(x, wrap*2);
-                return (x_wrap > wrap) ? (wrap*2 - x_wrap) : x_wrap;
-            }
-
-            float2 f2mirror(float2 x, float2 wrap)
-            {
-                // TODO: this could probably be optimized to use vector operations
-                return float2(fmirror(x[0], wrap[0]), fmirror(x[1], wrap[1]));
-            }
-
-            float4 AudioLinkLerpMultilineMirror(float2 xy, float wrap)
-            {
-                return lerp(
-                    AudioLinkDataMultiline(float2(fmirror(xy.x, wrap), xy.y)),
-                    AudioLinkDataMultiline(float2(fmirror(xy.x + 1, wrap), xy.y)),
-                    frac(xy.x));
-            }
-
-            // Index 0 to 255
-            float4 AudioLinkDFTData(uint i)
-            {
-                return AudioLinkDataMultiline(uint2(i, 4))*_Amplitude_Scale;
-            }
-
-            // Index 0 to 255
-            float4 AudioLinkDFTLerp(float i)
-            {
-                return AudioLinkLerpMultiline(float2(i, 4.0))*_Amplitude_Scale;
-            }
-
-            float4 AudioLinkDFTLerpWrap(float i, float wrap)
-            {
-                return AudioLinkLerpMultilineWrap(float2(i, 4.0), wrap)*_Amplitude_Scale;
-            }
-
-            float4 AudioLinkDFTLerpMirror(float i, float wrap)
-            {
-                return AudioLinkLerpMultilineMirror(float2(i, 4.0), wrap)*_Amplitude_Scale;
-            }
-
-            // Index 0 to 2047 when using .g
-            //       0 to 2045 when using .r and .a
-            //       0 to 1022 when using .b
-            float4 AudioLinkPCMData(uint i)
-            {
-                return AudioLinkDataMultiline(uint2(i, 6))*_Amplitude_Scale;
-            }
-
-            // Index 0 to 2047 when using .g
-            //       0 to 2045 when using .r and .a
-            //       0 to 1022 when using .b
-            float4 AudioLinkPCMLerp(float i)
-            {
-                return AudioLinkLerpMultiline(float2(i, 6.0))*_Amplitude_Scale;
-            }
-
-            float4 AudioLinkPCMLerpWrap(float i, float wrap)
-            {
-                return AudioLinkLerpMultilineWrap(float2(i, 6.0), wrap)*_Amplitude_Scale;
-            }
-
-            float4 AudioLinkPCMLerpMirror(float i, float wrap)
-            {
-                return AudioLinkLerpMultilineMirror(float2(i, 6.0), wrap)*_Amplitude_Scale;
-            }
-
-            // Pick one of:
-            // lr == 0: both channels (24 kHz red)
-            // lr == 1: left channel
-            // lr == 2: right channel
-            float PCMConditional(float4 pcm_value, uint lr)
-            {
-                float result = pcm_value.r;
-                if (lr == 1) {
-                    result = pcm_value.r + pcm_value.a;
-                } else if (lr == 2) {
-                    result = pcm_value.r - pcm_value.a;
-                }
-                return result;
-            }
-
-            float2 PCMToLR(float4 pcm_value)
-            {
-                return float2(pcm_value.r + pcm_value.a, pcm_value.r - pcm_value.a);
-            }
-
-            // This is basically just a helper function for get_value_circle_mirror_lr
-            float AudioLinkPCMLerpMirrorLR(float i, float wrap)
-            {
-                uint lr_1 = (mod(i, wrap*2) > wrap) ? 1 : 2;
-                uint lr_2 = (mod(i + 1, wrap*2) > wrap) ? 1 : 2;
-                return lerp(
-                    PCMConditional(AudioLinkPCMData(fmirror(i, wrap)), lr_1),
-                    PCMConditional(AudioLinkPCMData(fmirror(i + 1, wrap)), lr_2),
-                    frac(i));
-            }
 
             // From: https://stackoverflow.com/questions/5149544/can-i-generate-a-random-number-inside-a-pixel-shader
             float random(float2 p)
@@ -423,14 +254,14 @@ Shader "Xantoz/XZAudioLinkVisualizer"
 
             float get_value_horiz_line(float2 xy, uint nsamples, uint lr)
             {
-                float pcm_val = PCMConditional(AudioLinkPCMLerp(frac(xy.x)*(nsamples-1)), lr);
+                float pcm_val = PCMConditional(AudioLinkPCMLerp(frac(xy.x)*(nsamples-1))*_Amplitude_Scale, lr);
                 float dist = (frac(xy.y) - 0.5) - pcm_val*0.5;
                 return linefn(dist);
             }
 
             float get_value_vert_line(float2 xy, uint nsamples, uint lr)
             {
-                float4 pcm_val = PCMConditional(AudioLinkPCMLerp(frac(xy.y)*(nsamples-1)), lr);
+                float4 pcm_val = PCMConditional(AudioLinkPCMLerp(frac(xy.y)*(nsamples-1))*_Amplitude_Scale, lr);
                 float dist = (frac(xy.x) - 0.5) - pcm_val*0.5;
                 return linefn(dist);
             }
@@ -446,7 +277,7 @@ Shader "Xantoz/XZAudioLinkVisualizer"
                 float cdist = length(cpos);
                 float angle = atan2(cpos.x, cpos.y);
                 float pcm_val = PCMConditional(
-                    AudioLinkPCMLerpWrap(((angle+UNITY_PI)/(2*UNITY_PI))*nsamples, nsamples),
+                    AudioLinkPCMLerpWrap(((angle+UNITY_PI)/(2*UNITY_PI))*nsamples, nsamples)*_Amplitude_Scale,
                     lr);
                 float dist = (cdist - 0.5) - pcm_val*0.25;
                 return linefn(dist);
@@ -458,7 +289,7 @@ Shader "Xantoz/XZAudioLinkVisualizer"
                 float cdist = length(cpos);
                 float angle = atan2(cpos.x, cpos.y);
                 float pcm_val = PCMConditional(
-                    AudioLinkPCMLerpMirror(((angle+UNITY_PI)/(2*UNITY_PI))*nsamples*2, nsamples),
+                    AudioLinkPCMLerpMirror(((angle+UNITY_PI)/(2*UNITY_PI))*nsamples*2, nsamples)*_Amplitude_Scale,
                     lr);
                 float dist = (cdist - 0.5) - pcm_val*0.25;
                 return linefn(dist);
@@ -470,7 +301,7 @@ Shader "Xantoz/XZAudioLinkVisualizer"
                 float cdist = length(cpos);
                 float angle = atan2(cpos.x, cpos.y);
                 float index = ((angle+UNITY_PI)/(2*UNITY_PI))*nsamples*2;
-                float pcm_val = AudioLinkPCMLerpMirrorLR(index, nsamples);
+                float pcm_val = AudioLinkPCMLerpMirrorLR(index, nsamples)*_Amplitude_Scale;
                 float dist = (cdist - 0.5) - pcm_val*0.25;
                 return linefn(dist);
             }
@@ -552,8 +383,8 @@ Shader "Xantoz/XZAudioLinkVisualizer"
                 float2 sc1 = float2(sin(angle_1), cos(angle_1));
                 float2 sc2 = float2(sin(angle_2), cos(angle_2));
 
-                float2 pcm_1 = PCMToLR(AudioLinkPCMData(mod(index_1, nsamples - (nsamples % bin))))*0.2;
-                float2 pcm_2 = PCMToLR(AudioLinkPCMData(mod(index_2, nsamples - (nsamples % bin))))*0.2;
+                float2 pcm_1 = PCMToLR(AudioLinkPCMData(mod(index_1, nsamples - (nsamples % bin)))*_Amplitude_Scale)*0.2;
+                float2 pcm_2 = PCMToLR(AudioLinkPCMData(mod(index_2, nsamples - (nsamples % bin)))*_Amplitude_Scale)*0.2;
 
                 float r1 = clamp(pcm_1.x + 0.75, 0.0, 1.0);
                 float r2 = clamp(pcm_2.x + 0.75, 0.0, 1.0);
@@ -579,7 +410,7 @@ Shader "Xantoz/XZAudioLinkVisualizer"
                 float dist = 1.0/0.0;  // Inf
                 for (uint i = 0; i < nsamples; ++i)
                 {
-                    float2 pcm_lr = PCMToLR(AudioLinkPCMData(i));
+                    float2 pcm_lr = PCMToLR(AudioLinkPCMData(i)*_Amplitude_Scale);
                     float ndist = length(pcm_lr - cpos)*0.5;
                     dist = min(dist, ndist);
                 }
@@ -591,10 +422,10 @@ Shader "Xantoz/XZAudioLinkVisualizer"
             {
                 float2 cpos = (frac(xy) - float2(0.5, 0.5))*2;
                 float dist = 1.0/0.0;  // Inf
-                float2 pcm_lr_a = PCMToLR(AudioLinkPCMData(0));
+                float2 pcm_lr_a = PCMToLR(AudioLinkPCMData(0)*_Amplitude_Scale);
                 for (uint i = 1; i < nsamples; ++i)
                 {
-                    float2 pcm_lr_b = PCMToLR(AudioLinkPCMData(i));
+                    float2 pcm_lr_b = PCMToLR(AudioLinkPCMData(i)*_Amplitude_Scale);
                     float ndist = dist_to_line(cpos, pcm_lr_a, pcm_lr_b)*0.5;
                     dist = min(dist, ndist);
                     pcm_lr_a = pcm_lr_b;
