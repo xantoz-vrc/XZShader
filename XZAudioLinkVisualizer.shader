@@ -38,6 +38,7 @@ Shader "Xantoz/XZAudioLinkVisualizer"
         _Vignette_Intensity ("Vignette Intensity", Range(0.0,1.0)) = 1.0
         _Vignette_Inner_Radius ("Vignette Inner Radius", Range(0.0, 1.41421356237)) = 0.85
         _Vignette_Outer_Radius ("Vignette Outer Radius", Range(0.0, 1.41421356237)) = 1.0
+        [Enum(Circle,0, Diamond,1, Box,2)] _Vignette_Type("Vignette Type", Int) = 0
 
 
         [Space(10)]
@@ -162,6 +163,7 @@ Shader "Xantoz/XZAudioLinkVisualizer"
             float _Vignette_Intensity;
             float _Vignette_Inner_Radius;
             float _Vignette_Outer_Radius;
+            int _Vignette_Type;
 
             float _ChronoRot_Scale;
             float _ChronoRot_Band0;
@@ -574,7 +576,10 @@ Shader "Xantoz/XZAudioLinkVisualizer"
             float get_vignette(float2 xy)
             {
                 float2 cpos = (frac(xy) - float2(0.5,0.5))*2;
-                float cdist = length(cpos);
+                float cdist =
+                    (_Vignette_Type == 0) ? length(cpos) :                  // Circle
+                    (_Vignette_Type == 1) ? abs(cpos.x) + abs(cpos.y) :     // Diamond
+                                            max(abs(cpos.x), abs(cpos.y));  // Box
 
                 float inner_radius = _Vignette_Inner_Radius;
                 float outer_radius = _Vignette_Outer_Radius;
