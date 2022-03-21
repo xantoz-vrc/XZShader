@@ -12,4 +12,5 @@
     Spectrum_Circle_Mirror,
     Spectrum_Ribbon,
     Auto,
+    Auto2, // Auto but without the potentially laggy XY plot modes
 }

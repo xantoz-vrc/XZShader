@@ -573,6 +573,16 @@ Shader "Xantoz/XZAudioLinkVisualizer"
                 return get_color(mode, xy);
             }
 
+            float4 get_color_auto2(float2 xy)
+            {
+                // Get random number and convert to an integer between 0 and MAX_MODE
+                uint mode = ceil(get_rarely_changing_random()*MAX_MODE);
+                // But replace modes 6 and 7 with something else
+                if (mode == 7) mode = 2; // XY line plot replace with LR lines
+                if (mode == 6) mode = 8; // XY scatter plot replace with PCM ribbon
+                return get_color(mode, xy);
+            }
+
             float get_vignette(float2 xy)
             {
                 float2 cpos = (frac(xy) - float2(0.5,0.5))*2;
@@ -595,7 +605,9 @@ Shader "Xantoz/XZAudioLinkVisualizer"
                 float4 col = float4(0,0,0,0);
 
                 if (AudioLinkIsAvailable()) {
-                    if (_Mode > MAX_MODE) {
+                    if (_Mode > MAX_MODE + 1) {
+                        col = get_color_auto2(i.uv.xy);
+                    } else if (_Mode > MAX_MODE) {
                         col = get_color_auto(i.uv.xy);
                     } else {
                         col = get_color(_Mode, i.uv.xy);
