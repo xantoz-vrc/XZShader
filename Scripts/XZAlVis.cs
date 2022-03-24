@@ -52,6 +52,7 @@ namespace XZShader
         void Start()
         {
             if (material == null) Debug.Log("Not connected to material");
+            localPlayer = Networking.LocalPlayer;
             deserializing = false;
 
             _setMaterial();
