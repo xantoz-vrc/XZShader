@@ -161,7 +161,7 @@ namespace XZShader
 
             laggyModeToggle.isOn = false;
 
-            ApplySettings();
+            // ApplySettings();
         }
 
         // TODO: There must be a better way...
