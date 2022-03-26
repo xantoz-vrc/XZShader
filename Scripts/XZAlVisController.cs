@@ -41,6 +41,11 @@ namespace XZShader
         public Slider ctensityRotationSlider_Band3;
         public Slider ctensityRotationSlider_Band4;
 
+        public Text tilingScaleLabel;
+        public Slider tilingScaleSlider;
+        public Text rotationLabel;
+        public Slider rotationSlider;
+
         private float _initAmplitude;
         private int _initMode; // TODO: Might be better to be the enum?
         private bool _initCtensity;
@@ -51,6 +56,9 @@ namespace XZShader
         private float _initCtensityRotationBand2;
         private float _initCtensityRotationBand3;
         private float _initCtensityRotationBand4;
+
+        private float _initTilingScale;
+        private float _initRotation;
 
 #if UNITY_EDITOR
         void Update()
@@ -74,6 +82,9 @@ namespace XZShader
             _initCtensityRotationBand2 = ctensityRotationSlider_Band2.value;
             _initCtensityRotationBand3 = ctensityRotationSlider_Band3.value;
             _initCtensityRotationBand4 = ctensityRotationSlider_Band4.value;
+
+            _initTilingScale = tilingScaleSlider.value;
+            _initRotation = rotationSlider.value;
 
             UpdateSettings();
         }
@@ -107,6 +118,9 @@ namespace XZShader
                 "\tHigh Mid: " + ctensityRotationSlider_Band3.value.ToString("0.00") +
                 "\tTreble: " + ctensityRotationSlider_Band4.value.ToString("0.00");
 
+            tilingScaleLabel.text = "Tiling: " + tilingScaleSlider.value.ToString("0.00");
+            rotationLabel.text = "Rotation: " + rotationSlider.value.ToString("0.00");
+
             // Apply to material of preview strip
             Material material = preview.material;
             material.SetFloat("_Amplitude_Scale", amplitudeSlider.value);
@@ -120,6 +134,9 @@ namespace XZShader
             material.SetFloat("_ChronoRot_Band2", ctensityRotationSlider_Band2.value);
             material.SetFloat("_ChronoRot_Band3", ctensityRotationSlider_Band3.value);
             material.SetFloat("_ChronoRot_Band4", ctensityRotationSlider_Band4.value);
+
+            material.SetFloat("_Tiling_Scale", tilingScaleSlider.value);
+            material.SetFloat("_Rotation", rotationSlider.value);
         }
 
         public void ApplySettings()
@@ -139,7 +156,8 @@ namespace XZShader
             xzalvis.SetProgramVariable("ctensityRotation_Band3", ctensityRotationSlider_Band3.value);
             xzalvis.SetProgramVariable("ctensityRotation_Band4", ctensityRotationSlider_Band4.value);
 
-            // xzalvis.SendCustomNetworkEvent(VRC.Udon.Common.Interfaces.NetworkEventTarget.All, "UpdateSettings");
+            xzalvis.SetProgramVariable("tilingScale", tilingScaleSlider.value);
+            xzalvis.SetProgramVariable("rotation", rotationSlider.value);
 
             xzalvis.SendCustomEvent("UpdateSettings");
         }
@@ -158,6 +176,9 @@ namespace XZShader
             ctensityRotationSlider_Band2.value = _initCtensityRotationBand2;
             ctensityRotationSlider_Band3.value = _initCtensityRotationBand3;
             ctensityRotationSlider_Band4.value = _initCtensityRotationBand4;
+
+            tilingScaleSlider.value = _initTilingScale;
+            rotationSlider.value = _initRotation;
 
             laggyModeToggle.isOn = false;
 
