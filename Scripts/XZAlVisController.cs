@@ -14,7 +14,7 @@ namespace XZShader
         public UdonBehaviour xzalvis;
 
         [Space(10)]
-        public MeshRenderer preview;
+        public MeshRenderer[] previews;
 
         [Space(10)]
         public Text amplitudeLabel;
@@ -121,22 +121,24 @@ namespace XZShader
             tilingScaleLabel.text = "Tiling: " + tilingScaleSlider.value.ToString("0.00");
             rotationLabel.text = "Rotation: " + rotationSlider.value.ToString("0.00");
 
-            // Apply to material of preview strip
-            Material material = preview.material;
-            material.SetFloat("_Amplitude_Scale", amplitudeSlider.value);
-            material.SetInt("_Mode", mode);
-            material.SetFloat("_Chronotensity_Scale", ctensityToggle.isOn ? 1.0f : 0.0f);
-            material.SetFloat("_Chronotensity_Tiling_Scale", ctensityTilingScaleSlider.value);
-            material.SetFloat("_Chronotensity_Offset_Scale", ctensityOffsetScaleSlider.value);
+            // Apply to material of preview strip(s)
+            foreach (MeshRenderer preview in previews) {
+                Material material = preview.material;
+                material.SetFloat("_Amplitude_Scale", amplitudeSlider.value);
+                material.SetInt("_Mode", mode);
+                material.SetFloat("_Chronotensity_Scale", ctensityToggle.isOn ? 1.0f : 0.0f);
+                material.SetFloat("_Chronotensity_Tiling_Scale", ctensityTilingScaleSlider.value);
+                material.SetFloat("_Chronotensity_Offset_Scale", ctensityOffsetScaleSlider.value);
 
-            material.SetFloat("_ChronoRot_Scale", ctensityRotationScaleSlider.value);
-            material.SetFloat("_ChronoRot_Band1", ctensityRotationSlider_Band1.value);
-            material.SetFloat("_ChronoRot_Band2", ctensityRotationSlider_Band2.value);
-            material.SetFloat("_ChronoRot_Band3", ctensityRotationSlider_Band3.value);
-            material.SetFloat("_ChronoRot_Band4", ctensityRotationSlider_Band4.value);
+                material.SetFloat("_ChronoRot_Scale", ctensityRotationScaleSlider.value);
+                material.SetFloat("_ChronoRot_Band1", ctensityRotationSlider_Band1.value);
+                material.SetFloat("_ChronoRot_Band2", ctensityRotationSlider_Band2.value);
+                material.SetFloat("_ChronoRot_Band3", ctensityRotationSlider_Band3.value);
+                material.SetFloat("_ChronoRot_Band4", ctensityRotationSlider_Band4.value);
 
-            material.SetFloat("_Tiling_Scale", tilingScaleSlider.value);
-            material.SetFloat("_Rotation", rotationSlider.value);
+                material.SetFloat("_Tiling_Scale", tilingScaleSlider.value);
+                material.SetFloat("_Rotation", rotationSlider.value);
+            }
         }
 
         public void ApplySettings()
