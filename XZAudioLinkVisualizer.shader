@@ -97,7 +97,8 @@ Shader "Xantoz/XZAudioLinkVisualizer"
         Pass
         {
             ZWrite Off
-            Blend SrcAlpha OneMinusSrcAlpha
+            Blend SrcAlpha One
+
             Cull Off
             CGPROGRAM
             #pragma vertex vert
@@ -247,11 +248,9 @@ Shader "Xantoz/XZAudioLinkVisualizer"
             }
 
             // Converts a distance to a color value. Use to plot linee by putting in the distance from UV to your line in question.
-            // Note: Currently outputs negative values because I have no idea what I'm doing, and negative values actually end up looking pretty good with our blending mode of choice.
-            // TODO: Fix the above (might need changing what blending mode we use)
             float linefn(float a)
             {
-                return clamp((1.0-pow(0.1/abs(a), .1)), -2, 0);
+                return -clamp((1.0-pow(0.1/abs(a), .1)), -2, 0);
             }
 
             float get_value_horiz_line(float2 xy, uint nsamples, uint lr)
@@ -563,7 +562,7 @@ Shader "Xantoz/XZAudioLinkVisualizer"
                 // place as well?
 
                 // Emergency clamp added to temper any blinding flicker bugs that might be left.
-                return clamp((_Color1 + _Color2*al_color_mult)*val, -3.0, 0.0);
+                return clamp((_Color1 + _Color2*al_color_mult)*val, -3.0, 3.0);
             }
  
             float4 get_color_auto(float2 xy)
@@ -616,7 +615,6 @@ Shader "Xantoz/XZAudioLinkVisualizer"
                     col.a *= get_vignette(i.unmodified_uv.xy);
                 }
 
-                // apply fog
                 UNITY_APPLY_FOG(i.fogCoord, col);
                 return col;
             }
