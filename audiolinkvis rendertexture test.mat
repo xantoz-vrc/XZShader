@@ -1,0 +1,120 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!21 &2100000
+Material:
+  serializedVersion: 6
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: audiolinkvis rendertexture test
+  m_Shader: {fileID: 4800000, guid: 7555b3ded9a002e408fa2386f5727aa1, type: 3}
+  m_ShaderKeywords: 
+  m_LightmapFlags: 4
+  m_EnableInstancingVariants: 0
+  m_DoubleSidedGI: 0
+  m_CustomRenderQueue: -1
+  stringTagMap: {}
+  disabledShaderPasses: []
+  m_SavedProperties:
+    serializedVersion: 3
+    m_TexEnvs:
+    - _BumpMap:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _DetailAlbedoMap:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _DetailMask:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _DetailNormalMap:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _EmissionMap:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _MainTex:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 3, y: 3}
+        m_Offset: {x: 0, y: 0}
+    - _MetallicGlossMap:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _OcclusionMap:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _ParallaxMap:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    m_Floats:
+    - _Amplitude_Scale: 1
+    - _BumpScale: 1
+    - _ChronoRot_Band0: 0.5
+    - _ChronoRot_Band1: 0
+    - _ChronoRot_Band2: 0
+    - _ChronoRot_Band3: 0
+    - _ChronoRot_Effect_Band0: 0
+    - _ChronoRot_Effect_Band1: 1
+    - _ChronoRot_Effect_Band2: 1
+    - _ChronoRot_Effect_Band3: 1
+    - _ChronoRot_Scale: 0
+    - _Chronorot_Reversing_Factor: 0
+    - _Chronotensity_Effect_Band0: 1
+    - _Chronotensity_Effect_Band1: 1
+    - _Chronotensity_Effect_Band2: 5
+    - _Chronotensity_Effect_Band3: 1
+    - _Chronotensity_Offset_Scale: 9
+    - _Chronotensity_Scale: 0
+    - _Chronotensity_Tiling_Scale: 5.28
+    - _Chronotensity_Tiling_Wrap_U: 3
+    - _Chronotensity_Tiling_Wrap_V: 3
+    - _Cutoff: 0.5
+    - _DetailNormalMapScale: 1
+    - _DstBlend: 0
+    - _Effect_Scale: 1
+    - _GlossMapScale: 1
+    - _Glossiness: 0.5
+    - _GlossyReflections: 1
+    - _Metallic: 0
+    - _Mode: 11
+    - _OcclusionStrength: 1
+    - _PCM_Scale: 1
+    - _Parallax: 0.02
+    - _Rotation: 0
+    - _Rotation_Reversing: 0
+    - _Rotation_Reversing_Factor: 0
+    - _SmoothnessTextureChannel: 0
+    - _SpecularHighlights: 1
+    - _SrcBlend: 1
+    - _Tiling_Scale: 1
+    - _Tilling_Scale: 0
+    - _UVSec: 0
+    - _Vignette_Inner_Radius: 0.85
+    - _Vignette_Intensity: 1
+    - _Vignette_Outer_Radius: 1
+    - _Vignette_Type: 0
+    - _ZWrite: 1
+    m_Colors:
+    - _Chronotensity_ST_Band0: {r: 0, g: 0, b: -1, a: 2}
+    - _Chronotensity_ST_Band1: {r: 0.25, g: 0.5, b: 0.5, a: 0}
+    - _Chronotensity_ST_Band2: {r: 0.1, g: 0.1, b: 0.1, a: 0}
+    - _Chronotensity_ST_Band3: {r: 0.5, g: 0, b: 0, a: -0.2}
+    - _Color: {r: 1, g: 1, b: 1, a: 1}
+    - _Color1: {r: 1, g: 1, b: 1, a: 1}
+    - _Color2: {r: 1, g: 1, b: 1, a: 1}
+    - _Color_Mul_Band0: {r: 7.9190717, g: 0, b: 7.924528, a: 0}
+    - _Color_Mul_Band1: {r: 0.21960784, g: 5.992157, b: 0, a: 0}
+    - _Color_Mul_Band2: {r: 11.984314, g: 10.729412, b: 0, a: 0}
+    - _Color_Mul_Band3: {r: 0, g: 8.909804, b: 11.984314, a: 0}
+    - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
+    - _Potato: {r: 1, g: 1, b: 1, a: 1}
+    - _ST: {r: 1, g: 1, b: 0, a: 0}

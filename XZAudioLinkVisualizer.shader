@@ -97,7 +97,22 @@ Shader "Xantoz/XZAudioLinkVisualizer"
         Pass
         {
             ZWrite Off
-            Blend SrcAlpha One
+            // Blend SrcAlpha One
+            // Blend SrcAlpha OneMinusSrcAlpha
+
+            // Blend OneMinusSrcAlpha SrcAlpha
+
+            // Blend OneMinusSrcAlpha DstAlpha
+            // Blend SrcAlpha Zero
+            // Blend SrcAlpha DstAlpha
+            Blend SrcAlpha OneMinusDstAlpha
+            // Blend OneMinusSrcAlpha One
+
+            // Blend Zero One
+            // Blend SrcAlpha DstAlpha
+
+
+            // Blend One Zero
 
             Cull Off
             CGPROGRAM
@@ -614,6 +629,9 @@ Shader "Xantoz/XZAudioLinkVisualizer"
 
                     col.a *= get_vignette(i.unmodified_uv.xy);
                 }
+
+                // col = -col;
+                // col.a = -col.a;
 
                 UNITY_APPLY_FOG(i.fogCoord, col);
                 return col;
