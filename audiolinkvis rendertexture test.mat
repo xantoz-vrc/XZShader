@@ -77,9 +77,11 @@ Material:
     - _Chronotensity_Tiling_Scale: 5.28
     - _Chronotensity_Tiling_Wrap_U: 3
     - _Chronotensity_Tiling_Wrap_V: 3
+    - _Cull: 0
     - _Cutoff: 0.5
     - _DetailNormalMapScale: 1
     - _DstBlend: 0
+    - _DstBlendMode: 7
     - _Effect_Scale: 1
     - _GlossMapScale: 1
     - _Glossiness: 0.5
@@ -95,6 +97,7 @@ Material:
     - _SmoothnessTextureChannel: 0
     - _SpecularHighlights: 1
     - _SrcBlend: 1
+    - _SrcBlendMode: 5
     - _Tiling_Scale: 1
     - _Tilling_Scale: 0
     - _UVSec: 0
