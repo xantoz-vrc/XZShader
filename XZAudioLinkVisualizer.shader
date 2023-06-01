@@ -20,6 +20,11 @@ Shader "Xantoz/XZAudioLinkVisualizer"
 {
     Properties
     {
+        [Enum(UnityEngine.Rendering.CullMode)] _Cull("Cull Mode", Float) = 0
+        // Default to Blend SrcAlpha One
+        [Enum(UnityEngine.Rendering.BlendMode)] _SrcBlendMode("Src Blend Mode", Float) = 5
+        [Enum(UnityEngine.Rendering.BlendMode)] _DstBlendMode("Dst Blend Mode", Float) = 1
+
         [Header(Basic Setings)]
         [Enum(XZAudioLinkVisualizerMode)] _Mode("Visualizer Mode", Int) = 0
         [HDR]_Color1 ("Color 1 (Base Color)", Color) = (1,1,1,1)
@@ -91,11 +96,12 @@ Shader "Xantoz/XZAudioLinkVisualizer"
     {
         Tags { "Queue"="Transparent" "RenderType"="Transparent" "IgnoreProjector"="True" "VRCFallback"="Hidden" }
         LOD 100
+        Cull[_CullMode]
 
         Pass
         {
             ZWrite Off
-            Blend SrcAlpha One
+            Blend[_SrcBlendMode] [_DstBlendMode]
 
             Cull Off
             CGPROGRAM
