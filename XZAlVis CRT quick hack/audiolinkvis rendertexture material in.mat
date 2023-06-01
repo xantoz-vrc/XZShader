@@ -7,7 +7,7 @@ Material:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: audiolinkvis rendertexture test
+  m_Name: audiolinkvis rendertexture material in
   m_Shader: {fileID: 4800000, guid: 7555b3ded9a002e408fa2386f5727aa1, type: 3}
   m_ShaderKeywords: 
   m_LightmapFlags: 4
@@ -81,7 +81,7 @@ Material:
     - _Cutoff: 0.5
     - _DetailNormalMapScale: 1
     - _DstBlend: 0
-    - _DstBlendMode: 7
+    - _DstBlendMode: 8
     - _Effect_Scale: 1
     - _GlossMapScale: 1
     - _Glossiness: 0.5
@@ -102,7 +102,7 @@ Material:
     - _Tilling_Scale: 0
     - _UVSec: 0
     - _Vignette_Inner_Radius: 0.85
-    - _Vignette_Intensity: 1
+    - _Vignette_Intensity: 0
     - _Vignette_Outer_Radius: 1
     - _Vignette_Type: 0
     - _ZWrite: 1
