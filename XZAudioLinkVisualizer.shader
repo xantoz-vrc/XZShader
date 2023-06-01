@@ -49,7 +49,6 @@ Shader "Xantoz/XZAudioLinkVisualizer"
         [HDR]_Color_Mul_Band2 ("Color High Mid", Color) = (0,0,0,0)
         [HDR]_Color_Mul_Band3 ("Color Treble", Color) = (0,0,0,0)
 
-
         [Space(10)]
         [Header(Chronotensity Scroll (Tiling and Offset))]
         // This one affects the values as they come out of AudioLink. Can be used to toggle chronotensity scroll.
@@ -87,7 +86,6 @@ Shader "Xantoz/XZAudioLinkVisualizer"
         _ChronoRot_Band2 ("Chronotensity Rotation, High Mid", Float) = 0.0
         [Enum(AudioLinkChronotensityEnum)]_ChronoRot_Effect_Band3 ("Chronotensity Rotation Type, Treble", Int) = 1
         _ChronoRot_Band3 ("Chronotensity Rotation, Treble", Float) = 0.0
-
     }
     SubShader
     {
@@ -97,22 +95,7 @@ Shader "Xantoz/XZAudioLinkVisualizer"
         Pass
         {
             ZWrite Off
-            // Blend SrcAlpha One
-            // Blend SrcAlpha OneMinusSrcAlpha
-
-            // Blend OneMinusSrcAlpha SrcAlpha
-
-            // Blend OneMinusSrcAlpha DstAlpha
-            // Blend SrcAlpha Zero
-            // Blend SrcAlpha DstAlpha
-            Blend SrcAlpha OneMinusDstAlpha
-            // Blend OneMinusSrcAlpha One
-
-            // Blend Zero One
-            // Blend SrcAlpha DstAlpha
-
-
-            // Blend One Zero
+            Blend SrcAlpha One
 
             Cull Off
             CGPROGRAM
@@ -450,17 +433,8 @@ Shader "Xantoz/XZAudioLinkVisualizer"
                 return linefn(dist);
             }
 
-            v2f vert(appdata v)
+            float2 get_uv(float2 uv_in)
             {
-                v2f o;
-
-                UNITY_SETUP_INSTANCE_ID(v);
-                UNITY_INITIALIZE_OUTPUT(v2f, o);
-                UNITY_INITIALIZE_VERTEX_OUTPUT_STEREO(o);
-
-                o.vertex = UnityObjectToClipPos(v.vertex);
-                o.unmodified_uv = v.uv;
-
                 float4 chronotensity_ST = float4(0,0,0,0);
                 float rot = _Rotation;
                 if (AudioLinkIsAvailable()) {
@@ -530,13 +504,26 @@ Shader "Xantoz/XZAudioLinkVisualizer"
                 }
 
                 float4 new_ST = _ST * float4(_Tiling_Scale, _Tiling_Scale, 1, 1) + chronotensity_ST;
-                float2 centered_uv = (v.uv - float2(0.5, 0.5))*new_ST.xy;
+                float2 centered_uv = (uv_in - float2(0.5, 0.5))*new_ST.xy;
 
                 float sinX = sin(radians(rot));
                 float cosX = cos(radians(rot));
                 float sinY = sin(radians(rot));
                 float2x2 rotationMatrix = float2x2(cosX, -sinX, sinY, cosX);
-                o.uv = mul(centered_uv, rotationMatrix) + float2(0.5, 0.5) + new_ST.zw;
+                return mul(centered_uv, rotationMatrix) + float2(0.5, 0.5) + new_ST.zw;
+            }
+
+            v2f vert(appdata v)
+            {
+                v2f o;
+
+                UNITY_SETUP_INSTANCE_ID(v);
+                UNITY_INITIALIZE_OUTPUT(v2f, o);
+                UNITY_INITIALIZE_VERTEX_OUTPUT_STEREO(o);
+
+                o.vertex = UnityObjectToClipPos(v.vertex);
+                o.unmodified_uv = v.uv;
+                o.uv = get_uv(v.uv)
 
                 UNITY_TRANSFER_FOG(o,o.vertex);
                 return o;
@@ -629,9 +616,6 @@ Shader "Xantoz/XZAudioLinkVisualizer"
 
                     col.a *= get_vignette(i.unmodified_uv.xy);
                 }
-
-                // col = -col;
-                // col.a = -col.a;
 
                 UNITY_APPLY_FOG(i.fogCoord, col);
                 return col;
