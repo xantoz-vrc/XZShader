@@ -207,6 +207,7 @@ Shader "Xantoz/XZAudioLinkVisualizerProjection"
 	    ZWrite Off
 
 	    CGPROGRAM
+            #pragma target 5.0
 	    #pragma vertex vert
 	    #pragma fragment frag
 	    ENDCG

@@ -104,6 +104,8 @@ Shader "Xantoz/XZAudioLinkVisualizer"
 
             Cull Off
             CGPROGRAM
+            #pragma target 5.0
+
             #pragma vertex vert
             #pragma fragment frag
             #pragma multi_compile_fog
