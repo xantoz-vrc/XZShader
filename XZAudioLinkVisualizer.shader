@@ -45,7 +45,6 @@ Shader "Xantoz/XZAudioLinkVisualizer"
         _Vignette_Outer_Radius ("Vignette Outer Radius", Range(0.0, 1.41421356237)) = 1.0
         [Enum(Circle,0, Diamond,1, Box,2)] _Vignette_Type("Vignette Type", Int) = 0
 
-
         [Space(10)]
         [Header(Color Blink)]
         [HDR]_Color2 ("Color 2 (Blink Base Color)", Color) = (1,1,1,1)
