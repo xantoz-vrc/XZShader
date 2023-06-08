@@ -278,17 +278,29 @@ float get_value_pcm_fancy(float2 xy, uint nsamples, uint bin)
     return val*0.6;
 }
 
+float doubledist_to_pcm_lr(float2 cpos, uint i)
+{
+    float2 pcm_lr = PCMToLR(AudioLinkPCMData(i)*_Amplitude_Scale);
+    return length(pcm_lr - cpos);
+}
+
 float get_value_xy_scatter(float2 xy)
 {
     float2 cpos = (frac(xy) - float2(0.5, 0.5))*2;
-    float dist = 1.#INF;
+    float4 dist4 = float4(1.#INF, 1.#INF, 1.#INF, 1.#INF);
     // [unroll(256)]
-    for (uint i = 0; i < 256; ++i)
+    // TODO: optimize further by using matrices?
+    for (uint i = 0; i < 256; i += 4)
     {
-        float2 pcm_lr = PCMToLR(AudioLinkPCMData(i)*_Amplitude_Scale);
-        float ndist = length(pcm_lr - cpos)*0.5;
-        dist = min(dist, ndist);
+        float4 ndist4 = float4(
+            doubledist_to_pcm_lr(cpos, i),
+            doubledist_to_pcm_lr(cpos, i+1),
+            doubledist_to_pcm_lr(cpos, i+2),
+            doubledist_to_pcm_lr(cpos, i+3))*0.5;
+        dist4 = min(dist4, ndist4);
     }
+
+    float dist = min(min(dist4.x, dist4.y), min(dist4.z, dist4.w));
 
     return linefn(dist);
 }
@@ -296,16 +308,26 @@ float get_value_xy_scatter(float2 xy)
 float get_value_xy_line(float2 xy)
 {
     float2 cpos = (frac(xy) - float2(0.5, 0.5))*2;
-    float dist = 1.#INF;
+    float4 dist4 = float4(1.#INF, 1.#INF, 1.#INF, 1.#INF);
     float2 pcm_lr_a = PCMToLR(AudioLinkPCMData(0)*_Amplitude_Scale);
     // [unroll(384)]
-    for (uint i = 1; i < 384; ++i)
+    // TODO: optimize further by making matrix versions of dist_to_line and all that
+    for (uint i = 1; i < 384; i += 4)
     {
         float2 pcm_lr_b = PCMToLR(AudioLinkPCMData(i)*_Amplitude_Scale);
-        float ndist = dist_to_line(cpos, pcm_lr_a, pcm_lr_b)*0.5;
-        dist = min(dist, ndist);
-        pcm_lr_a = pcm_lr_b;
+        float2 pcm_lr_c = PCMToLR(AudioLinkPCMData(i+1)*_Amplitude_Scale);
+        float2 pcm_lr_d = PCMToLR(AudioLinkPCMData(i+2)*_Amplitude_Scale);
+        float2 pcm_lr_e = PCMToLR(AudioLinkPCMData(i+3)*_Amplitude_Scale);
+        float4 ndist4 = float4(
+            dist_to_line(cpos, pcm_lr_a, pcm_lr_b),
+            dist_to_line(cpos, pcm_lr_b, pcm_lr_c),
+            dist_to_line(cpos, pcm_lr_c, pcm_lr_d),
+            dist_to_line(cpos, pcm_lr_d, pcm_lr_e))*0.5;
+        dist4 = min(dist4, ndist4);
+        pcm_lr_a = pcm_lr_e;
     }
+
+    float dist = min(min(dist4.x, dist4.y), min(dist4.z, dist4.w));
 
     return linefn(dist);
 }
