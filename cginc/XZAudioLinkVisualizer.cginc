@@ -288,8 +288,8 @@ float get_value_xy_scatter(float2 xy)
 {
     float2 cpos = (frac(xy) - float2(0.5, 0.5))*2;
     float4 dist4 = float4(1.#INF, 1.#INF, 1.#INF, 1.#INF);
-    // [unroll(256)]
     // TODO: optimize further by using matrices?
+    [unroll]
     for (uint i = 0; i < 256; i += 4)
     {
         float4 ndist4 = float4(
@@ -310,8 +310,8 @@ float get_value_xy_line(float2 xy)
     float2 cpos = (frac(xy) - float2(0.5, 0.5))*2;
     float4 dist4 = float4(1.#INF, 1.#INF, 1.#INF, 1.#INF);
     float2 pcm_lr_a = PCMToLR(AudioLinkPCMData(0)*_Amplitude_Scale);
-    // [unroll(384)]
     // TODO: optimize further by making matrix versions of dist_to_line and all that
+    [unroll]
     for (uint i = 1; i < 384; i += 4)
     {
         float2 pcm_lr_b = PCMToLR(AudioLinkPCMData(i)*_Amplitude_Scale);
