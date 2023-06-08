@@ -278,11 +278,12 @@ float get_value_pcm_fancy(float2 xy, uint nsamples, uint bin)
     return val*0.6;
 }
 
-float get_value_xy_scatter(float2 xy, uint nsamples)
+float get_value_xy_scatter(float2 xy)
 {
     float2 cpos = (frac(xy) - float2(0.5, 0.5))*2;
-    float dist = 1.0/0.0;  // Inf
-    for (uint i = 0; i < nsamples; ++i)
+    float dist = 1.#INF;
+    // [unroll(256)]
+    for (uint i = 0; i < 256; ++i)
     {
         float2 pcm_lr = PCMToLR(AudioLinkPCMData(i)*_Amplitude_Scale);
         float ndist = length(pcm_lr - cpos)*0.5;
@@ -292,12 +293,13 @@ float get_value_xy_scatter(float2 xy, uint nsamples)
     return linefn(dist);
 }
 
-float get_value_xy_line(float2 xy, uint nsamples)
+float get_value_xy_line(float2 xy)
 {
     float2 cpos = (frac(xy) - float2(0.5, 0.5))*2;
-    float dist = 1.0/0.0;  // Inf
+    float dist = 1.#INF;
     float2 pcm_lr_a = PCMToLR(AudioLinkPCMData(0)*_Amplitude_Scale);
-    for (uint i = 1; i < nsamples; ++i)
+    // [unroll(384)]
+    for (uint i = 1; i < 384; ++i)
     {
         float2 pcm_lr_b = PCMToLR(AudioLinkPCMData(i)*_Amplitude_Scale);
         float ndist = dist_to_line(cpos, pcm_lr_a, pcm_lr_b)*0.5;
@@ -399,8 +401,8 @@ float4 get_color(uint mode, float2 xy)
         case 3: val = get_value_circle(xy, 128, 0); break;
         case 4: val = get_value_circle_mirror(xy, 128, 0); break;
         case 5: val = get_value_circle_mirror_lr(xy, 128); break;
-        case 6: val = get_value_xy_scatter(xy, 256); break;
-        case 7: val = get_value_xy_line(xy, 384); break;
+        case 6: val = get_value_xy_scatter(xy); break;
+        case 7: val = get_value_xy_line(xy); break;
         case 8: val = get_value_pcm_fancy(xy, 1024, 8); break;
         case 9: val = get_value_spectrum_circle_mirror(xy); break;
         case 10: val = get_value_spectrum_fancy(xy, 256, 4); break;
