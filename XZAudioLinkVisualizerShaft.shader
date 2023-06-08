@@ -108,8 +108,8 @@ Shader "Xantoz/XZAudioLinkVisualizerShaft"
     SubShader
     {
 	Tags { "RenderType" = "Transparent" "Queue"="Overlay+101" }
-	Blend One One
-	// Blend SrcAlpha One
+	// Blend One One
+	Blend SrcAlpha One
 
 
 	CGINCLUDE
@@ -213,7 +213,7 @@ Shader "Xantoz/XZAudioLinkVisualizerShaft"
 			float3 v2 = normalize(projectorPos - p);
 			float r = pow(dot(v1, v2) + 1, _DirectionalFactor) + _ConstantFactor;
 			// c.rgb += all(saturate(tp2) == tp2) ? (tex2Dlod(_MainTex, float4(tp2, 0, 1)).rgb * 0.01 * pow(tp.z, -0.2) * r) : 0.0;
-			c.rgb += all(saturate(tp2) == tp2) ? (get_frag(get_uv(tp2), tp2).rgb * 0.01 * pow(tp.z, -0.2) * r) : 0.0;
+			c += all(saturate(tp2) == tp2) ? (get_frag(get_uv(tp2), tp2) * 0.01 * pow(tp.z, -0.2) * r) : 0.0;
 			// c.rgb += all(saturate(tp2) == tp2) ? (float3(0.0, 0.0, 0.1) * 0.01 * pow(tp.z, -0.2) * r) : 0.0;
                         // c.rgb += float4(0.0, 0.0, 0.1, 1.0);
 		    }
