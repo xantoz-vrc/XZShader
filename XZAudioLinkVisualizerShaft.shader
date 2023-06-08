@@ -38,11 +38,6 @@ Shader "Xantoz/XZAudioLinkVisualizerShaft"
         [Header(Visualizer)]
         [Space(10)]
 
-        [Enum(UnityEngine.Rendering.CullMode)] _Cull("Cull Mode", Float) = 0
-        // Default to Blend SrcAlpha One
-        [Enum(UnityEngine.Rendering.BlendMode)] _SrcBlendMode("Src Blend Mode", Float) = 5
-        [Enum(UnityEngine.Rendering.BlendMode)] _DstBlendMode("Dst Blend Mode", Float) = 1
-
         [Header(Basic Setings)]
         [Enum(XZAudioLinkVisualizerMode)] _Mode("Visualizer Mode", Int) = 0
         [HDR]_Color1 ("Color 1 (Base Color)", Color) = (1,1,1,1)
@@ -114,6 +109,8 @@ Shader "Xantoz/XZAudioLinkVisualizerShaft"
     {
 	Tags { "RenderType" = "Transparent" "Queue"="Overlay+101" }
 	Blend One One
+	// Blend SrcAlpha One
+
 
 	CGINCLUDE
 	#include "UnityCG.cginc"
@@ -217,7 +214,8 @@ Shader "Xantoz/XZAudioLinkVisualizerShaft"
 			float r = pow(dot(v1, v2) + 1, _DirectionalFactor) + _ConstantFactor;
 			// c.rgb += all(saturate(tp2) == tp2) ? (tex2Dlod(_MainTex, float4(tp2, 0, 1)).rgb * 0.01 * pow(tp.z, -0.2) * r) : 0.0;
 			c.rgb += all(saturate(tp2) == tp2) ? (get_frag(get_uv(tp2), tp2).rgb * 0.01 * pow(tp.z, -0.2) * r) : 0.0;
-                        // c.rgb += float4(0.0, 0.0, 0.0, 0.0);
+			// c.rgb += all(saturate(tp2) == tp2) ? (float3(0.0, 0.0, 0.1) * 0.01 * pow(tp.z, -0.2) * r) : 0.0;
+                        // c.rgb += float4(0.0, 0.0, 0.1, 1.0);
 		    }
 		}
 	    }
@@ -239,7 +237,9 @@ Shader "Xantoz/XZAudioLinkVisualizerShaft"
 	    else
 	    {
 		if (side >= 0)
-		return fixed4(0, 0, 0, 0);
+                {
+		    return fixed4(0, 0, 0, 0);
+                }
 
 		return trace(i.worldPos, viewDir);
 	    }
