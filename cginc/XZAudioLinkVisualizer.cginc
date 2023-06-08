@@ -317,7 +317,7 @@ float get_value_xy_line(float2 xy)
         float2 pcm_lr_b = PCMToLR(AudioLinkPCMData(i)*_Amplitude_Scale);
         float2 pcm_lr_c = PCMToLR(AudioLinkPCMData(i+1)*_Amplitude_Scale);
         float2 pcm_lr_d = PCMToLR(AudioLinkPCMData(i+2)*_Amplitude_Scale);
-        float2 pcm_lr_e = PCMToLR(AudioLinkPCMData(i+3)*_Amplitude_Scale);
+        float2 pcm_lr_e = PCMToLR(AudioLinkPCMData((i+3)%384)*_Amplitude_Scale);
         float4 ndist4 = float4(
             dist_to_line(cpos, pcm_lr_a, pcm_lr_b),
             dist_to_line(cpos, pcm_lr_b, pcm_lr_c),
