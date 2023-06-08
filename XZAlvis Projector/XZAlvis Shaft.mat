@@ -61,7 +61,7 @@ Material:
         m_Offset: {x: 0, y: 0}
     m_Floats:
     - _Amplitude_Scale: 1
-    - _Brightness: 1
+    - _Brightness: 1.5
     - _BumpScale: 1
     - _ChronoRot_Band0: 0.5
     - _ChronoRot_Band1: 0
