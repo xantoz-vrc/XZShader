@@ -120,6 +120,14 @@ float dist_to_line(float2 p, float2 a, float2 b)
     return length(p - b * h);                        // dist to segment
 }
 
+float sqdist_to_line(float2 p, float2 a, float2 b)
+{
+    p -= a, b -= a;
+    float h = clamp(dot(p, b) / dot(b, b), 0.0, 1.0); // proj coord on line
+    float2 x = (p - b * h);
+    return dot(x, x);   // distance squared to segment
+}
+
 // Converts a distance to a color value. Use to plot linee by putting in the distance from UV to your line in question.
 float linefn(float a)
 {
@@ -278,10 +286,11 @@ float get_value_pcm_fancy(float2 xy, uint nsamples, uint bin)
     return val*0.6;
 }
 
-float doubledist_to_pcm_lr(float2 cpos, uint i)
+float sqdist_to_pcm_lr(float2 cpos, uint i)
 {
     float2 pcm_lr = PCMToLR(AudioLinkPCMData(i)*_Amplitude_Scale);
-    return length(pcm_lr - cpos);
+    float2 x = (pcm_lr - cpos);
+    return dot(x, x);
 }
 
 float get_value_xy_scatter(float2 xy)
@@ -292,14 +301,14 @@ float get_value_xy_scatter(float2 xy)
     for (uint i = 0; i < 256; i += 4)
     {
         float4 ndist4 = float4(
-            doubledist_to_pcm_lr(cpos, i),
-            doubledist_to_pcm_lr(cpos, i+1),
-            doubledist_to_pcm_lr(cpos, i+2),
-            doubledist_to_pcm_lr(cpos, i+3))*0.5;
+            sqdist_to_pcm_lr(cpos, i),
+            sqdist_to_pcm_lr(cpos, i+1),
+            sqdist_to_pcm_lr(cpos, i+2),
+            sqdist_to_pcm_lr(cpos, i+3));
         dist4 = min(dist4, ndist4);
     }
 
-    float dist = min(min(dist4.x, dist4.y), min(dist4.z, dist4.w));
+    float dist = sqrt(min(min(dist4.x, dist4.y), min(dist4.z, dist4.w)))*0.5;
 
     return linefn(dist);
 }
@@ -317,14 +326,14 @@ float get_value_xy_line(float2 xy)
         float2 pcm_lr_d = PCMToLR(AudioLinkPCMData(i+3)*_Amplitude_Scale);
         float2 pcm_lr_e = PCMToLR(AudioLinkPCMData((i+4)%384)*_Amplitude_Scale);
         float4 ndist4 = float4(
-            dist_to_line(cpos, pcm_lr_a, pcm_lr_b),
-            dist_to_line(cpos, pcm_lr_b, pcm_lr_c),
-            dist_to_line(cpos, pcm_lr_c, pcm_lr_d),
-            dist_to_line(cpos, pcm_lr_d, pcm_lr_e))*0.5;
+            sqdist_to_line(cpos, pcm_lr_a, pcm_lr_b),
+            sqdist_to_line(cpos, pcm_lr_b, pcm_lr_c),
+            sqdist_to_line(cpos, pcm_lr_c, pcm_lr_d),
+            sqdist_to_line(cpos, pcm_lr_d, pcm_lr_e));
         dist4 = min(dist4, ndist4);
     }
 
-    float dist = min(min(dist4.x, dist4.y), min(dist4.z, dist4.w));
+    float dist = sqrt(min(min(dist4.x, dist4.y), min(dist4.z, dist4.w)))*0.5;
 
     return linefn(dist);
 }
