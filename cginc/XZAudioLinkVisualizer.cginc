@@ -471,23 +471,6 @@ float4 get_color(uint mode, float2 xy)
     return clamp((_Color1 + _Color2*al_color_mult)*val, -3.0, 3.0);
 }
 
-float4 get_color_auto(float2 xy)
-{
-    // Get random number and convert to an integer between 0 and MAX_MODE
-    const uint mode = ceil(get_rarely_changing_random()*MAX_MODE);
-    return get_color(mode, xy);
-}
-
-float4 get_color_auto2(float2 xy)
-{
-    // Get random number and convert to an integer between 0 and MAX_MODE
-    uint mode = ceil(get_rarely_changing_random()*MAX_MODE);
-    // But replace modes 6 and 7 with something else
-    if (mode == 7) mode = 2; // XY line plot replace with LR lines
-    if (mode == 6) mode = 8; // XY scatter plot replace with PCM ribbon
-    return get_color(mode, xy);
-}
-
 float get_vignette(float2 xy)
 {
     float2 cpos = (frac(xy) - float2(0.5,0.5))*2;
@@ -508,14 +491,20 @@ float4 get_frag(float2 xy, float2 vignette_xy)
     float4 col = float4(0,0,0,0);
 
     if (AudioLinkIsAvailable()) {
-        if (_Mode > MAX_MODE + 1) {
-            col = get_color_auto2(xy);
-        } else if (_Mode > MAX_MODE) {
-            col = get_color_auto(xy);
-        } else {
-            col = get_color(_Mode, xy);
+        uint mode = _Mode;
+
+        if (_Mode > MAX_MODE) {
+            // Auto mode
+            // Get random number and convert to an integer between 0 and MAX_MODE
+            mode = ceil(get_rarely_changing_random()*MAX_MODE);
+            if (_Mode > MAX_MODE + 1) {
+                // Auto2 mode: replace modes 6 and 7 with something else
+                if (mode == 7) mode = 2; // XY line plot replace with LR lines
+                if (mode == 6) mode = 8; // XY scatter plot replace with PCM ribbon
+            }
         }
 
+        col = get_color(mode, xy);
         col.a *= get_vignette(vignette_xy);
     }
 
