@@ -318,9 +318,9 @@ float get_value_xy_line(float2 xy)
     float2 cpos = (frac(xy) - float2(0.5, 0.5))*2;
     float4 dist4 = float4(1.#INF, 1.#INF, 1.#INF, 1.#INF);
     // TODO: optimize further by making matrix versions of dist_to_line and all that
+    float2 pcm_lr_a = PCMToLR(AudioLinkPCMData(0)*_Amplitude_Scale);
     for (uint i = 0; i < 384; i += 4)
     {
-        float2 pcm_lr_a = PCMToLR(AudioLinkPCMData(i)*_Amplitude_Scale);
         float2 pcm_lr_b = PCMToLR(AudioLinkPCMData(i+1)*_Amplitude_Scale);
         float2 pcm_lr_c = PCMToLR(AudioLinkPCMData(i+2)*_Amplitude_Scale);
         float2 pcm_lr_d = PCMToLR(AudioLinkPCMData(i+3)*_Amplitude_Scale);
@@ -331,6 +331,7 @@ float get_value_xy_line(float2 xy)
             sqdist_to_line(cpos, pcm_lr_c, pcm_lr_d),
             sqdist_to_line(cpos, pcm_lr_d, pcm_lr_e));
         dist4 = min(dist4, ndist4);
+        pcm_lr_a = pcm_lr_e;
     }
 
     float dist = sqrt(min(min(dist4.x, dist4.y), min(dist4.z, dist4.w)))*0.5;
