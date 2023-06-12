@@ -18,7 +18,7 @@ CustomRenderTexture:
   m_AntiAliasing: 1
   m_MipCount: -1
   m_DepthFormat: 0
-  m_ColorFormat: 8
+  m_ColorFormat: 24
   m_MipMap: 0
   m_GenerateMips: 1
   m_SRGB: 0
@@ -40,13 +40,13 @@ CustomRenderTexture:
   m_InitMaterial: {fileID: 2100000, guid: 299c9a812a97f5630b9777cf86070606, type: 2}
   m_InitColor: {r: 1, g: 1, b: 1, a: 1}
   m_InitTexture: {fileID: 2800000, guid: 5e7c9ab97e5884e4eaa5967e9024f39d, type: 3}
-  m_UpdateMode: 0
+  m_UpdateMode: 1
   m_InitializationMode: 1
   m_UpdateZoneSpace: 0
   m_CurrentUpdateZoneSpace: 0
   m_UpdateZones: []
-  m_UpdatePeriod: 1
+  m_UpdatePeriod: 0
   m_ShaderPass: 0
   m_CubemapFaceMask: 4294967295
-  m_DoubleBuffered: 1
+  m_DoubleBuffered: 0
   m_WrapUpdateZones: 0
