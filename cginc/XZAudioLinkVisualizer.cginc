@@ -443,10 +443,10 @@ float4 get_color(uint mode, float2 xy)
         AudioLinkData(uint2(0,3)).r
     };
     float4 al_color_mult =
-    _Color_Mul_Band0*al_beat[0] +
-    _Color_Mul_Band1*al_beat[1] +
-    _Color_Mul_Band2*al_beat[2] +
-    _Color_Mul_Band3*al_beat[3];
+        _Color_Mul_Band0*al_beat[0] +
+        _Color_Mul_Band1*al_beat[1] +
+        _Color_Mul_Band2*al_beat[2] +
+        _Color_Mul_Band3*al_beat[3];
 
     // TODO: Maybe each function should have a way to
     // tell if they want a certain color in a certain
