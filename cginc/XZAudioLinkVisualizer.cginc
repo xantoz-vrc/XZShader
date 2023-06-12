@@ -315,25 +315,39 @@ float get_value_xy_scatter(float2 xy)
 
 float get_value_xy_line(float2 xy)
 {
-    float2 cpos = (frac(xy) - float2(0.5, 0.5))*2;
-    float4 dist4 = float4(1.#INF, 1.#INF, 1.#INF, 1.#INF);
+    const float2 cpos = (frac(xy) - float2(0.5, 0.5))*2;
+    float4 dist4_0 = float4(1.#INF, 1.#INF, 1.#INF, 1.#INF);
+    float4 dist4_1 = float4(1.#INF, 1.#INF, 1.#INF, 1.#INF);
     // TODO: optimize further by making matrix versions of dist_to_line and all that
     float2 pcm_lr_a = PCMToLR(AudioLinkPCMData(0)*_Amplitude_Scale);
-    for (uint i = 0; i < 384; i += 4)
+    for (uint i = 0; i < 384; i += 8)
     {
         float2 pcm_lr_b = PCMToLR(AudioLinkPCMData(i+1)*_Amplitude_Scale);
         float2 pcm_lr_c = PCMToLR(AudioLinkPCMData(i+2)*_Amplitude_Scale);
         float2 pcm_lr_d = PCMToLR(AudioLinkPCMData(i+3)*_Amplitude_Scale);
-        float2 pcm_lr_e = PCMToLR(AudioLinkPCMData((i+4)%384)*_Amplitude_Scale);
-        float4 ndist4 = float4(
+        float2 pcm_lr_e = PCMToLR(AudioLinkPCMData(i+4)*_Amplitude_Scale);
+        float2 pcm_lr_f = PCMToLR(AudioLinkPCMData(i+5)*_Amplitude_Scale);
+        float2 pcm_lr_g = PCMToLR(AudioLinkPCMData(i+6)*_Amplitude_Scale);
+        float2 pcm_lr_h = PCMToLR(AudioLinkPCMData(i+7)*_Amplitude_Scale);
+        float2 pcm_lr_i = PCMToLR(AudioLinkPCMData((i+8)%384)*_Amplitude_Scale);
+        float4 ndist4_0 = float4(
             sqdist_to_line(cpos, pcm_lr_a, pcm_lr_b),
             sqdist_to_line(cpos, pcm_lr_b, pcm_lr_c),
             sqdist_to_line(cpos, pcm_lr_c, pcm_lr_d),
             sqdist_to_line(cpos, pcm_lr_d, pcm_lr_e));
-        dist4 = min(dist4, ndist4);
-        pcm_lr_a = pcm_lr_e;
+        float4 ndist4_1 = float4(
+            sqdist_to_line(cpos, pcm_lr_e, pcm_lr_f),
+            sqdist_to_line(cpos, pcm_lr_f, pcm_lr_g),
+            sqdist_to_line(cpos, pcm_lr_g, pcm_lr_h),
+            sqdist_to_line(cpos, pcm_lr_h, pcm_lr_i));
+
+        dist4_0 = min(dist4_0, ndist4_0);
+        dist4_1 = min(dist4_1, ndist4_1);
+
+        pcm_lr_a = pcm_lr_i;
     }
 
+    float4 dist4 = min(dist4_0, dist4_1);
     float dist = sqrt(min(min(dist4.x, dist4.y), min(dist4.z, dist4.w)))*0.5;
 
     return linefn(dist);
