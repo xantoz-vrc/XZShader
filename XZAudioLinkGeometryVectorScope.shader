@@ -22,6 +22,9 @@ Shader "Xantoz/XZAudioLinkGeometryVectorScope"
     {
         [HDR]_Color1 ("Color 1 (Base Color)", Color) = (1,1,1,1)
 
+        _PointSize ("Point Size", Float) = 0.1
+        _AlphaMultiplier ("Alpha Multiplier (lower makes more transparent)", Range(0.0, 2.0)) = 0.5
+
         _Amplitude_Scale ("Amplitude Scale", Range(0.0, 2.0)) = 1.0  // Scale amplitude of PCM & DFT data in plots
 
         [Space(10)]
@@ -42,6 +45,7 @@ Shader "Xantoz/XZAudioLinkGeometryVectorScope"
         {
             ZWrite Off
             Blend SrcAlpha One
+            // Blend SrcAlpha OneMinusSrcAlpha
 
             Cull Off
             CGPROGRAM
@@ -55,6 +59,9 @@ Shader "Xantoz/XZAudioLinkGeometryVectorScope"
             
             #include "UnityCG.cginc"
             #include "cginc/AudioLinkFuncs.cginc"
+
+            float _PointSize;
+            float _AlphaMultiplier;
 
             float _Amplitude_Scale;
 
@@ -107,12 +114,13 @@ Shader "Xantoz/XZAudioLinkGeometryVectorScope"
                 return o;
             }
 
+            // 6 input points * 32 instances * 8 samples per instance = 1536 samples out
             #define SAMPLECNT 8
 
-            // 6 input points * 32 instances * 8 vertexes out = 1536 samples out
-	    [maxvertexcount(SAMPLECNT)]
+            // 8 samples * 6 vertices out (quad)
+	    [maxvertexcount(SAMPLECNT*6)]
 	    [instance(32)]
-	    void geom(point v2g IN[1], inout PointStream<g2f> stream,
+	    void geom(point v2g IN[1], inout TriangleStream<g2f> stream,
 		uint instanceID : SV_GSInstanceID, uint geoPrimID : SV_PrimitiveID)
 	    {
                 UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(IN[0]);
@@ -124,18 +132,63 @@ Shader "Xantoz/XZAudioLinkGeometryVectorScope"
                 UNITY_INITIALIZE_OUTPUT(g2f, o);
                 UNITY_TRANSFER_VERTEX_OUTPUT_STEREO(IN[0], o);
 
-                o.uv = IN[0].uv;
-
                 for (int i = 0; i < SAMPLECNT; ++i)
                 {
                     uint sampleID = i + operationID * SAMPLECNT;
                     float2 pcm_lr = PCMToLR(AudioLinkPCMData(sampleID)*_Amplitude_Scale);
                     float4 pointOut = float4(pcm_lr, 0.0, 1.0);
-                    
-                    o.vertex = UnityObjectToClipPos(pointOut);
+                    // pointOut.z = (AudioLinkPCMData(sampleID)*_Amplitude_Scale).a;
+                    // pointOut.z = -(AudioLinkDFTLerpMirror(sampleID % 256, 256)*0.1);
+                    pointOut.z = AudioLinkPCMData(sampleID).g*_Amplitude_Scale;
+
+                    const float4 TL = float4(-1.0,-1.0, 0.0, 0.0);
+                    const float4 TR = float4(-1.0, 1.0, 0.0, 0.0);
+                    const float4 BL = float4( 1.0,-1.0, 0.0, 0.0);
+                    const float4 BR = float4( 1.0, 1.0, 0.0, 0.0);
+
+                    const float2 uvTL = (TL.xy + float2(1.0, 1.0))/2;
+                    const float2 uvTR = (TR.xy + float2(1.0, 1.0))/2;
+                    const float2 uvBL = (BL.xy + float2(1.0, 1.0))/2;
+                    const float2 uvBR = (BR.xy + float2(1.0, 1.0))/2;
+
+                    float4 pointTL = pointOut + TL*_PointSize;
+                    float4 pointTR = pointOut + TR*_PointSize;
+                    float4 pointBL = pointOut + BL*_PointSize;
+                    float4 pointBR = pointOut + BR*_PointSize;
+
+                    o.vertex = UnityObjectToClipPos(pointTL);
+                    o.uv = uvTL;
                     UNITY_TRANSFER_FOG(o, o.vertex);
                     stream.Append(o);
+                    o.vertex = UnityObjectToClipPos(pointTR);
+                    o.uv = uvTR;
+                    UNITY_TRANSFER_FOG(o, o.vertex);
+                    stream.Append(o);
+                    o.vertex = UnityObjectToClipPos(pointBL);
+                    o.uv = uvBL;
+                    UNITY_TRANSFER_FOG(o, o.vertex);
+                    stream.Append(o);
+
+                    o.vertex = UnityObjectToClipPos(pointBL);
+                    o.uv = uvBL;
+                    UNITY_TRANSFER_FOG(o, o.vertex);
+                    stream.Append(o);
+                    o.vertex = UnityObjectToClipPos(pointBR);
+                    o.uv = uvBR;
+                    UNITY_TRANSFER_FOG(o, o.vertex);
+                    stream.Append(o);
+                    o.vertex = UnityObjectToClipPos(pointTR);
+                    o.uv = uvTR;
+                    UNITY_TRANSFER_FOG(o, o.vertex);
+                    stream.Append(o);
+
+                    stream.RestartStrip();
                 }
+            }
+
+            float linefn(float a)
+            {
+                return -clamp((1.0-pow(0.5/abs(a), .1)), -2, 0);
             }
 
             float4 frag(g2f i) : SV_Target
@@ -154,7 +207,10 @@ Shader "Xantoz/XZAudioLinkGeometryVectorScope"
                     _Color_Mul_Band2*al_beat[2] +
                     _Color_Mul_Band3*al_beat[3];
 
-                float4 col = (_Color1 + _Color2*al_color_mult)/2;
+                float val = linefn(length((frac(i.uv.xy) - float2(0.5, 0.5))*2));
+
+                float4 col = clamp(val*(_Color1 + _Color2*al_color_mult), 0.0, 1.0);
+                col.a *= _AlphaMultiplier;
 
                 UNITY_APPLY_FOG(i.fogCoord, col);
                 return col;
