@@ -87,7 +87,7 @@ Material:
     - _Glossiness: 0.5
     - _GlossyReflections: 1
     - _Metallic: 0
-    - _Mode: 11
+    - _Mode: 12
     - _OcclusionStrength: 1
     - _PCM_Scale: 1
     - _Parallax: 0.02
@@ -104,7 +104,7 @@ Material:
     - _Vignette_Inner_Radius: 0.85
     - _Vignette_Intensity: 1
     - _Vignette_Outer_Radius: 1
-    - _Vignette_Type: 0
+    - _Vignette_Type: 2
     - _ZWrite: 1
     m_Colors:
     - _Chronotensity_ST_Band0: {r: 0, g: 0, b: -1, a: 2}

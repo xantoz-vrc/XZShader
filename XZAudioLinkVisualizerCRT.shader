@@ -75,6 +75,9 @@ Shader "Xantoz/XZAudioLinkVisualizerCRT"
     {
         Lighting Off
         // Blend One Zero
+        // Blend One Zero
+        // Blend SrcAlpha Zero
+
         Blend SrcAlpha OneMinusDstAlpha
         // Blend SrcAlpha OneMinusSrcAlpha
 
@@ -92,25 +95,25 @@ Shader "Xantoz/XZAudioLinkVisualizerCRT"
 
             float4 frag(v2f_customrendertexture IN) : COLOR
             {
-                const float rot = 5.0f;
+                const float rot = 3.0f;
                 const float sinX = sin(radians(rot));
                 const float cosX = cos(radians(rot));
                 const float sinY = sin(radians(rot));
                 const float2x2 rotationMatrix = float2x2(cosX, -sinX, sinY, cosX);
 
-                float2 new_uv = (mul(IN.globalTexcoord.xy-0.5, rotationMatrix))*1.03 + 0.5;
-                // float2 new_uv = get_uv((mul(IN.globalTexcoord.xy-0.5, rotationMatrix))*1.05 + 0.5);
-                // float2 new_uv = (mul(get_uv(IN.globalTexcoord.xy)-0.5, rotationMatrix))*1.05 + 0.5;
+                // float2 new_uv = (mul(IN.globalTexcoord.xy-0.5, rotationMatrix))*1.03 + 0.5;
+                // float2 new_uv = get_uv((mul(IN.globalTexcoord.xy-0.5, rotationMatrix))*1.03 + 0.5);
+                float2 new_uv = (mul(get_uv(IN.globalTexcoord.xy)-0.5, rotationMatrix))*1.03 + 0.5;
 
                 float4 oldcol = tex2D(_SelfTexture2D, new_uv);
                 float4 newcol = get_frag(get_uv(IN.localTexcoord.xy), IN.localTexcoord.xy);
                 float4 col = float4(0.0, 0.0, 0.0, 0.0);
 
-                // col = oldcol*(1-oldcol.a) + newcol;
-                col = oldcol*0.9 + newcol;
+                col = 0.7*oldcol*(1-oldcol.a) + newcol;
+                // col = oldcol*0.9 + newcol;
 
                 // col.rgb = oldcol.rgb*(1-oldcol.a) + newcol.rgb;
-                // col.a = oldcol.a*0.5 + newcol.a
+                // col.a = oldcol.a*0.5 + newcol.a;
 
                 return col;
             }
