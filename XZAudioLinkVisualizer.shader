@@ -102,7 +102,6 @@ Shader "Xantoz/XZAudioLinkVisualizer"
             ZWrite Off
             Blend[_SrcBlendMode] [_DstBlendMode]
 
-            Cull Off
             CGPROGRAM
             #pragma target 5.0
 
@@ -127,7 +126,7 @@ Shader "Xantoz/XZAudioLinkVisualizer"
                 float2 uv : TEXCOORD0;
                 float2 unmodified_uv : TEXCOORD1;
                 float4 vertex : SV_POSITION;
-                UNITY_FOG_COORDS(1)
+                UNITY_FOG_COORDS(2)
 
                 UNITY_VERTEX_OUTPUT_STEREO
             };
