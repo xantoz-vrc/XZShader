@@ -35,30 +35,33 @@ Shader "Xantoz/XZAudioLinkGeometryVectorScope"
         [HDR]_Color_Mul_Band2 ("Color High Mid", Color) = (0,0,0,0)
         [HDR]_Color_Mul_Band3 ("Color Treble", Color) = (0,0,0,0)
     }
+
+    CGINCLUDE
+        #pragma vertex vert
+        #pragma fragment frag
+        #pragma geometry geom
+        #pragma multi_compile_fog
+        #pragma multi_compile_instancing
+        #pragma target 5.0
+
+        #include "UnityCG.cginc"
+        #include "cginc/AudioLinkFuncs.cginc"
+    ENDCG
+
     SubShader
     {
         Tags { "Queue"="Transparent" "RenderType"="Transparent" "IgnoreProjector"="True" "VRCFallback"="Hidden" }
         LOD 100
         Cull Off
+        ZWrite Off
+        // ZTest always
 
         Pass
         {
-            ZWrite Off
             Blend SrcAlpha One
             // Blend SrcAlpha OneMinusSrcAlpha
 
-            Cull Off
             CGPROGRAM
-            #pragma target 5.0
-
-            #pragma vertex vert
-            #pragma fragment frag
-            #pragma geometry geom
-            #pragma multi_compile_fog
-            #pragma multi_compile_instancing
-            
-            #include "UnityCG.cginc"
-            #include "cginc/AudioLinkFuncs.cginc"
 
             float _PointSize;
             float _AlphaMultiplier;
@@ -74,28 +77,26 @@ Shader "Xantoz/XZAudioLinkGeometryVectorScope"
 
             struct appdata
             {
-                float4 vertex : SV_POSITION;
-                float2 uv : TEXCOORD0;
+                float4 vertex : POSITION;
 	        uint vertexID : SV_VertexID;
 
                 UNITY_VERTEX_INPUT_INSTANCE_ID
             };
 
-            struct v2g
-            {
-                float2 uv : TEXCOORD0;
-                float4 vertex : SV_POSITION;
-                uint2 batchID : TEXCOORD1;
+	    struct v2g
+	    {
+		float4 vertex : SV_POSITION;
+		uint2 batchID : TEXCOORD0;
 
-                UNITY_VERTEX_OUTPUT_STEREO
+		UNITY_VERTEX_OUTPUT_STEREO
             };
-            
+
             struct g2f
             {
                 float2 uv : TEXCOORD0;
                 float4 vertex : SV_POSITION;
 
-                UNITY_FOG_COORDS(6)
+                UNITY_FOG_COORDS(1)
                 UNITY_VERTEX_OUTPUT_STEREO
             };
 
@@ -109,7 +110,6 @@ Shader "Xantoz/XZAudioLinkGeometryVectorScope"
 
                 o.vertex = v.vertex;
                 o.batchID = v.vertexID / 6; // Assumes we get a quad
-                o.uv = v.uv;
 
                 return o;
             }
@@ -118,11 +118,11 @@ Shader "Xantoz/XZAudioLinkGeometryVectorScope"
             #define SAMPLECNT 8
 
             // 8 samples * 6 vertices out (quad)
-	    [maxvertexcount(SAMPLECNT*6)]
+            [maxvertexcount(SAMPLECNT*6)]
 	    [instance(32)]
 	    void geom(point v2g IN[1], inout TriangleStream<g2f> stream,
 		uint instanceID : SV_GSInstanceID, uint geoPrimID : SV_PrimitiveID)
-	    {
+            {
                 UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(IN[0]);
 
 		int batchID = IN[0].batchID;
