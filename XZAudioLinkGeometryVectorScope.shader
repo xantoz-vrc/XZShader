@@ -132,13 +132,16 @@ Shader "Xantoz/XZAudioLinkGeometryVectorScope"
                 UNITY_INITIALIZE_OUTPUT(g2f, o);
                 UNITY_TRANSFER_VERTEX_OUTPUT_STEREO(IN[0], o);
 
+                if (!AudioLinkIsAvailable())
+                {
+                    return;
+                }
+
                 for (int i = 0; i < SAMPLECNT; ++i)
                 {
                     uint sampleID = i + operationID * SAMPLECNT;
                     float2 pcm_lr = PCMToLR(AudioLinkPCMData(sampleID)*_Amplitude_Scale);
                     float4 pointOut = float4(pcm_lr, 0.0, 1.0);
-                    // pointOut.z = (AudioLinkPCMData(sampleID)*_Amplitude_Scale).a;
-                    // pointOut.z = -(AudioLinkDFTLerpMirror(sampleID % 256, 256)*0.1);
                     pointOut.z = AudioLinkPCMData(sampleID).g*_Amplitude_Scale;
 
                     const float4 TL = float4(-1.0,-1.0, 0.0, 0.0);
@@ -194,6 +197,11 @@ Shader "Xantoz/XZAudioLinkGeometryVectorScope"
             float4 frag(g2f i) : SV_Target
             {
                 UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(i);
+
+                if (!AudioLinkIsAvailable())
+                {
+                    return float4(0,0,0,0);
+                }
 
                 float al_beat[4] = {
                     AudioLinkData(uint2(0,0)).r,
