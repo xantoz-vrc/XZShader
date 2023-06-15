@@ -43,6 +43,7 @@ Shader "Xantoz/XZAudioLinkGeometryVectorScope"
         #pragma multi_compile_fog
         #pragma multi_compile_instancing
         #pragma target 5.0
+        #pragma exclude_renderers gles metal
 
         #include "UnityCG.cginc"
         #include "cginc/AudioLinkFuncs.cginc"
