@@ -58,7 +58,7 @@ Material:
     m_Floats:
     - _3D: 1
     - _AlphaMultiplier: 0.5
-    - _Amplitude_Scale: 1
+    - _Amplitude_Scale: 2
     - _BumpScale: 1
     - _Cutoff: 0.5
     - _DetailNormalMapScale: 1

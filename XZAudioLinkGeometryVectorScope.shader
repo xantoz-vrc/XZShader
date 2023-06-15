@@ -119,6 +119,14 @@ Shader "Xantoz/XZAudioLinkGeometryVectorScope"
                 return o;
             }
 
+            float4 billboard(float3 xyz)
+            {
+		float3 vpos = mul((float3x3)unity_ObjectToWorld, xyz);
+		float4 worldCoord = float4(unity_ObjectToWorld._m03, unity_ObjectToWorld._m13, unity_ObjectToWorld._m23, 1);
+		float4 viewPos = mul(UNITY_MATRIX_V, worldCoord) + float4(vpos, 0);
+		return mul(UNITY_MATRIX_P, viewPos);
+            }
+
             // 6 input points * 32 instances * 8 samples per instance = 1536 samples out
             #define SAMPLECNT 8
 
@@ -142,55 +150,54 @@ Shader "Xantoz/XZAudioLinkGeometryVectorScope"
                     return;
                 }
 
+                const float4 TL = float4(-1.0,-1.0, 0.0, 0.0);
+                const float4 TR = float4(-1.0, 1.0, 0.0, 0.0);
+                const float4 BL = float4( 1.0,-1.0, 0.0, 0.0);
+                const float4 BR = float4( 1.0, 1.0, 0.0, 0.0);
+
+                const float2 uvTL = (TL.xy + float2(1.0, 1.0))/2;
+                const float2 uvTR = (TR.xy + float2(1.0, 1.0))/2;
+                const float2 uvBL = (BL.xy + float2(1.0, 1.0))/2;
+                const float2 uvBR = (BR.xy + float2(1.0, 1.0))/2;
+
                 for (int i = 0; i < SAMPLECNT; ++i)
                 {
                     uint sampleID = i + operationID * SAMPLECNT;
-                    float2 pcm_lr = PCMToLR(AudioLinkPCMData(sampleID)*_Amplitude_Scale);
+                    float4 pcm = AudioLinkPCMData(sampleID)*0.5*_Amplitude_Scale;
+                    float2 pcm_lr = PCMToLR(pcm);
                     float4 pointOut = float4(pcm_lr, 0.0, 1.0);
 
-                    if (_3D)
-                    {
-                        pointOut.z = AudioLinkPCMData(sampleID).g*_Amplitude_Scale;
+                    float4 pointTL, pointTR, pointBL, pointBR;
+                    if (_3D) {
+                        pointOut.z = pcm.g;
+                        pointTL = UnityObjectToClipPos(pointOut) + billboard(TL*_PointSize);
+                        pointTR = UnityObjectToClipPos(pointOut) + billboard(TR*_PointSize);
+                        pointBL = UnityObjectToClipPos(pointOut) + billboard(BL*_PointSize);
+                        pointBR = UnityObjectToClipPos(pointOut) + billboard(BR*_PointSize);
+                    } else {
+                        pointTL = UnityObjectToClipPos(pointOut + TL*_PointSize);
+                        pointTR = UnityObjectToClipPos(pointOut + TR*_PointSize);
+                        pointBL = UnityObjectToClipPos(pointOut + BL*_PointSize);
+                        pointBR = UnityObjectToClipPos(pointOut + BR*_PointSize);
                     }
 
-                    const float4 TL = float4(-1.0,-1.0, 0.0, 0.0);
-                    const float4 TR = float4(-1.0, 1.0, 0.0, 0.0);
-                    const float4 BL = float4( 1.0,-1.0, 0.0, 0.0);
-                    const float4 BR = float4( 1.0, 1.0, 0.0, 0.0);
-
-                    const float2 uvTL = (TL.xy + float2(1.0, 1.0))/2;
-                    const float2 uvTR = (TR.xy + float2(1.0, 1.0))/2;
-                    const float2 uvBL = (BL.xy + float2(1.0, 1.0))/2;
-                    const float2 uvBR = (BR.xy + float2(1.0, 1.0))/2;
-
-                    float4 pointTL = pointOut + TL*_PointSize;
-                    float4 pointTR = pointOut + TR*_PointSize;
-                    float4 pointBL = pointOut + BL*_PointSize;
-                    float4 pointBR = pointOut + BR*_PointSize;
-
-                    o.vertex = UnityObjectToClipPos(pointTL);
-                    o.uv = uvTL;
+                    o.vertex = pointTL; o.uv = uvTL;
                     UNITY_TRANSFER_FOG(o, o.vertex);
                     stream.Append(o);
-                    o.vertex = UnityObjectToClipPos(pointTR);
-                    o.uv = uvTR;
+                    o.vertex = pointTR; o.uv = uvTR;
                     UNITY_TRANSFER_FOG(o, o.vertex);
                     stream.Append(o);
-                    o.vertex = UnityObjectToClipPos(pointBL);
-                    o.uv = uvBL;
+                    o.vertex = pointBL; o.uv = uvBL;
                     UNITY_TRANSFER_FOG(o, o.vertex);
                     stream.Append(o);
 
-                    o.vertex = UnityObjectToClipPos(pointBL);
-                    o.uv = uvBL;
+                    o.vertex = pointBL; o.uv = uvBL;
                     UNITY_TRANSFER_FOG(o, o.vertex);
                     stream.Append(o);
-                    o.vertex = UnityObjectToClipPos(pointBR);
-                    o.uv = uvBR;
+                    o.vertex = pointBR; o.uv = uvBR;
                     UNITY_TRANSFER_FOG(o, o.vertex);
                     stream.Append(o);
-                    o.vertex = UnityObjectToClipPos(pointTR);
-                    o.uv = uvTR;
+                    o.vertex = pointTR; o.uv = uvTR;
                     UNITY_TRANSFER_FOG(o, o.vertex);
                     stream.Append(o);
 
