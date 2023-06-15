@@ -22,6 +22,8 @@ Shader "Xantoz/XZAudioLinkGeometryVectorScope"
     {
         [HDR]_Color1 ("Color 1 (Base Color)", Color) = (1,1,1,1)
 
+        [IntRange]_3D ("3D effect (move in Z direction as well)", Range(0,1)) = 0
+
         _PointSize ("Point Size", Float) = 0.1
         _AlphaMultiplier ("Alpha Multiplier (lower makes more transparent)", Range(0.0, 2.0)) = 0.5
 
@@ -68,6 +70,8 @@ Shader "Xantoz/XZAudioLinkGeometryVectorScope"
             float _AlphaMultiplier;
 
             float _Amplitude_Scale;
+
+            int _3D;
 
             float4 _Color1;
             float4 _Color2;
@@ -143,7 +147,11 @@ Shader "Xantoz/XZAudioLinkGeometryVectorScope"
                     uint sampleID = i + operationID * SAMPLECNT;
                     float2 pcm_lr = PCMToLR(AudioLinkPCMData(sampleID)*_Amplitude_Scale);
                     float4 pointOut = float4(pcm_lr, 0.0, 1.0);
-                    pointOut.z = AudioLinkPCMData(sampleID).g*_Amplitude_Scale;
+
+                    if (_3D)
+                    {
+                        pointOut.z = AudioLinkPCMData(sampleID).g*_Amplitude_Scale;
+                    }
 
                     const float4 TL = float4(-1.0,-1.0, 0.0, 0.0);
                     const float4 TR = float4(-1.0, 1.0, 0.0, 0.0);

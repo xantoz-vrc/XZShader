@@ -9,7 +9,7 @@ Material:
   m_PrefabAsset: {fileID: 0}
   m_Name: GeometryShader vectorscope
   m_Shader: {fileID: 4800000, guid: f34f3bf4ade732294813d51d3339824c, type: 3}
-  m_ShaderKeywords: 
+  m_ShaderKeywords: _3D_ON
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 0
   m_DoubleSidedGI: 0
@@ -56,6 +56,8 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     m_Floats:
+    - _3D: 1
+    - _AlphaMultiplier: 0.5
     - _Amplitude_Scale: 1
     - _BumpScale: 1
     - _Cutoff: 0.5
