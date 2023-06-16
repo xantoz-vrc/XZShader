@@ -205,8 +205,13 @@ Shader "Xantoz/RaymarchedMetaballs3D"
 */
 
                 float dist = shortestDistanceToSurface(ray_origin, ray_direction, MIN_DIST, MAX_DIST);
+                float3 eye = ray_origin;
                 float3 worldDir = ray_direction;
-                float3 eye = ray_direction;
+
+                // float3 viewDir = ray_direction;
+                // float3x3 viewToWorld = viewMatrix(eye, float3(0.0, 0.0, 0.0), float3(0.0, 1.0, 0.0));
+                // float3 worldDir = mul(viewDir, viewToWorld);
+
 
                 if (dist > MAX_DIST - EPSILON) {
                     col = sampleCubeMap(worldDir);
