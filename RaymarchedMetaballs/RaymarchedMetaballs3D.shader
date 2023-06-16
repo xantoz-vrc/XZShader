@@ -7,6 +7,7 @@ Shader "Xantoz/RaymarchedMetaballs3D"
         _Tint ("Tint Color", Color) = (1, 1, 1, 1)
         [NoScaleOffset]_Tex ("Cubemap (HDR)", Cube) = "Cube" {}
         [Gamma] _Exposure ("Exposure", Range(0, 8)) = 0.5
+        [IntRange]_InObjectSpace ("Raymarch in Object space rather than world space", Range(0, 1)) = 0
     }
     SubShader
     {
@@ -29,6 +30,7 @@ Shader "Xantoz/RaymarchedMetaballs3D"
             float4 _Tex_HDR;
             float4 _Tint;
             float _Exposure;
+            int _InObjectSpace;
 
             struct appdata
             {
@@ -59,9 +61,14 @@ Shader "Xantoz/RaymarchedMetaballs3D"
 
                 o.vertex = UnityObjectToClipPos(v.vertex);
                 o.uv = v.uv;
-                
-                o.ray_origin = _WorldSpaceCameraPos;
-                o.vert_position = mul(unity_ObjectToWorld, v.vertex);
+
+                if (_InObjectSpace) {
+                    o.ray_origin = mul(unity_WorldToObject, float4(_WorldSpaceCameraPos, 1));
+                    o.vert_position = v.vertex;
+                } else {
+                    o.ray_origin = _WorldSpaceCameraPos;
+                    o.vert_position = mul(unity_ObjectToWorld, v.vertex);
+                }
 
                 UNITY_TRANSFER_FOG(o,o.vertex);
                 return o;
