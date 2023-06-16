@@ -120,7 +120,8 @@ Shader "Xantoz/RaymarchedMetaballs3D"
                 for (float i = 1.0; i < 4.0; i += 1.3) {
                     for (float j = 1.0; j < 4.0; j += 1.3) {
                         float cost = cos(t * j);
-                        balls = smin(balls, sphereSDF(samplePoint + float3(sin(t * i) * j, cost * i, cost * j), ballRadius), 0.7);
+                        // balls = smin(balls, sphereSDF(samplePoint + float3(sin(t * i) * j, cost * i, cost * j), ballRadius), 0.7);
+                        balls = smin(balls, sphereSDF(samplePoint + float3(sin(t * i) * j, cost * i, cost * j)*0.05, ballRadius*0.05), 0.7*0.05);
                     }
                 }
 
@@ -195,13 +196,17 @@ Shader "Xantoz/RaymarchedMetaballs3D"
                 float3 ray_origin = i.ray_origin;
                 float3 ray_direction = normalize(i.vert_position - i.ray_origin);
 
+/*
                 float3 viewDir = ray_direction;
-
-                // float3 viewDir = rayDirection(90.0, float2(1.0, 1.0), i.uv.xy);
                 float3 eye = mul(float3(3.0, 3.0, 10.0), rotateY(TIME / 3.0));
                 float3x3 viewToWorld = viewMatrix(eye, float3(0.0, 0.0, 0.0), float3(0.0, 1.0, 0.0));
                 float3 worldDir = mul(viewDir, viewToWorld);
                 float dist = shortestDistanceToSurface(eye, worldDir, MIN_DIST, MAX_DIST);
+*/
+
+                float dist = shortestDistanceToSurface(ray_origin, ray_direction, MIN_DIST, MAX_DIST);
+                float3 worldDir = ray_direction;
+                float3 eye = ray_direction;
 
                 if (dist > MAX_DIST - EPSILON) {
                     col = sampleCubeMap(worldDir);
