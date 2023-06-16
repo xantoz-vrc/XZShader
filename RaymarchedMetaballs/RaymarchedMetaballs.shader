@@ -6,7 +6,7 @@ Shader "Xantoz/RaymarchedMetaballs"
     {
         _Tint ("Tint Color", Color) = (1, 1, 1, 1)
         [NoScaleOffset]_Tex ("Cubemap (HDR)", Cube) = "Cube" {}
-        [Gamma] _Exposure ("Exposure", Range(0, 8)) = 1.0
+        [Gamma] _Exposure ("Exposure", Range(0, 8)) = 0.5
     }
     SubShader
     {
@@ -64,13 +64,14 @@ Shader "Xantoz/RaymarchedMetaballs"
                 return o;
             }
 
-            const int MAX_MARCHING_STEPS = 64;
-            const float MIN_DIST = 0.0;
-            const float MAX_DIST = 100.0;
-            const float EPSILON = 0.001;
+            #define MAX_MARCHING_STEPS 64
+            #define MIN_DIST 0.0
+            #define MAX_DIST 100.0
+            #define EPSILON 0.001
 
-            // #define TIME _Time.y
-            #define TIME 0
+
+            #define TIME _Time.y
+            // #define TIME 1
 
             /**
             * Rotation matrix around the Y axis.
@@ -110,6 +111,7 @@ Shader "Xantoz/RaymarchedMetaballs"
                     for (float j = 1.0; j < 4.0; j += 1.3) {
                         float cost = cos(t * j);
                         balls = smin(balls, sphereSDF(samplePoint + float3(sin(t * i) * j, cost * i, cost * j), ballRadius), 0.7);
+                        // balls = min(balls, sphereSDF(samplePoint + float3(sin(t * i) * j, cost * i, cost * j), ballRadius));
                     }
                 }
 
@@ -181,8 +183,10 @@ Shader "Xantoz/RaymarchedMetaballs"
 
                 UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(i);
 
-                float3 viewDir = rayDirection(90.0, float2(1, 1), i.uv.xy);
+                float3 viewDir = rayDirection(90.0, float2(1.0, 1.0), (i.uv.xy - 0.5)*2);
                 float3 eye = mul(rotateY(TIME / 3.0), float3(3.0, 3.0, 10.0));
+                // float3 eye = float3(3.0, 3.0, 10.0);
+
                 float3x3 viewToWorld = viewMatrix(eye, float3(0.0, 0.0, 0.0), float3(0.0, 1.0, 0.0));
                 float3 worldDir = mul(viewToWorld, viewDir);
                 float dist = shortestDistanceToSurface(eye, worldDir, MIN_DIST, MAX_DIST);
