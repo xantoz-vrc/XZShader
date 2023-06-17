@@ -7,7 +7,7 @@ Shader "Xantoz/RaymarchedMetaballs3D"
         _Tint ("Tint Color", Color) = (1, 1, 1, 1)
         [NoScaleOffset]_Tex ("Cubemap (HDR)", Cube) = "Cube" {}
         [Gamma] _Exposure ("Exposure", Range(0, 8)) = 0.5
-        [IntRange]_InObjectSpace ("Raymarch in Object space rather than world space", Range(0, 1)) = 0
+        [IntRange]_InObjectSpace ("Raymarch in Object space rather than world space", Range(0, 1)) = 1
         _SceneScale("Scene scale", Float) = 0.04
         _K("k-factor", Float) = 0.7
     }
