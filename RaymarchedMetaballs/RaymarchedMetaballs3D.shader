@@ -8,6 +8,8 @@ Shader "Xantoz/RaymarchedMetaballs3D"
         [NoScaleOffset]_Tex ("Cubemap (HDR)", Cube) = "Cube" {}
         [Gamma] _Exposure ("Exposure", Range(0, 8)) = 0.5
         [IntRange]_InObjectSpace ("Raymarch in Object space rather than world space", Range(0, 1)) = 0
+        _SceneScale("Scene scale", Float) = 0.04
+        _K("k-factor", Float) = 0.7
     }
     SubShader
     {
@@ -31,6 +33,8 @@ Shader "Xantoz/RaymarchedMetaballs3D"
             float4 _Tint;
             float _Exposure;
             int _InObjectSpace;
+            float _SceneScale;
+            float _K;
 
             struct appdata
             {
@@ -117,11 +121,10 @@ Shader "Xantoz/RaymarchedMetaballs3D"
                 float ballRadius = 1.0;
                 float t = TIME / 3.0 + 10500.0;
                 float balls = MAX_DIST;
-                for (float i = 1.0; i < 4.0; i += 1.3) {
-                    for (float j = 1.0; j < 4.0; j += 1.3) {
+                for (float i = 1.0; i < 4.0*2; i += 1.3) {
+                    for (float j = 1.0; j < 4.0*2; j += 1.3) {
                         float cost = cos(t * j);
-                        // balls = smin(balls, sphereSDF(samplePoint + float3(sin(t * i) * j, cost * i, cost * j), ballRadius), 0.7);
-                        balls = smin(balls, sphereSDF(samplePoint + float3(sin(t * i) * j, cost * i, cost * j)*0.05, ballRadius*0.05), 0.7*0.05);
+                        balls = smin(balls, sphereSDF(samplePoint + float3(sin(t * i) * j, cost * i, cost * j)*_SceneScale, ballRadius*_SceneScale), _K*_SceneScale);
                     }
                 }
 
@@ -204,14 +207,9 @@ Shader "Xantoz/RaymarchedMetaballs3D"
                 float dist = shortestDistanceToSurface(eye, worldDir, MIN_DIST, MAX_DIST);
 */
 
-                float dist = shortestDistanceToSurface(ray_origin, ray_direction, MIN_DIST, MAX_DIST);
                 float3 eye = ray_origin;
                 float3 worldDir = ray_direction;
-
-                // float3 viewDir = ray_direction;
-                // float3x3 viewToWorld = viewMatrix(eye, float3(0.0, 0.0, 0.0), float3(0.0, 1.0, 0.0));
-                // float3 worldDir = mul(viewDir, viewToWorld);
-
+                float dist = shortestDistanceToSurface(eye, worldDir, MIN_DIST, MAX_DIST);
 
                 if (dist > MAX_DIST - EPSILON) {
                     col = sampleCubeMap(worldDir);
