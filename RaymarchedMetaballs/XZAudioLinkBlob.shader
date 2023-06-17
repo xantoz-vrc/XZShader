@@ -22,7 +22,7 @@ Shader "Xantoz/XZAudioLinkBlob"
     #include "../cginc/AudioLinkFuncs.cginc"
 
     // Number of samples to turn into metaballs
-    #define SAMPLECNT 32
+    #define SAMPLECNT 128
     
     #define MAX_MARCHING_STEPS 64
     #define MIN_DIST 0.0
