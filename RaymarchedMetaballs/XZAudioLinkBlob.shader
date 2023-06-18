@@ -8,8 +8,8 @@ Shader "Xantoz/XZAudioLinkBlob"
         [NoScaleOffset]_Tex ("Cubemap (HDR)", Cube) = "Cube" {}
         [Gamma] _Exposure ("Exposure", Range(0, 8)) = 0.5
         [IntRange]_InObjectSpace ("Raymarch in Object space rather than world space", Range(0, 1)) = 1
-        _SceneScale("Scene scale", Float) = 0.04
-        _K("k-factor", Float) = 0.7
+        _SceneScale("Scene scale", Float) = 0.03
+        _K("k-factor", Float) = 2.5
         _Amplitude_Scale ("AudioLink PCM Amplitude Scale", Range(0.0, 2.0)) = 1.0  // Scale amplitude of PCM
     }
 
@@ -22,9 +22,9 @@ Shader "Xantoz/XZAudioLinkBlob"
     #include "../cginc/AudioLinkFuncs.cginc"
 
     // Number of samples to turn into metaballs
-    #define SAMPLECNT 128
+    #define SAMPLECNT 64
     // Use every n'th sample
-    #define STEP 16
+    #define STEP 32
     
     #define MAX_MARCHING_STEPS 64
     #define MIN_DIST 0.0
