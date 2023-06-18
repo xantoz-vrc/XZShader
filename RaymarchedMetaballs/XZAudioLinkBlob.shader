@@ -23,6 +23,8 @@ Shader "Xantoz/XZAudioLinkBlob"
 
     // Number of samples to turn into metaballs
     #define SAMPLECNT 128
+    // Use every n'th sample
+    #define STEP 16
     
     #define MAX_MARCHING_STEPS 64
     #define MIN_DIST 0.0
@@ -119,7 +121,7 @@ Shader "Xantoz/XZAudioLinkBlob"
                 float t = TIME / 3.0 + 10500.0;
                 float balls = MAX_DIST;
                 for (uint i = 0; i < SAMPLECNT; ++i) {
-                    float4 pcm = AudioLinkPCMData(i)*0.5*_Amplitude_Scale;
+                    float4 pcm = AudioLinkPCMData(i*STEP)*0.5*_Amplitude_Scale;
                     float2 pcm_lr = PCMToLR(pcm);
                     balls = smin(balls, sphereSDF(samplePoint + float3(pcm_lr.x, pcm_lr.y, pcm.g), ballRadius*_SceneScale), _K*_SceneScale);
                 }
