@@ -90,8 +90,9 @@ Shader "Xantoz/XZAudioLinkGeometryVectorScope"
 
 	    struct v2g
 	    {
-		float4 vertex : SV_POSITION;
+		float4 vertex : POSITION0;
 		uint2 batchID : TEXCOORD0;
+                float3 worldScale : COLOR0;
 
 		UNITY_VERTEX_OUTPUT_STEREO
             };
@@ -99,7 +100,7 @@ Shader "Xantoz/XZAudioLinkGeometryVectorScope"
             struct g2f
             {
                 float2 uv : TEXCOORD0;
-                float4 vertex : SV_POSITION;
+                float4 vertex : POSITION0;
 
                 UNITY_FOG_COORDS(1)
                 UNITY_VERTEX_OUTPUT_STEREO
@@ -116,15 +117,21 @@ Shader "Xantoz/XZAudioLinkGeometryVectorScope"
                 o.vertex = v.vertex;
                 o.batchID = v.vertexID / 6; // Assumes we get a quad
 
+                o.worldScale = float3(
+                    length(float3(unity_ObjectToWorld[0].x, unity_ObjectToWorld[1].x, unity_ObjectToWorld[2].x)), // scale x axis
+                    length(float3(unity_ObjectToWorld[0].y, unity_ObjectToWorld[1].y, unity_ObjectToWorld[2].y)), // scale y axis
+                    length(float3(unity_ObjectToWorld[0].z, unity_ObjectToWorld[1].z, unity_ObjectToWorld[2].z))  // scale z axis
+                );
+
                 return o;
             }
 
-            float4 billboard(float3 xyz)
+            float4 billboard(float2 xy, float2 scale)
             {
-		float3 vpos = mul((float3x3)unity_ObjectToWorld, xyz);
-		float4 worldCoord = float4(unity_ObjectToWorld._m03, unity_ObjectToWorld._m13, unity_ObjectToWorld._m23, 1);
-		float4 viewPos = mul(UNITY_MATRIX_V, worldCoord) + float4(vpos, 0);
-		return mul(UNITY_MATRIX_P, viewPos);
+                return mul(UNITY_MATRIX_P,
+		    mul(UNITY_MATRIX_MV, float4(0.0, 0.0, 0.0, 1.0))
+		    + float4(xy, 0.0, 0.0) * float4(scale, 1.0, 1.0)
+                );
             }
 
             // 6 input points * 32 instances * 8 samples per instance = 1536 samples out
@@ -150,35 +157,36 @@ Shader "Xantoz/XZAudioLinkGeometryVectorScope"
                     return;
                 }
 
-                const float4 TL = float4(-1.0,-1.0, 0.0, 0.0);
-                const float4 TR = float4(-1.0, 1.0, 0.0, 0.0);
-                const float4 BL = float4( 1.0,-1.0, 0.0, 0.0);
-                const float4 BR = float4( 1.0, 1.0, 0.0, 0.0);
+                const float2 TL = float2(-1.0,-1.0);
+		const float2 TR = float2(-1.0, 1.0);
+		const float2 BL = float2( 1.0,-1.0);
+		const float2 BR = float2( 1.0, 1.0);
 
-                const float2 uvTL = (TL.xy + float2(1.0, 1.0))/2;
-                const float2 uvTR = (TR.xy + float2(1.0, 1.0))/2;
-                const float2 uvBL = (BL.xy + float2(1.0, 1.0))/2;
-                const float2 uvBR = (BR.xy + float2(1.0, 1.0))/2;
+                const float2 uvTL = (TL + float2(1.0, 1.0))/2;
+		const float2 uvTR = (TR + float2(1.0, 1.0))/2;
+		const float2 uvBL = (BL + float2(1.0, 1.0))/2;
+		const float2 uvBR = (BR + float2(1.0, 1.0))/2;
 
                 for (int i = 0; i < SAMPLECNT; ++i)
                 {
                     uint sampleID = i + operationID * SAMPLECNT;
                     float4 pcm = AudioLinkPCMData(sampleID)*0.5*_Amplitude_Scale;
                     float2 pcm_lr = PCMToLR(pcm);
-                    float4 pointOut = float4(pcm_lr, 0.0, 1.0);
+                    float3 pointOut = float3(pcm_lr, 0.0);
 
                     float4 pointTL, pointTR, pointBL, pointBR;
                     if (_3D) {
                         pointOut.z = pcm.g;
-                        pointTL = UnityObjectToClipPos(pointOut) + billboard(TL*_PointSize);
-                        pointTR = UnityObjectToClipPos(pointOut) + billboard(TR*_PointSize);
-                        pointBL = UnityObjectToClipPos(pointOut) + billboard(BL*_PointSize);
-                        pointBR = UnityObjectToClipPos(pointOut) + billboard(BR*_PointSize);
+
+                        pointTL = UnityObjectToClipPos(pointOut) + billboard(TL, IN[0].worldScale.xy)*_PointSize;
+			pointTR = UnityObjectToClipPos(pointOut) + billboard(TR, IN[0].worldScale.xy)*_PointSize;
+			pointBL = UnityObjectToClipPos(pointOut) + billboard(BL, IN[0].worldScale.xy)*_PointSize;
+			pointBR = UnityObjectToClipPos(pointOut) + billboard(BR, IN[0].worldScale.xy)*_PointSize;
                     } else {
-                        pointTL = UnityObjectToClipPos(pointOut + TL*_PointSize);
-                        pointTR = UnityObjectToClipPos(pointOut + TR*_PointSize);
-                        pointBL = UnityObjectToClipPos(pointOut + BL*_PointSize);
-                        pointBR = UnityObjectToClipPos(pointOut + BR*_PointSize);
+                        pointTL = UnityObjectToClipPos(pointOut + float3(TL*_PointSize, 0.0));
+                        pointTR = UnityObjectToClipPos(pointOut + float3(TR*_PointSize, 0.0));
+                        pointBL = UnityObjectToClipPos(pointOut + float3(BL*_PointSize, 0.0));
+                        pointBR = UnityObjectToClipPos(pointOut + float3(BR*_PointSize, 0.0));
                     }
 
                     o.vertex = pointTL; o.uv = uvTL;
