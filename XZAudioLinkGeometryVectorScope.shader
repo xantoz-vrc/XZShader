@@ -134,8 +134,8 @@ Shader "Xantoz/XZAudioLinkGeometryVectorScope"
                 );
             }
 
-            // 6 input points * 32 instances * 8 samples per instance = 1536 samples out
-            #define SAMPLECNT 8
+            // 6 input points * 32 instances * 10 samples per instance = 1920 samples out
+            #define SAMPLECNT 10
 
             // 8 samples * 6 vertices out (quad)
             [maxvertexcount(SAMPLECNT*6)]
