@@ -113,7 +113,7 @@ Shader "Xantoz/MeshAsPointCloud"
 
             float4 billboard(float2 xy, float2 scale)
             {
-                return mul(UNITY_MATRIX_P,
+                return mul(transpose(UNITY_MATRIX_IT_MV),
 		    mul(UNITY_MATRIX_MV, float4(0.0, 0.0, 0.0, 1.0))
 		    + float4(xy, 0.0, 0.0) * float4(scale, 1.0, 1.0)
                 );
@@ -149,26 +149,10 @@ Shader "Xantoz/MeshAsPointCloud"
                 float4 pointTL, pointTR, pointBL, pointBR;
 
                 // TODO: seems like the billboarding version is not quite scale-correct
-                pointTL = UnityObjectToClipPos(pointOut) + billboard(TL, IN[0].worldScale.xy)*_PointSize;
-		pointTR = UnityObjectToClipPos(pointOut) + billboard(TR, IN[0].worldScale.xy)*_PointSize;
-		pointBL = UnityObjectToClipPos(pointOut) + billboard(BL, IN[0].worldScale.xy)*_PointSize;
-		pointBR = UnityObjectToClipPos(pointOut) + billboard(BR, IN[0].worldScale.xy)*_PointSize;
-
-                // pointTL = UnityObjectToClipPos(pointOut) + billboard(TL, IN[0].worldScale.xy*_PointSize);
-		// pointTR = UnityObjectToClipPos(pointOut) + billboard(TR, IN[0].worldScale.xy*_PointSize);
-		// pointBL = UnityObjectToClipPos(pointOut) + billboard(BL, IN[0].worldScale.xy*_PointSize);
-		// pointBR = UnityObjectToClipPos(pointOut) + billboard(BR, IN[0].worldScale.xy*_PointSize);
-
-                // pointTL = UnityObjectToClipPos(pointOut) + billboard(TL, IN[0].worldScale.xy);
-		// pointTR = UnityObjectToClipPos(pointOut) + billboard(TR, IN[0].worldScale.xy);
-		// pointBL = UnityObjectToClipPos(pointOut) + billboard(BL, IN[0].worldScale.xy);
-		// pointBR = UnityObjectToClipPos(pointOut) + billboard(BR, IN[0].worldScale.xy);
-
-
-                // pointTL = UnityObjectToClipPos(pointOut + float3(TL*_PointSize, 0.0));
-                // pointTR = UnityObjectToClipPos(pointOut + float3(TR*_PointSize, 0.0));
-                // pointBL = UnityObjectToClipPos(pointOut + float3(BL*_PointSize, 0.0));
-                // pointBR = UnityObjectToClipPos(pointOut + float3(BR*_PointSize, 0.0));
+                pointTL = UnityObjectToClipPos(pointOut + billboard(TL*_PointSize, IN[0].worldScale.xy));
+		pointTR = UnityObjectToClipPos(pointOut + billboard(TR*_PointSize, IN[0].worldScale.xy));
+		pointBL = UnityObjectToClipPos(pointOut + billboard(BL*_PointSize, IN[0].worldScale.xy));
+		pointBR = UnityObjectToClipPos(pointOut + billboard(BR*_PointSize, IN[0].worldScale.xy));
 
                 o.vertex = pointTL; o.uv = uvTL;
                 UNITY_TRANSFER_FOG(o, o.vertex);
