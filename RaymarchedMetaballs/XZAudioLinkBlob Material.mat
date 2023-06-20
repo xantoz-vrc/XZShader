@@ -70,7 +70,7 @@ Material:
     - _Glossiness: 0.5
     - _GlossyReflections: 1
     - _InObjectSpace: 1
-    - _K: 2.5
+    - _K: 3
     - _Metallic: 0
     - _Mode: 0
     - _OcclusionStrength: 1

@@ -24,7 +24,7 @@ Shader "Xantoz/XZAudioLinkBlob"
     // Number of samples to turn into metaballs
     #define SAMPLECNT 64
     // Use every n'th sample
-    #define STEP 32
+    #define STEP 16
     
     #define MAX_MARCHING_STEPS 64
     #define MIN_DIST 0.0
