@@ -128,7 +128,7 @@ Shader "Xantoz/XZAudioLinkGeometryVectorScope"
 
             float4 billboard(float2 xy, float2 scale)
             {
-                return mul(UNITY_MATRIX_P,
+                return mul(transpose(UNITY_MATRIX_IT_MV),
 		    mul(UNITY_MATRIX_MV, float4(0.0, 0.0, 0.0, 1.0))
 		    + float4(xy, 0.0, 0.0) * float4(scale, 1.0, 1.0)
                 );
@@ -178,10 +178,10 @@ Shader "Xantoz/XZAudioLinkGeometryVectorScope"
                     if (_3D) {
                         pointOut.z = pcm.g;
 
-                        pointTL = UnityObjectToClipPos(pointOut) + billboard(TL, IN[0].worldScale.xy)*_PointSize;
-			pointTR = UnityObjectToClipPos(pointOut) + billboard(TR, IN[0].worldScale.xy)*_PointSize;
-			pointBL = UnityObjectToClipPos(pointOut) + billboard(BL, IN[0].worldScale.xy)*_PointSize;
-			pointBR = UnityObjectToClipPos(pointOut) + billboard(BR, IN[0].worldScale.xy)*_PointSize;
+                        pointTL = UnityObjectToClipPos(pointOut + billboard(TL*_PointSize, IN[0].worldScale.xy));
+			pointTR = UnityObjectToClipPos(pointOut + billboard(TR*_PointSize, IN[0].worldScale.xy));
+			pointBL = UnityObjectToClipPos(pointOut + billboard(BL*_PointSize, IN[0].worldScale.xy));
+			pointBR = UnityObjectToClipPos(pointOut + billboard(BR*_PointSize, IN[0].worldScale.xy));
                     } else {
                         pointTL = UnityObjectToClipPos(pointOut + float3(TL*_PointSize, 0.0));
                         pointTR = UnityObjectToClipPos(pointOut + float3(TR*_PointSize, 0.0));
