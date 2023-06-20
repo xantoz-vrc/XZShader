@@ -29,6 +29,9 @@ Shader "Xantoz/XZAudioLinkGeometryVectorScope"
 
         _Amplitude_Scale ("Amplitude Scale", Range(0.0, 2.0)) = 1.0  // Scale amplitude of PCM & DFT data in plots
 
+        // Each option will set _OVERLAY_NONE, _OVERLAY_ADD, _OVERLAY_MULTIPLY shader keywords.
+        [KeywordEnum(Quad, Point, Line)] _OutMode ("Output Mode", Float) = 0
+
         [Space(10)]
         [Header(Color Blink)]
         [HDR]_Color2 ("Color 2 (Blink Base Color)", Color) = (1,1,1,1)
@@ -65,6 +68,7 @@ Shader "Xantoz/XZAudioLinkGeometryVectorScope"
             // Blend SrcAlpha OneMinusSrcAlpha
 
             CGPROGRAM
+            #pragma multi_compile _OUTMODE_QUAD _OUTMODE_POINT _OUTMODE_LINE
 
             float _PointSize;
             float _AlphaMultiplier;
@@ -137,11 +141,19 @@ Shader "Xantoz/XZAudioLinkGeometryVectorScope"
             // 6 input points * 32 instances * 10 samples per instance = 1920 samples out
             #define SAMPLECNT 10
 
+	    [instance(32)]
+#if defined(_OUTMODE_QUAD)
             // 8 samples * 6 vertices out (quad)
             [maxvertexcount(SAMPLECNT*6)]
-	    [instance(32)]
-	    void geom(point v2g IN[1], inout TriangleStream<g2f> stream,
-		uint instanceID : SV_GSInstanceID, uint geoPrimID : SV_PrimitiveID)
+	    void geom(point v2g IN[1], inout TriangleStream<g2f> stream, uint instanceID : SV_GSInstanceID, uint geoPrimID : SV_PrimitiveID)
+#elif defined(_OUTMODE_LINE)
+            // Needs one more vertex to link up to the line the next instance will draw
+            [maxvertexcount(SAMPLECNT+1)]
+	    void geom(point v2g IN[1], inout LineStream<g2f> stream, uint instanceID : SV_GSInstanceID, uint geoPrimID : SV_PrimitiveID)
+#else // _OUTMODE_POINT
+            [maxvertexcount(SAMPLECNT)]
+	    void geom(point v2g IN[1], inout PointStream<g2f> stream, uint instanceID : SV_GSInstanceID, uint geoPrimID : SV_PrimitiveID)
+#endif
             {
                 UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(IN[0]);
 
@@ -157,6 +169,7 @@ Shader "Xantoz/XZAudioLinkGeometryVectorScope"
                     return;
                 }
 
+#if defined(_OUTMODE_QUAD)
                 const float2 TL = float2(-1.0,-1.0);
 		const float2 TR = float2(-1.0, 1.0);
 		const float2 BL = float2( 1.0,-1.0);
@@ -211,8 +224,47 @@ Shader "Xantoz/XZAudioLinkGeometryVectorScope"
 
                     stream.RestartStrip();
                 }
+#else // defined(_OUTMODE_LINE) || defined(_OUTMODE_POINT)
+                int cnt = SAMPLECNT;
+            #if defined(_OUTMODE_LINE)
+                cnt++;
+            #endif
+                for (int i = 0; i < cnt; ++i)
+                {
+                    uint sampleID = i + operationID * SAMPLECNT;
+                    float4 pcm = AudioLinkPCMData(sampleID)*0.5*_Amplitude_Scale;
+                    float2 pcm_lr = PCMToLR(pcm);
+                    float3 pointOut = float3(pcm_lr, 0.0);
+
+                    if (_3D) {
+                        pointOut.z = pcm.g;
+                    }
+
+                    o.vertex = UnityObjectToClipPos(pointOut);
+                    UNITY_TRANSFER_FOG(o, o.vertex);
+                    stream.Append(o);
+                }
+#endif
             }
 
+            float4 getBeatColor()
+            {
+
+                float al_beat[4] = {
+                    AudioLinkData(uint2(0,0)).r,
+                    AudioLinkData(uint2(0,1)).r,
+                    AudioLinkData(uint2(0,2)).r,
+                    AudioLinkData(uint2(0,3)).r
+                };
+                float4 al_color_mult =
+                    _Color_Mul_Band0*al_beat[0] +
+                    _Color_Mul_Band1*al_beat[1] +
+                    _Color_Mul_Band2*al_beat[2] +
+                    _Color_Mul_Band3*al_beat[3];
+                return al_color_mult;
+            }
+
+#if defined(_OUTMODE_QUAD)
             float linefn(float a)
             {
                 return -clamp((1.0-pow(0.5/abs(a), .1)), -2, 0);
@@ -227,26 +279,32 @@ Shader "Xantoz/XZAudioLinkGeometryVectorScope"
                     return float4(0,0,0,0);
                 }
 
-                float al_beat[4] = {
-                    AudioLinkData(uint2(0,0)).r,
-                    AudioLinkData(uint2(0,1)).r,
-                    AudioLinkData(uint2(0,2)).r,
-                    AudioLinkData(uint2(0,3)).r
-                };
-                float4 al_color_mult =
-                    _Color_Mul_Band0*al_beat[0] +
-                    _Color_Mul_Band1*al_beat[1] +
-                    _Color_Mul_Band2*al_beat[2] +
-                    _Color_Mul_Band3*al_beat[3];
-
+                float4 al_color_mult = getBeatColor();
                 float val = linefn(length((frac(i.uv.xy) - float2(0.5, 0.5))*2));
-
                 float4 col = clamp(val*(_Color1 + _Color2*al_color_mult), 0.0, 1.0);
                 col.a *= _AlphaMultiplier;
 
                 UNITY_APPLY_FOG(i.fogCoord, col);
                 return col;
             }
+#else // defined(_OUTMODE_LINE) || defined(_OUTMODE_POINT)
+            float4 frag(g2f i) : SV_Target
+            {
+                UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(i);
+
+                if (!AudioLinkIsAvailable())
+                {
+                    return float4(0,0,0,0);
+                }
+
+                float4 al_color_mult = getBeatColor();
+                float4 col = clamp(_Color1 + _Color2*al_color_mult, 0.0, 2.0);
+                col.a *= _AlphaMultiplier;
+
+                UNITY_APPLY_FOG(i.fogCoord, col);
+                return col;
+            }
+#endif
             ENDCG
         }
     }
