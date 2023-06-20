@@ -24,6 +24,8 @@ Shader "Xantoz/MeshAsPointCloud"
 
         _PointSize ("Point Size", Float) = 0.1
         _AlphaMultiplier ("Alpha Multiplier (lower makes more transparent)", Range(0.0, 2.0)) = 0.5
+
+        [Toggle(ENABLE_CLONES)] _EnableClones("Enable clones (silly effect)", Float) = 0
     }
 
     CGINCLUDE
@@ -52,6 +54,7 @@ Shader "Xantoz/MeshAsPointCloud"
             // Blend SrcAlpha OneMinusSrcAlpha
 
             CGPROGRAM
+            #pragma multi_compile_local __ ENABLE_CLONES
 
             sampler2D _MainTex;
             float4 _MainTex_ST;
@@ -84,6 +87,9 @@ Shader "Xantoz/MeshAsPointCloud"
                 float2 origUV : TEXCOORD1;
                 float4 vertex : POSITION0;
                 float4 vertexColor : COLOR1;
+#ifdef ENABLE_CLONES
+                uint instanceID : COLOR3;
+#endif
 
                 UNITY_FOG_COORDS(6)
                 UNITY_VERTEX_OUTPUT_STEREO
@@ -122,6 +128,9 @@ Shader "Xantoz/MeshAsPointCloud"
             // TODO: add hull stages and so so we can artificially make a denser point cloud?
 
             [maxvertexcount(6)]
+#ifdef ENABLE_CLONES
+            [instance(3)]
+#endif
 	    void geom(point v2g IN[1], inout TriangleStream<g2f> stream,
 		uint instanceID : SV_GSInstanceID, uint geoPrimID : SV_PrimitiveID)
             {
@@ -147,6 +156,15 @@ Shader "Xantoz/MeshAsPointCloud"
                 float3 pointOut = IN[0].vertex;
 
                 float4 pointTL, pointTR, pointBL, pointBR;
+
+#ifdef ENABLE_CLONES
+                if (instanceID == 2) {
+                    pointOut.x -= 1.5;
+                } else {
+                    pointOut.x += instanceID*1.5;
+                }
+                o.instanceID = instanceID;
+#endif
 
                 // TODO: seems like the billboarding version is not quite scale-correct
                 pointTL = UnityObjectToClipPos(pointOut + billboard(TL*_PointSize, IN[0].worldScale.xy));
@@ -188,7 +206,16 @@ Shader "Xantoz/MeshAsPointCloud"
 
                 float val = linefn(length((frac(i.uv.xy) - float2(0.5, 0.5))*2));
 
-                float4 col = val*tex2D(_MainTex, i.origUV);
+                float4 texCol = tex2D(_MainTex, i.origUV);
+#ifdef ENABLE_CLONES
+                if (i.instanceID == 1) {
+                    texCol.rgb = float3(texCol.b, texCol.r, texCol.g);
+                } else if (i.instanceID == 2) {
+                    texCol.rgb = float3(texCol.g, texCol.b, texCol.r);
+                }
+#endif
+
+                float4 col = val*texCol;
                 col.a *= _AlphaMultiplier;
 
                 UNITY_APPLY_FOG(i.fogCoord, col);
