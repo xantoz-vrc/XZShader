@@ -21,8 +21,9 @@ Shader "Xantoz/MeshAsPointCloud"
     Properties
     {
         _MainTex ("Texture", 2D) = "white" {}
+        _ParticleTex ("Particle Texture", 2D) = "white" {}
 
-        _PointSize ("Point Size", Float) = 0.1
+        _PointSize ("Point Size", Float) = 0.01
         _AlphaMultiplier ("Alpha Multiplier (lower makes more transparent)", Range(0.0, 2.0)) = 0.5
 
         [Toggle(ENABLE_CLONES)] _EnableClones("Enable clones (silly effect)", Float) = 0
@@ -58,6 +59,8 @@ Shader "Xantoz/MeshAsPointCloud"
 
             sampler2D _MainTex;
             float4 _MainTex_ST;
+            sampler2D _ParticleTex;
+            float4 _ParticleTex_ST;
 
             float _PointSize;
             float _AlphaMultiplier;
@@ -204,7 +207,9 @@ Shader "Xantoz/MeshAsPointCloud"
             {
                 UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(i);
 
-                float val = linefn(length((frac(i.uv.xy) - float2(0.5, 0.5))*2));
+                // float val = linefn(length((frac(i.uv.xy) - float2(0.5, 0.5))*2));
+                // float4 val = tex2D(_ParticleTex, clamp(i.uv*10, 0.0, 1.0));
+                float4 val = tex2D(_ParticleTex, i.uv);
 
                 float4 texCol = tex2D(_MainTex, i.origUV);
 #ifdef ENABLE_CLONES
