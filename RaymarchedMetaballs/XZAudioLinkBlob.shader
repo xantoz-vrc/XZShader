@@ -193,8 +193,9 @@ Shader "Xantoz/XZAudioLinkBlob"
                 float dist = shortestDistanceToSurface(eye, worldDir, MIN_DIST, MAX_DIST);
 
                 if (dist > MAX_DIST - EPSILON) {
-                    col = sampleCubeMap(worldDir);
-                    return col;
+                    discard;
+                    // col = sampleCubeMap(worldDir);
+                    // return col;
                 }
 
                 float3 p = eye + dist * worldDir;
