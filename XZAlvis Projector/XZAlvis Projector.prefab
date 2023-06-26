@@ -102,7 +102,7 @@ GameObject:
   m_Component:
   - component: {fileID: 5691036260480392232}
   - component: {fileID: 5711557144351318420}
-  m_Layer: 25
+  m_Layer: 0
   m_Name: Projector
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -151,7 +151,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 5691170701272124618}
-  m_Layer: 13
+  m_Layer: 0
   m_Name: XZAlvis Projector
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -186,13 +186,13 @@ GameObject:
   - component: {fileID: 5684673627385510512}
   - component: {fileID: 5665507657691608206}
   - component: {fileID: 5672797058105403822}
-  m_Layer: 25
+  m_Layer: 0
   m_Name: Shaft
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!4 &5684673627385510512
 Transform:
   m_ObjectHideFlags: 0
