@@ -4,6 +4,7 @@ Shader "Xantoz/RaymarchedMetaballs3D"
 {
     Properties
     {
+        [Enum(UnityEngine.Rendering.CullMode)] _Cull("Cull Mode", Float) = 1
         _Tint ("Tint Color", Color) = (1, 1, 1, 1)
         [NoScaleOffset]_Tex ("Cubemap (HDR)", Cube) = "Cube" {}
         [Gamma] _Exposure ("Exposure", Range(0, 8)) = 0.5
@@ -18,10 +19,18 @@ Shader "Xantoz/RaymarchedMetaballs3D"
     {
         Tags { "RenderType"="Opaque" }
         LOD 100
-        Cull Off
+        Cull [_Cull]
 
         Pass
         {
+            // ZWrite Off
+            // ZTest LEqual
+            // ZTest Less
+            // ZTest GEqual
+            // ZTest Greater
+            // ZClip false
+
+
             CGPROGRAM
             #pragma target 5.0
             #pragma vertex vert
@@ -58,6 +67,7 @@ Shader "Xantoz/RaymarchedMetaballs3D"
                 float2 uv : TEXCOORD0;
                 float3 ray_origin : TEXCOORD1;
                 float3 vert_position : TEXCOORD2;
+                float3 worldPos : TEXCOORD3;
 
                 UNITY_FOG_COORDS(2)
                 UNITY_VERTEX_OUTPUT_STEREO
@@ -72,6 +82,7 @@ Shader "Xantoz/RaymarchedMetaballs3D"
                 UNITY_INITIALIZE_VERTEX_OUTPUT_STEREO(o);
 
                 o.vertex = UnityObjectToClipPos(v.vertex);
+                o.worldPos = mul(unity_ObjectToWorld, v.vertex);
                 o.uv = v.uv;
 
                 if (_InObjectSpace) {
@@ -198,21 +209,32 @@ Shader "Xantoz/RaymarchedMetaballs3D"
                 return float4(c, 1);
             }
 
-            float4 frag (v2f i) : SV_Target
+            float4 frag (v2f i, out float depth : SV_Depth) : SV_Target
+            // float4 frag (v2f i, out float depth : SV_DepthLessEqual) : SV_Target
+            // float4 frag (v2f i, out float depth : SV_DepthGreaterEqual) : SV_Target
             {
                 float4 col = 0.0f;
+
 
                 UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(i);
 
                 float3 ray_origin = i.ray_origin;
                 float3 ray_direction = normalize(i.vert_position - i.ray_origin);
 
-                float3x3 R = AngleAxis3x3(radians(_SceneRotationAngle), _SceneRotationAxis);
-                float3 eye = mul(ray_origin + _SceneOffset, R);
-                float3 worldDir = mul(ray_direction, R);
+                // float3x3 R = AngleAxis3x3(radians(_SceneRotationAngle), _SceneRotationAxis);
+                // float3 eye = mul(ray_origin + _SceneOffset, R);
+                // float3 worldDir = mul(ray_direction, R);
+                float3 eye = ray_origin;
+                float3 worldDir = ray_direction;
                 float dist = shortestDistanceToSurface(eye, worldDir, MIN_DIST, MAX_DIST);
 
                 if (dist > MAX_DIST - EPSILON) {
+                    // discard;
+                    // depth = 1.#INF;
+
+                    // depth = i.vertex.z / i.vertex.w;
+                    float4 clip_pos = mul(UNITY_MATRIX_VP, float4(i.worldPos, 1.0));
+                    depth = clip_pos.z / clip_pos.w;
                     col = sampleCubeMap(worldDir);
                     return col;
                 }
@@ -222,6 +244,23 @@ Shader "Xantoz/RaymarchedMetaballs3D"
                 float4 tex = sampleCubeMap(reflect(worldDir, normal));
 
                 col = (tex + (normal.y / 2.0 - 0.2)) * float4(1.0, 0.8, 0.6, 1.0);
+
+                // Output depth
+                // float3 hit_position = (_InObjectSpace) ? mul(unity_ObjectToWorld, p) : p;
+                // float4 clip_pos = mul(UNITY_MATRIX_VP, float4(hit_position, 1.0));
+                // float3 hit_position = (_InObjectSpace) ? p : mul(unity_WorldToObject, p);
+                // float4 clip_pos = UnityObjectToClipPos(hit_position);
+
+                // TODO: use transpose of rotation matrix (orthogonal so it is the inverse) to unrotate and then remove offset or so
+
+                float4 clip_pos;
+                if (_InObjectSpace) {
+                    clip_pos = UnityObjectToClipPos(p);
+                } else {
+                    clip_pos = mul(UNITY_MATRIX_VP, float4(p, 1.0));
+                }
+
+                depth = clip_pos.z / clip_pos.w;
 
                 // apply fog
                 UNITY_APPLY_FOG(i.fogCoord, col);
