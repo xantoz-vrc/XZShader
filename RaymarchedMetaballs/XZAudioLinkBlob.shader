@@ -9,7 +9,14 @@ Shader "Xantoz/XZAudioLinkBlob"
         [Gamma] _Exposure ("Exposure", Range(0, 8)) = 0.5
         [IntRange]_InObjectSpace ("Raymarch in Object space rather than world space", Range(0, 1)) = 1
         _SceneScale("Scene scale", Float) = 0.03
+        _SceneRotationAngle("Scene rotation angle", Range(-180,180)) = 0
+        _SceneRotationAxis("Scene rotation axis", Vector) = (1,0,0)
+        _SceneOffset("Scene offset", Vector) = (0,0,0)
         _K("k-factor", Float) = 2.5
+        [ToggleUI]_Discard("Discard", Int) = 1
+
+        [Space(10)]
+        [Header(Audiolink)]
         _Amplitude_Scale ("AudioLink PCM Amplitude Scale", Range(0.0, 2.0)) = 1.0  // Scale amplitude of PCM
     }
 
@@ -19,6 +26,7 @@ Shader "Xantoz/XZAudioLinkBlob"
     #pragma multi_compile_instancing
 
     #include "UnityCG.cginc"
+    #include "common.cginc"
     #include "../cginc/AudioLinkFuncs.cginc"
 
     // Number of samples to turn into metaballs
@@ -55,6 +63,9 @@ Shader "Xantoz/XZAudioLinkBlob"
             float _Exposure;
             int _InObjectSpace;
             float _SceneScale;
+            float _SceneRotationAngle;
+            float3 _SceneRotationAxis;
+            float3 _SceneOffset;
             float _K;
 
             int _Discard;
@@ -192,8 +203,9 @@ Shader "Xantoz/XZAudioLinkBlob"
                 float3 ray_origin = i.ray_origin;
                 float3 ray_direction = normalize(i.vert_position - i.ray_origin);
 
-                float3 eye = ray_origin;
-                float3 worldDir = ray_direction;
+                float3x3 R = AngleAxis3x3(radians(_SceneRotationAngle), _SceneRotationAxis);
+                float3 eye = mul(ray_origin + _SceneOffset, R);
+                float3 worldDir = mul(ray_direction, R);
                 float dist = shortestDistanceToSurface(eye, worldDir, MIN_DIST, MAX_DIST);
 
                 if (dist > MAX_DIST - EPSILON) {

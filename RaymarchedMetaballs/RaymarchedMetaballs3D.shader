@@ -8,7 +8,10 @@ Shader "Xantoz/RaymarchedMetaballs3D"
         [NoScaleOffset]_Tex ("Cubemap (HDR)", Cube) = "Cube" {}
         [Gamma] _Exposure ("Exposure", Range(0, 8)) = 0.5
         [IntRange]_InObjectSpace ("Raymarch in Object space rather than world space", Range(0, 1)) = 1
-        _SceneScale("Scene scale", Float) = 0.04
+        _SceneScale("Scene scale", Range(0,1)) = 0.04
+        _SceneRotationAngle("Scene rotation angle", Range(-180,180)) = 0
+        _SceneRotationAxis("Scene rotation axis", Vector) = (1,0,0)
+        _SceneOffset("Scene offset", Vector) = (0,0,0)
         _K("k-factor", Float) = 0.7
     }
     SubShader
@@ -27,6 +30,7 @@ Shader "Xantoz/RaymarchedMetaballs3D"
             #pragma multi_compile_fog
 
             #include "UnityCG.cginc"
+            #include "common.cginc"
 
             samplerCUBE _Tex;
             float4 _Tex_HDR;
@@ -34,6 +38,10 @@ Shader "Xantoz/RaymarchedMetaballs3D"
             float _Exposure;
             int _InObjectSpace;
             float _SceneScale;
+            float _SceneRotationAngle;
+            float3 _SceneRotationAxis;
+            float3 _SceneOffset;
+
             float _K;
 
             struct appdata
@@ -199,16 +207,9 @@ Shader "Xantoz/RaymarchedMetaballs3D"
                 float3 ray_origin = i.ray_origin;
                 float3 ray_direction = normalize(i.vert_position - i.ray_origin);
 
-/*
-                float3 viewDir = ray_direction;
-                float3 eye = mul(float3(3.0, 3.0, 10.0), rotateY(TIME / 3.0));
-                float3x3 viewToWorld = viewMatrix(eye, float3(0.0, 0.0, 0.0), float3(0.0, 1.0, 0.0));
-                float3 worldDir = mul(viewDir, viewToWorld);
-                float dist = shortestDistanceToSurface(eye, worldDir, MIN_DIST, MAX_DIST);
-*/
-
-                float3 eye = ray_origin;
-                float3 worldDir = ray_direction;
+                float3x3 R = AngleAxis3x3(radians(_SceneRotationAngle), _SceneRotationAxis);
+                float3 eye = mul(ray_origin + _SceneOffset, R);
+                float3 worldDir = mul(ray_direction, R);
                 float dist = shortestDistanceToSurface(eye, worldDir, MIN_DIST, MAX_DIST);
 
                 if (dist > MAX_DIST - EPSILON) {
