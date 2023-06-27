@@ -56,6 +56,8 @@ Shader "Xantoz/XZAudioLinkBlob"
             int _InObjectSpace;
             float _SceneScale;
             float _K;
+
+            int _Discard;
             float _Amplitude_Scale;
 
             struct appdata
@@ -195,9 +197,12 @@ Shader "Xantoz/XZAudioLinkBlob"
                 float dist = shortestDistanceToSurface(eye, worldDir, MIN_DIST, MAX_DIST);
 
                 if (dist > MAX_DIST - EPSILON) {
-                    discard;
-                    // col = sampleCubeMap(worldDir);
-                    // return col;
+                    if (_Discard) {
+                        discard;
+                    } else {
+                        col = sampleCubeMap(worldDir);
+                        return col;
+                    }
                 }
 
                 float3 p = eye + dist * worldDir;
