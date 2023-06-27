@@ -28,8 +28,10 @@ Shader "Xantoz/XZAudioLinkBlob"
     
     #define MAX_MARCHING_STEPS 64
     #define MIN_DIST 0.0
-    #define MAX_DIST 100.0
-    #define EPSILON 0.001
+    // #define MAX_DIST 100.0
+    // #define EPSILON 0.001
+    #define MAX_DIST 50.0
+    #define EPSILON 0.002
 
     #define TIME _Time.y
 
