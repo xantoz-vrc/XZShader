@@ -102,7 +102,7 @@ Material:
     - _Tilling_Scale: 0
     - _UVSec: 0
     - _Vignette_Inner_Radius: 0.85
-    - _Vignette_Intensity: 1
+    - _Vignette_Intensity: 0
     - _Vignette_Outer_Radius: 1
     - _Vignette_Type: 0
     - _ZWrite: 1
