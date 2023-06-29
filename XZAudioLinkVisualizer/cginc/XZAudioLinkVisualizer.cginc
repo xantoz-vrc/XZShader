@@ -353,7 +353,7 @@ float get_value_xy_line(float2 xy)
     return linefn(dist);
 }
 
-float2 get_uv(float2 uv_in)
+float2 get_uv2(float2 uv_in, float seed)
 {
     float4 chronotensity_ST = float4(0,0,0,0);
     float rot = _Rotation;
@@ -364,8 +364,6 @@ float2 get_uv(float2 uv_in)
 
         // In auto mode, in addition to switching visualization mode, we also randomly switch chronotensity on and off
         if (_Mode > MAX_MODE) {
-            float seed = get_rarely_changing_random();
-
             // We need to pass the gotten number again into the random function to
             // make the current visualization and the decision on whether to use
             // chronotensity scrolling be non-correlated.
@@ -430,6 +428,11 @@ float2 get_uv(float2 uv_in)
     float sinY = sin(radians(rot));
     float2x2 rotationMatrix = float2x2(cosX, -sinX, sinY, cosX);
     return mul(centered_uv, rotationMatrix) + float2(0.5, 0.5) + new_ST.zw;
+}
+
+float2 get_uv(float2 uv_in)
+{
+    return get_uv2(uv_in, get_rarely_changing_random());
 }
 
 float4 get_color(uint mode, float2 xy)

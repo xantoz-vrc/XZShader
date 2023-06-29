@@ -155,21 +155,26 @@ Shader "Xantoz/XZAudioLinkVisualizer"
                 UNITY_INITIALIZE_OUTPUT(v2f, o);
                 UNITY_INITIALIZE_VERTEX_OUTPUT_STEREO(o);
 
+                float seed;
+                if (_UseVertexColor) {
+                    float rand = random(v.vertexColor.rg);
+                    uint2 useed = uint2(
+                        rand*20000000.0 +
+                        AudioLinkGetChronotensity(1, 0) + AudioLinkGetChronotensity(2, 2),
+                        AudioLinkGetChronotensity(0, 1) + AudioLinkGetChronotensity(5, 3))/2000000.0;
+                    seed = random(useed);
+
+                    o.vertexColorRand = seed;
+                    o.mode_add = int(rand*10);
+                } else {
+                    seed = get_rarely_changing_random();
+                }
+
                 o.vertex = UnityObjectToClipPos(v.vertex);
 
                 float2 uv = v.uv * _ST0.xy + _ST0.zw;
                 o.unmodified_uv = uv;
-                o.uv = get_uv(uv);
-
-                if (_UseVertexColor) {
-                    float rand = random(v.vertexColor.rg);
-                    uint2 seed = uint2(
-                        rand*20000000.0 +
-                        AudioLinkGetChronotensity(1, 0) + AudioLinkGetChronotensity(2, 2),
-                        AudioLinkGetChronotensity(0, 1) + AudioLinkGetChronotensity(5, 3))/2000000.0;
-                    o.vertexColorRand = random(seed);
-                    o.mode_add = int(rand*10);
-                }
+                o.uv = get_uv2(uv, seed);
 
                 UNITY_TRANSFER_FOG(o,o.vertex);
                 return o;
@@ -180,7 +185,7 @@ Shader "Xantoz/XZAudioLinkVisualizer"
             {
                 UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(i);
 
-                if (_UseVertexColor && !(i.vertexColorRand > 0.8)) {
+                if (_UseVertexColor && !(i.vertexColorRand > 0.97 || i.vertexColorRand < 0.03)) {
                     discard;
                 }
 
