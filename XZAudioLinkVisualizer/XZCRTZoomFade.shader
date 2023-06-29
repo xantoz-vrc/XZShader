@@ -22,7 +22,7 @@ Shader "Xantoz/XZCRTZoomFade"
             CGPROGRAM
             #include "UnityCustomRenderTexture.cginc"
             #include "UnityCG.cginc"
-            #include "cginc/AudioLinkFuncs.cginc"
+            #include "../cginc/AudioLinkFuncs.cginc"
             // #include "cginc/XZAudioLinkVisualizer.cginc"
 
 

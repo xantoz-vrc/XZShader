@@ -96,6 +96,12 @@ Shader "Xantoz/XZAudioLinkVisualizer"
         [Header(Misc)]
         [ToggleUI]_UseVertexColor ("Use vertex color to randomly show/not show and mix things up", Int) = 0
     }
+
+    CGINCLUDE
+    #include "UnityCG.cginc"
+    #include "cginc/XZAudioLinkVisualizer.cginc"
+    ENDCG
+
     SubShader
     {
         Tags { "Queue"="Transparent" "RenderType"="Transparent" "IgnoreProjector"="True" "VRCFallback"="Hidden" }
@@ -115,8 +121,6 @@ Shader "Xantoz/XZAudioLinkVisualizer"
             #pragma multi_compile_fog
             #pragma multi_compile_instancing
             
-            #include "UnityCG.cginc"
-            #include "cginc/XZAudioLinkVisualizer.cginc"
 
             struct appdata
             {

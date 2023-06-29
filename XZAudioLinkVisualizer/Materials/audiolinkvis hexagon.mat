@@ -81,13 +81,13 @@ Material:
     - _Cutoff: 0.5
     - _DetailNormalMapScale: 1
     - _DstBlend: 0
-    - _DstBlendMode: 1
+    - _DstBlendMode: 2
     - _Effect_Scale: 1
     - _GlossMapScale: 1
     - _Glossiness: 0.5
     - _GlossyReflections: 1
     - _Metallic: 0
-    - _Mode: 12
+    - _Mode: 11
     - _OcclusionStrength: 1
     - _PCM_Scale: 1
     - _Parallax: 0.02
@@ -97,10 +97,11 @@ Material:
     - _SmoothnessTextureChannel: 0
     - _SpecularHighlights: 1
     - _SrcBlend: 1
-    - _SrcBlendMode: 5
+    - _SrcBlendMode: 1
     - _Tiling_Scale: 1
     - _Tilling_Scale: 0
     - _UVSec: 0
+    - _UseVertexColor: 1
     - _Vignette_Inner_Radius: 0.85
     - _Vignette_Intensity: 1
     - _Vignette_Outer_Radius: 1

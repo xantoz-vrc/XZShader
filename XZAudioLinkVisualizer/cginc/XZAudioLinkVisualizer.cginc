@@ -1,4 +1,4 @@
-#include "cginc/AudioLinkFuncs.cginc"
+#include "../../cginc/AudioLinkFuncs.cginc"
 
 float4 _ST;
 

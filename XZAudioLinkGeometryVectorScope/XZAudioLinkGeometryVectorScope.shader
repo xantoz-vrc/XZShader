@@ -51,7 +51,7 @@ Shader "Xantoz/XZAudioLinkGeometryVectorScope"
         #pragma exclude_renderers gles metal
 
         #include "UnityCG.cginc"
-        #include "cginc/AudioLinkFuncs.cginc"
+        #include "../cginc/AudioLinkFuncs.cginc"
     ENDCG
 
     SubShader
