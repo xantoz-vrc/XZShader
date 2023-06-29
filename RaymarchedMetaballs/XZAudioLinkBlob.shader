@@ -35,7 +35,8 @@ Shader "Xantoz/XZAudioLinkBlob"
     // Use every n'th sample
     #define STEP 16
     
-    #define MAX_MARCHING_STEPS 64
+    // #define MAX_MARCHING_STEPS 64
+    #define MAX_MARCHING_STEPS 32
     #define MIN_DIST 0.0
     // #define MAX_DIST 100.0
     // #define EPSILON 0.001
