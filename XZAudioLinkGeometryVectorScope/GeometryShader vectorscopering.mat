@@ -9,7 +9,7 @@ Material:
   m_PrefabAsset: {fileID: 0}
   m_Name: GeometryShader vectorscopering
   m_Shader: {fileID: 4800000, guid: 3095a217efa1fc54cb4251b4fc06c235, type: 3}
-  m_ShaderKeywords: _OUTMODE_POINT
+  m_ShaderKeywords: _OUTMODE_LINE
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 0
   m_DoubleSidedGI: 0
@@ -82,9 +82,10 @@ Material:
     - _Metallic: 0
     - _Mode: 0
     - _OcclusionStrength: 1
-    - _OutMode: 1
+    - _OutMode: 2
     - _Parallax: 0.02
     - _PointSize: 0.025
+    - _RotateAxis: 1
     - _Scaling: 10
     - _SmoothnessTextureChannel: 0
     - _SpecularHighlights: 1
