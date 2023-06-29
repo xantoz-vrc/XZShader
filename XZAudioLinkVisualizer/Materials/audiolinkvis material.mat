@@ -92,7 +92,7 @@ Material:
     - _PCM_Scale: 1
     - _Parallax: 0.02
     - _Rotation: 0
-    - _Rotation_Reversing: 0
+    - _Rotation_Reversing: 1
     - _Rotation_Reversing_Factor: 0
     - _SmoothnessTextureChannel: 0
     - _SpecularHighlights: 1
