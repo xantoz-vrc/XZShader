@@ -77,6 +77,13 @@ Shader "Xantoz/XZAudioLinkGeometryVectorScopeRing"
         [Enum(Bass,0, Low Mid,1, High Mid,2, Treble,3)]_ChronoRot_Order_3 ("Rotation to apply fourth", Int) = 3
 
         [ToggleUI]_RotateAxis("Let the rotation affect the other axis of rotation", Int) = 0
+
+        [Space(10)]
+        [Header(Beat Movement x,y,z are just as you would imagine. w is movement along the circle radius)]
+        _BeatMovement_Band0 ("Beat movement, Bass", Vector) = (0,0,0,0)
+        _BeatMovement_Band1 ("Beat movement, Low Mid", Vector) = (0,0,0,0)
+        _BeatMovement_Band2 ("Beat movement, High Mid", Vector) = (0,0,0,0)
+        _BeatMovement_Band3 ("Beat movement, Treble", Vector) = (0,0,0,0)
     }
 
     CGINCLUDE
@@ -150,6 +157,11 @@ Shader "Xantoz/XZAudioLinkGeometryVectorScopeRing"
 
             int _RotateAxis;
 
+            float4 _BeatMovement_Band0;
+            float4 _BeatMovement_Band1;
+            float4 _BeatMovement_Band2;
+            float4 _BeatMovement_Band3;
+
             struct appdata
             {
                 float4 vertex : POSITION;
@@ -205,16 +217,22 @@ Shader "Xantoz/XZAudioLinkGeometryVectorScopeRing"
             {
                 float instance = (float(instanceID)/float(INSTANCES));
                 
-                int j = instance*128;
-                float al_beat[4] = {
-                    AudioLinkData(uint2(j,0)).r,
-                    AudioLinkData(uint2(j,1)).r,
-                    AudioLinkData(uint2(j,2)).r,
-                    AudioLinkData(uint2(j,3)).r
+                float angle = instance*2*UNITY_PI;
+                float3 pos = float3(sin(angle), 0, cos(angle))*0.5;
+
+                // int j = instance*128;
+                int j = instance*32;
+                float4 al_beatmove[4] = {
+                    AudioLinkData(uint2(j,0)).r*_BeatMovement_Band0,
+                    AudioLinkData(uint2(j,1)).r*_BeatMovement_Band1,
+                    AudioLinkData(uint2(j,2)).r*_BeatMovement_Band2,
+                    AudioLinkData(uint2(j,3)).r*_BeatMovement_Band3,
                 };
 
-                float angle = instance*2*UNITY_PI;
-                float3 pos = float3(sin(angle), al_beat[3], cos(angle))*0.5;
+                for (uint i = 0; i < 4; ++i) {
+                    pos.xz *= (1 + al_beatmove[i].w);
+                    pos.xyz += al_beatmove[i].xyz;
+                }
 
                 float chronorot_band[4] = {
                     _ChronoRot_Band0 * AudioLinkGetChronotensity(_ChronoRot_Effect_Band0, 0)/1000000.0,

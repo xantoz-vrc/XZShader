@@ -93,6 +93,10 @@ Material:
     - _UVSec: 0
     - _ZWrite: 1
     m_Colors:
+    - _BeatMovement_Band0: {r: 0, g: 0, b: 0, a: 0}
+    - _BeatMovement_Band1: {r: 0.5, g: 0, b: 0, a: 0}
+    - _BeatMovement_Band2: {r: 0, g: -0.7, b: 0, a: 0}
+    - _BeatMovement_Band3: {r: 0, g: 0.7, b: 0, a: 0}
     - _ChronoRot_Axis_Band0: {r: 1, g: 1, b: 0, a: 0}
     - _ChronoRot_Axis_Band1: {r: 0, g: 1, b: 0, a: 0}
     - _ChronoRot_Axis_Band2: {r: 0, g: 0, b: 1, a: 0}
