@@ -277,7 +277,6 @@ Shader "Xantoz/XZAudioLinkGeometryVectorScope"
                 return al_color_mult;
             }
 
-#if defined(_OUTMODE_QUAD)
             float linefn(float a)
             {
                 return -clamp((1.0-pow(0.5/abs(a), .1)), -2, 0);
@@ -293,32 +292,19 @@ Shader "Xantoz/XZAudioLinkGeometryVectorScope"
                 }
 
                 float4 al_color_mult = getBeatColor();
+#if defined(_OUTMODE_QUAD)
                 float val = linefn(length((frac(i.uv.xy) - float2(0.5, 0.5))*2));
                 float4 col = clamp(val*(_Color1 + _Color2*al_color_mult), 0.0, 1.0);
-                col.a *= _AlphaMultiplier;
 
-                UNITY_APPLY_FOG(i.fogCoord, col);
-                return col;
-            }
 #else // defined(_OUTMODE_LINE) || defined(_OUTMODE_POINT)
-            float4 frag(g2f i) : SV_Target
-            {
-                UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(i);
-
-                if (!AudioLinkIsAvailable())
-                {
-                    return float4(0,0,0,0);
-                }
-
-                float4 al_color_mult = getBeatColor();
                 // Try our best to not wash out to white (no proper HDR support here)
                 float4 col = clamp((_Color1 + _Color2*al_color_mult)/2, 0.0, 1.0);
+#endif
                 col.a *= _AlphaMultiplier;
 
                 UNITY_APPLY_FOG(i.fogCoord, col);
                 return col;
             }
-#endif
             ENDCG
         }
     }
