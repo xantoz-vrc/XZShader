@@ -91,6 +91,10 @@ Shader "Xantoz/XZAudioLinkVisualizer"
         _ChronoRot_Band2 ("Chronotensity Rotation, High Mid", Float) = 0.0
         [Enum(AudioLinkChronotensityEnum)]_ChronoRot_Effect_Band3 ("Chronotensity Rotation Type, Treble", Int) = 1
         _ChronoRot_Band3 ("Chronotensity Rotation, Treble", Float) = 0.0
+
+        [Space(10)]
+        [Header(Misc)]
+        [ToggleUI]_UseVertexColor ("Use vertex color to randomly show/not show and mix things up", Int) = 0
     }
     SubShader
     {
@@ -118,6 +122,7 @@ Shader "Xantoz/XZAudioLinkVisualizer"
             {
                 float4 vertex : POSITION;
                 float2 uv : TEXCOORD0;
+                float4 vertexColor : COLOR;
 
                 UNITY_VERTEX_INPUT_INSTANCE_ID
             };
@@ -127,12 +132,16 @@ Shader "Xantoz/XZAudioLinkVisualizer"
                 float2 uv : TEXCOORD0;
                 float2 unmodified_uv : TEXCOORD1;
                 float4 vertex : SV_POSITION;
+
+                float vertexColorRand : COLOR1;
+                int mode_add : COLOR2;
                 UNITY_FOG_COORDS(2)
 
                 UNITY_VERTEX_OUTPUT_STEREO
             };
 
             float4 _ST0;
+            int _UseVertexColor;
 
             v2f vert(appdata v)
             {
@@ -148,15 +157,30 @@ Shader "Xantoz/XZAudioLinkVisualizer"
                 o.unmodified_uv = uv;
                 o.uv = get_uv(uv);
 
+                if (_UseVertexColor) {
+                    float rand = random(v.vertexColor.rg);
+                    uint2 seed = uint2(
+                        rand*20000000.0 +
+                        AudioLinkGetChronotensity(1, 0) + AudioLinkGetChronotensity(2, 2),
+                        AudioLinkGetChronotensity(0, 1) + AudioLinkGetChronotensity(5, 3))/2000000.0;
+                    o.vertexColorRand = random(seed);
+                    o.mode_add = int(rand*10);
+                }
+
                 UNITY_TRANSFER_FOG(o,o.vertex);
                 return o;
             }
+
 
             float4 frag(v2f i) : SV_Target
             {
                 UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(i);
 
-                float4 col = get_frag(i.uv.xy, i.unmodified_uv.xy);
+                if (_UseVertexColor && !(i.vertexColorRand > 0.8)) {
+                    discard;
+                }
+
+                float4 col = get_frag2(i.uv.xy, i.unmodified_uv.xy, i.mode_add);
                 UNITY_APPLY_FOG(i.fogCoord, col);
                 return col;
             }

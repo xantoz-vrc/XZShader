@@ -377,7 +377,6 @@ float2 get_uv(float2 uv_in)
             float random_rot = random(float2(seed*seed, 2*seed));
             chronorot_scale = (random_rot > 0.666) ?  1.0 :
             (random_rot > 0.333) ? -1.0 : 0.0;
-
         }
 
         float chronotensity_band[4] = {
@@ -486,7 +485,7 @@ float get_vignette(float2 xy)
     return (1.0 - smoothstep(inner_radius, outer_radius, cdist) * intensity);
 }
 
-float4 get_frag(float2 xy, float2 vignette_xy)
+float4 get_frag2(float2 xy, float2 vignette_xy, int mode_add)
 {
     float4 col = float4(0,0,0,0);
 
@@ -497,6 +496,8 @@ float4 get_frag(float2 xy, float2 vignette_xy)
             // Auto mode
             // Get random number and convert to an integer between 0 and MAX_MODE
             mode = ceil(get_rarely_changing_random()*MAX_MODE);
+            mode = (mode + mode_add) % MAX_MODE;
+
             if (_Mode > MAX_MODE + 1) {
                 // Auto2 mode: replace modes 6 and 7 with something else
                 if (mode == 7) mode = 2; // XY line plot replace with LR lines
@@ -509,4 +510,9 @@ float4 get_frag(float2 xy, float2 vignette_xy)
     }
 
     return col;
+}
+
+float4 get_frag(float2 xy, float2 vignette_xy)
+{
+    return get_frag2(xy, vignette_xy, 0);
 }
