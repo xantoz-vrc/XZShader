@@ -17,7 +17,7 @@
 // CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
 
-// This is similar to XZAudioLinkGeometryVectorScope2 but designed around using a Plane that is 200 tris big instead
+// This is similar to XZAudioLinkGeometryVectorScope but designed around using a Plane that is 200 tris big instead
 // For simplicity it is designed around using the 200 tris in from the plane and geoPrimID, to give 2000 samples without using instancing
 // Then we use instances to create duplicates of the thingy around a ring
 
@@ -28,7 +28,7 @@ Shader "Xantoz/XZAudioLinkGeometryVectorScopeRing"
     {
         [HDR]_Color1 ("Color 1 (Base Color)", Color) = (1,1,1,1)
 
-        [IntRange]_3D ("3D effect (move in Z direction as well)", Range(0,1)) = 0
+        [IntRange]_3D ("3D effect (move in Z direction as well)", Range(0,1)) = 1
 
         _PointSize ("Point Size", Float) = 0.025
         _AlphaMultiplier ("Alpha Multiplier (lower makes more transparent)", Range(0.0, 2.0)) = 0.5
