@@ -83,6 +83,7 @@ Material:
     - _DstBlend: 0
     - _DstBlendMode: 2
     - _Effect_Scale: 1
+    - _Fat: 0.0001
     - _GlossMapScale: 1
     - _Glossiness: 0.5
     - _GlossyReflections: 1

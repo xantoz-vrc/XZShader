@@ -95,6 +95,8 @@ Shader "Xantoz/XZAudioLinkVisualizer"
         [Space(10)]
         [Header(Misc)]
         [ToggleUI]_UseVertexColor ("Use vertex color to randomly show/not show and mix things up", Int) = 0
+
+        _Fat ("Fattening", Float) = 0
     }
 
     CGINCLUDE
@@ -127,6 +129,7 @@ Shader "Xantoz/XZAudioLinkVisualizer"
                 float4 vertex : POSITION;
                 float2 uv : TEXCOORD0;
                 float4 vertexColor : COLOR;
+                float3 normal : NORMAL;
 
                 UNITY_VERTEX_INPUT_INSTANCE_ID
             };
@@ -146,6 +149,7 @@ Shader "Xantoz/XZAudioLinkVisualizer"
 
             float4 _ST0;
             int _UseVertexColor;
+            float _Fat;
 
             v2f vert(appdata v)
             {
@@ -169,6 +173,8 @@ Shader "Xantoz/XZAudioLinkVisualizer"
                 } else {
                     seed = get_rarely_changing_random();
                 }
+
+                v.vertex.xyz += v.normal*_Fat;
 
                 o.vertex = UnityObjectToClipPos(v.vertex);
 
