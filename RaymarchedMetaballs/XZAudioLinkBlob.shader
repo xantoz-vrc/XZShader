@@ -47,7 +47,7 @@ Shader "Xantoz/XZAudioLinkBlob"
 
     SubShader
     {
-        Tags { "RenderType"="Opaque" }
+        Tags { "RenderType"="Opaque" "DisableBatching"="True" }
         LOD 100
         Cull Off
 

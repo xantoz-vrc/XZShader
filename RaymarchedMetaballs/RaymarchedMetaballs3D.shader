@@ -17,7 +17,7 @@ Shader "Xantoz/RaymarchedMetaballs3D"
     }
     SubShader
     {
-        Tags { "RenderType"="Opaque" }
+        Tags { "RenderType"="Opaque" "DisableBatching"="True" }
         LOD 100
         Cull [_Cull]
 
