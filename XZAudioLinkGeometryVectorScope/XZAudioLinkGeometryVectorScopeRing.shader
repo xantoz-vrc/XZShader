@@ -79,7 +79,7 @@ Shader "Xantoz/XZAudioLinkGeometryVectorScopeRing"
         [ToggleUI]_RotateAxis("Let the rotation affect the other axis of rotation", Int) = 0
 
         [Space(10)]
-        [Header(Beat Movement x,y,z are just as you would imagine. w is movement along the circle radius)]
+        [Header(Beat Movement xyz are just as you would imagine while w is movement along the circle radius)]
         _BeatMovement_Band0 ("Beat movement, Bass", Vector) = (0,0,0,0)
         _BeatMovement_Band1 ("Beat movement, Low Mid", Vector) = (0,0,0,0)
         _BeatMovement_Band2 ("Beat movement, High Mid", Vector) = (0,0,0,0)

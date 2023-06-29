@@ -9,7 +9,7 @@ Material:
   m_PrefabAsset: {fileID: 0}
   m_Name: GeometryShader vectorscopering
   m_Shader: {fileID: 4800000, guid: 3095a217efa1fc54cb4251b4fc06c235, type: 3}
-  m_ShaderKeywords: _OUTMODE_LINE
+  m_ShaderKeywords: _OUTMODE_QUAD
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 0
   m_DoubleSidedGI: 0
@@ -60,8 +60,8 @@ Material:
     - _AlphaMultiplier: 0.5
     - _Amplitude_Scale: 0.5
     - _BumpScale: 1
-    - _ChronoRot_Band0: 2
-    - _ChronoRot_Band1: 5
+    - _ChronoRot_Band0: 5
+    - _ChronoRot_Band1: 2
     - _ChronoRot_Band2: 0
     - _ChronoRot_Band3: 3
     - _ChronoRot_Effect_Band0: 5
@@ -82,7 +82,7 @@ Material:
     - _Metallic: 0
     - _Mode: 0
     - _OcclusionStrength: 1
-    - _OutMode: 2
+    - _OutMode: 0
     - _Parallax: 0.02
     - _PointSize: 0.025
     - _RotateAxis: 1
@@ -93,10 +93,10 @@ Material:
     - _UVSec: 0
     - _ZWrite: 1
     m_Colors:
-    - _BeatMovement_Band0: {r: 0, g: 0, b: 0, a: 0}
-    - _BeatMovement_Band1: {r: 0.5, g: 0, b: 0, a: 0}
-    - _BeatMovement_Band2: {r: 0, g: -0.7, b: 0, a: 0}
-    - _BeatMovement_Band3: {r: 0, g: 0.7, b: 0, a: 0}
+    - _BeatMovement_Band0: {r: 0, g: 0, b: 0, a: 0.2}
+    - _BeatMovement_Band1: {r: 0, g: 0, b: 0, a: -0.5}
+    - _BeatMovement_Band2: {r: 0, g: -0.35, b: 0, a: 0}
+    - _BeatMovement_Band3: {r: 0, g: 0.35, b: 0, a: 0}
     - _ChronoRot_Axis_Band0: {r: 1, g: 1, b: 0, a: 0}
     - _ChronoRot_Axis_Band1: {r: 0, g: 1, b: 0, a: 0}
     - _ChronoRot_Axis_Band2: {r: 0, g: 0, b: 1, a: 0}
