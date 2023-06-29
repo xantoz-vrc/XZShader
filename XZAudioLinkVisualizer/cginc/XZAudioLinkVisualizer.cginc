@@ -496,7 +496,7 @@ float4 get_frag2(float2 xy, float2 vignette_xy, int mode_add)
             // Auto mode
             // Get random number and convert to an integer between 0 and MAX_MODE
             mode = ceil(get_rarely_changing_random()*MAX_MODE);
-            mode = (mode + mode_add) % MAX_MODE;
+            mode = (mode + mode_add) % (MAX_MODE+1);
 
             if (_Mode > MAX_MODE + 1) {
                 // Auto2 mode: replace modes 6 and 7 with something else
