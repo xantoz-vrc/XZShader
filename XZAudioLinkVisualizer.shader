@@ -29,6 +29,7 @@ Shader "Xantoz/XZAudioLinkVisualizer"
         [Enum(XZAudioLinkVisualizerMode)] _Mode("Visualizer Mode", Int) = 0
         [HDR]_Color1 ("Color 1 (Base Color)", Color) = (1,1,1,1)
 
+        _ST0 ("UV tiling and offset global", Vector) = (1,1,0,0) // (happens before _ST and _Tiling_Scale and any of the chronotensity scroll and scaling effects). Also affects the vignette)
         _ST ("UV tiling and offset", Vector) = (1,1,0,0)
         _Tiling_Scale ("UV Tiling scale", Range(0.1, 10.0)) = 1.0 // First added so we could have a nice slider in ShaderFes 2021 (normally you could also just modify _ST)
 
@@ -131,6 +132,8 @@ Shader "Xantoz/XZAudioLinkVisualizer"
                 UNITY_VERTEX_OUTPUT_STEREO
             };
 
+            float4 _ST0;
+
             v2f vert(appdata v)
             {
                 v2f o;
@@ -140,8 +143,10 @@ Shader "Xantoz/XZAudioLinkVisualizer"
                 UNITY_INITIALIZE_VERTEX_OUTPUT_STEREO(o);
 
                 o.vertex = UnityObjectToClipPos(v.vertex);
-                o.unmodified_uv = v.uv;
-                o.uv = get_uv(v.uv)
+
+                float2 uv = v.uv * _ST0.xy + _ST0.zw;
+                o.unmodified_uv = uv;
+                o.uv = get_uv(uv);
 
                 UNITY_TRANSFER_FOG(o,o.vertex);
                 return o;
