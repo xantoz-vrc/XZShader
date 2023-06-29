@@ -4,6 +4,7 @@ Shader "Xantoz/XZAudioLinkBlob"
 {
     Properties
     {
+        [Enum(UnityEngine.Rendering.CullMode)] _Cull("Cull Mode", Float) = 1
         _Tint ("Tint Color", Color) = (1, 1, 1, 1)
         [NoScaleOffset]_Tex ("Cubemap (HDR)", Cube) = "Cube" {}
         [Gamma] _Exposure ("Exposure", Range(0, 8)) = 0.5
@@ -49,7 +50,7 @@ Shader "Xantoz/XZAudioLinkBlob"
     {
         Tags { "RenderType"="Opaque" "DisableBatching"="True" }
         LOD 100
-        Cull Off
+        Cull [_Cull]
 
         Pass
         {
@@ -85,6 +86,7 @@ Shader "Xantoz/XZAudioLinkBlob"
                 float2 uv : TEXCOORD0;
                 float3 ray_origin : TEXCOORD1;
                 float3 vert_position : TEXCOORD2;
+                float3 worldPos : TEXCOORD3;
 
                 UNITY_FOG_COORDS(2)
                 UNITY_VERTEX_OUTPUT_STEREO
@@ -99,6 +101,7 @@ Shader "Xantoz/XZAudioLinkBlob"
                 UNITY_INITIALIZE_VERTEX_OUTPUT_STEREO(o);
 
                 o.vertex = UnityObjectToClipPos(v.vertex);
+                o.worldPos = mul(unity_ObjectToWorld, v.vertex);
                 o.uv = v.uv;
 
                 if (_InObjectSpace) {
@@ -194,7 +197,7 @@ Shader "Xantoz/XZAudioLinkBlob"
                 return float4(c, 1);
             }
 
-            float4 frag (v2f i) : SV_Target
+            float4 frag (v2f i, out float depth : SV_Depth) : SV_Target
             {
                 float4 col = 0.0f;
 
@@ -203,16 +206,20 @@ Shader "Xantoz/XZAudioLinkBlob"
                 float3 ray_origin = i.ray_origin;
                 float3 ray_direction = normalize(i.vert_position - i.ray_origin);
 
-                float3x3 R = AngleAxis3x3(radians(_SceneRotationAngle), _SceneRotationAxis);
+                float3x3 R = AngleAxis3x3(radians(_SceneRotationAngle), normalize(_SceneRotationAxis));
                 float3 eye = mul(ray_origin + _SceneOffset, R);
                 float3 worldDir = mul(ray_direction, R);
                 float dist = shortestDistanceToSurface(eye, worldDir, MIN_DIST, MAX_DIST);
+
+                float4 clip_pos = mul(UNITY_MATRIX_VP, float4(i.worldPos, 1.0));
+                float maxDepth = clip_pos.z / clip_pos.w;
 
                 if (dist > MAX_DIST - EPSILON) {
                     if (_Discard) {
                         discard;
                     } else {
                         col = sampleCubeMap(worldDir);
+                        depth = maxDepth;
                         return col;
                     }
                 }
@@ -222,6 +229,15 @@ Shader "Xantoz/XZAudioLinkBlob"
                 float4 tex = sampleCubeMap(reflect(worldDir, normal));
 
                 col = (tex + (normal.y / 2.0 - 0.2)) * float4(1.0, 0.8, 0.6, 1.0);
+
+                // undo rotation and offset for depth calculation
+                p = mul(p, transpose(R)) - _SceneOffset;
+                if (_InObjectSpace) {
+                    clip_pos = UnityObjectToClipPos(p);
+                } else {
+                    clip_pos = mul(UNITY_MATRIX_VP, float4(p, 1.0));
+                }
+                depth = max(clip_pos.z / clip_pos.w, maxDepth);
 
                 // apply fog
                 UNITY_APPLY_FOG(i.fogCoord, col);

@@ -223,21 +223,18 @@ Shader "Xantoz/RaymarchedMetaballs3D"
                 float3 ray_origin = i.ray_origin;
                 float3 ray_direction = normalize(i.vert_position - i.ray_origin);
 
-                // float3x3 R = AngleAxis3x3(radians(_SceneRotationAngle), _SceneRotationAxis);
-                // float3 eye = mul(ray_origin + _SceneOffset, R);
-                // float3 worldDir = mul(ray_direction, R);
-                float3 eye = ray_origin;
-                float3 worldDir = ray_direction;
+                float3x3 R = AngleAxis3x3(radians(_SceneRotationAngle), normalize(_SceneRotationAxis));
+                float3 eye = mul(ray_origin + _SceneOffset, R);
+                float3 worldDir = mul(ray_direction, R);
                 float dist = shortestDistanceToSurface(eye, worldDir, MIN_DIST, MAX_DIST);
+
+                float4 clip_pos = mul(UNITY_MATRIX_VP, float4(i.worldPos, 1.0));
+                float maxDepth = clip_pos.z / clip_pos.w;
 
                 if (dist > MAX_DIST - EPSILON) {
                     // discard;
-                    // depth = 1.#INF;
-
-                    // depth = i.vertex.z / i.vertex.w;
-                    float4 clip_pos = mul(UNITY_MATRIX_VP, float4(i.worldPos, 1.0));
-                    depth = clip_pos.z / clip_pos.w;
                     col = sampleCubeMap(worldDir);
+                    depth = maxDepth;
                     return col;
                 }
 
@@ -248,21 +245,14 @@ Shader "Xantoz/RaymarchedMetaballs3D"
                 col = (tex + (normal.y / 2.0 - 0.2)) * float4(1.0, 0.8, 0.6, 1.0);
 
                 // Output depth
-                // float3 hit_position = (_InObjectSpace) ? mul(unity_ObjectToWorld, p) : p;
-                // float4 clip_pos = mul(UNITY_MATRIX_VP, float4(hit_position, 1.0));
-                // float3 hit_position = (_InObjectSpace) ? p : mul(unity_WorldToObject, p);
-                // float4 clip_pos = UnityObjectToClipPos(hit_position);
-
-                // TODO: use transpose of rotation matrix (orthogonal so it is the inverse) to unrotate and then remove offset or so
-
-                float4 clip_pos;
+                // undo rotation and offset for depth calculation
+                p = mul(p, transpose(R)) - _SceneOffset;
                 if (_InObjectSpace) {
                     clip_pos = UnityObjectToClipPos(p);
                 } else {
                     clip_pos = mul(UNITY_MATRIX_VP, float4(p, 1.0));
                 }
-
-                depth = clip_pos.z / clip_pos.w;
+                depth = max(clip_pos.z / clip_pos.w, maxDepth);
 
                 // apply fog
                 UNITY_APPLY_FOG(i.fogCoord, col);
