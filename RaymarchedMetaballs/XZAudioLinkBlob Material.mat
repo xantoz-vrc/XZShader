@@ -62,7 +62,7 @@ Material:
     m_Floats:
     - _Amplitude_Scale: 1
     - _BumpScale: 1
-    - _Cull: 2
+    - _Cull: 1
     - _Cutoff: 0.5
     - _DetailNormalMapScale: 1
     - _Discard: 1
