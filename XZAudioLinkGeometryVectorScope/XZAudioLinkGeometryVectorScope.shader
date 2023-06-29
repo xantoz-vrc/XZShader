@@ -96,7 +96,7 @@ Shader "Xantoz/XZAudioLinkGeometryVectorScope"
 	    {
 		float4 vertex : POSITION0;
 		uint2 batchID : TEXCOORD0;
-                float3 worldScale : COLOR0;
+                float3 worldScale : COLOR0_nointerpolation;
 
 		UNITY_VERTEX_OUTPUT_STEREO
             };
