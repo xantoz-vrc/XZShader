@@ -1,0 +1,107 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!21 &2100000
+Material:
+  serializedVersion: 6
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: GeometryShader vectorscopering
+  m_Shader: {fileID: 4800000, guid: 3095a217efa1fc54cb4251b4fc06c235, type: 3}
+  m_ShaderKeywords: _OUTMODE_POINT
+  m_LightmapFlags: 4
+  m_EnableInstancingVariants: 0
+  m_DoubleSidedGI: 0
+  m_CustomRenderQueue: -1
+  stringTagMap: {}
+  disabledShaderPasses: []
+  m_SavedProperties:
+    serializedVersion: 3
+    m_TexEnvs:
+    - _BumpMap:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _DetailAlbedoMap:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _DetailMask:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _DetailNormalMap:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _EmissionMap:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _MainTex:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _MetallicGlossMap:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _OcclusionMap:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _ParallaxMap:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    m_Floats:
+    - _3D: 1
+    - _AlphaMultiplier: 0.5
+    - _Amplitude_Scale: 0.5
+    - _BumpScale: 1
+    - _ChronoRot_Band0: 2
+    - _ChronoRot_Band1: 5
+    - _ChronoRot_Band2: 0
+    - _ChronoRot_Band3: 3
+    - _ChronoRot_Effect_Band0: 5
+    - _ChronoRot_Effect_Band1: 1
+    - _ChronoRot_Effect_Band2: 1
+    - _ChronoRot_Effect_Band3: 3
+    - _ChronoRot_Order_0: 1
+    - _ChronoRot_Order_1: 0
+    - _ChronoRot_Order_2: 2
+    - _ChronoRot_Order_3: 3
+    - _ChronoRot_Scale: 1
+    - _Cutoff: 0.5
+    - _DetailNormalMapScale: 1
+    - _DstBlend: 0
+    - _GlossMapScale: 1
+    - _Glossiness: 0.5
+    - _GlossyReflections: 1
+    - _Metallic: 0
+    - _Mode: 0
+    - _OcclusionStrength: 1
+    - _OutMode: 1
+    - _Parallax: 0.02
+    - _PointSize: 0.025
+    - _Scaling: 10
+    - _SmoothnessTextureChannel: 0
+    - _SpecularHighlights: 1
+    - _SrcBlend: 1
+    - _UVSec: 0
+    - _ZWrite: 1
+    m_Colors:
+    - _ChronoRot_Axis_Band0: {r: 1, g: 1, b: 0, a: 0}
+    - _ChronoRot_Axis_Band1: {r: 0, g: 1, b: 0, a: 0}
+    - _ChronoRot_Axis_Band2: {r: 0, g: 0, b: 1, a: 0}
+    - _ChronoRot_Axis_Band3: {r: 0, g: 1, b: 1, a: 0}
+    - _ChronoRot_Ordering: {r: 0, g: 1, b: 2, a: 3}
+    - _Color: {r: 1, g: 1, b: 1, a: 1}
+    - _Color1: {r: 1, g: 1, b: 1, a: 1}
+    - _Color2: {r: 1.4980392, g: 1.4980392, b: 1.4980392, a: 1}
+    - _Color_Mul_Band0: {r: 4, g: 0, b: 0, a: 1}
+    - _Color_Mul_Band1: {r: 0.21960784, g: 1.4980392, b: 0, a: 1}
+    - _Color_Mul_Band2: {r: 0, g: 0.59607846, b: 1.4980392, a: 1}
+    - _Color_Mul_Band3: {r: 1.4980392, g: 1.4901961, b: 0, a: 1}
+    - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
