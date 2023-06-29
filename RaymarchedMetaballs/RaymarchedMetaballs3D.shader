@@ -21,6 +21,11 @@ Shader "Xantoz/RaymarchedMetaballs3D"
         LOD 100
         Cull [_Cull]
 
+        CGINCLUDE
+            #include "UnityCG.cginc"
+            #include "../cginc/rotation.cginc"
+        ENDCG
+
         Pass
         {
             // ZWrite Off
@@ -37,9 +42,6 @@ Shader "Xantoz/RaymarchedMetaballs3D"
             #pragma fragment frag
             #pragma multi_compile_instancing
             #pragma multi_compile_fog
-
-            #include "UnityCG.cginc"
-            #include "common.cginc"
 
             samplerCUBE _Tex;
             float4 _Tex_HDR;

@@ -26,7 +26,7 @@ Shader "Xantoz/XZAudioLinkBlob"
     #pragma multi_compile_instancing
 
     #include "UnityCG.cginc"
-    #include "common.cginc"
+    #include "../cginc/rotation.cginc"
     #include "../cginc/AudioLinkFuncs.cginc"
 
     // Number of samples to turn into metaballs
