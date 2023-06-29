@@ -75,6 +75,8 @@ Shader "Xantoz/XZAudioLinkGeometryVectorScopeRing"
         [Enum(Bass,0, Low Mid,1, High Mid,2, Treble,3)]_ChronoRot_Order_1 ("Rotation to apply second", Int) = 1
         [Enum(Bass,0, Low Mid,1, High Mid,2, Treble,3)]_ChronoRot_Order_2 ("Rotation to apply third",  Int) = 2
         [Enum(Bass,0, Low Mid,1, High Mid,2, Treble,3)]_ChronoRot_Order_3 ("Rotation to apply fourth", Int) = 3
+
+        [ToggleUI]_RotateAxis("Let the rotation affect the other axis of rotation", Int) = 0
     }
 
     CGINCLUDE
@@ -145,6 +147,8 @@ Shader "Xantoz/XZAudioLinkGeometryVectorScopeRing"
 	    uint _ChronoRot_Order_1;
 	    uint _ChronoRot_Order_2;
 	    uint _ChronoRot_Order_3;
+
+            int _RotateAxis;
 
             struct appdata
             {
@@ -231,10 +235,21 @@ Shader "Xantoz/XZAudioLinkGeometryVectorScopeRing"
                     _ChronoRot_Order_3,
                 };
 
-                for (uint i = 0; i < 4; ++i) {
-                    uint idx = chronorot_order[i];
-                    float angle = _ChronoRot_Scale*frac(chronorot_band[idx])*360;
-                    pos = mul(AngleAxis3x3(radians(angle), chronorot_axis[idx]), pos);
+                if (_RotateAxis) {
+                    float3 axis = chronorot_axis[chronorot_order[0]];
+                    for (uint i = 0; i < 4; ++i) {
+                        uint idx = chronorot_order[i];
+                        float angle = _ChronoRot_Scale*frac(chronorot_band[idx])*360;
+                        float3x3 R = AngleAxis3x3(radians(angle), axis);
+                        pos = mul(R, pos);
+                        axis = mul(R, chronorot_axis[chronorot_order[(i+1) % 4]]);
+                    }
+                } else {
+                    for (uint i = 0; i < 4; ++i) {
+                        uint idx = chronorot_order[i];
+                        float angle = _ChronoRot_Scale*frac(chronorot_band[idx])*360;
+                        pos = mul(AngleAxis3x3(radians(angle), chronorot_axis[idx]), pos);
+                    }
                 }
                 
                 return pos;
