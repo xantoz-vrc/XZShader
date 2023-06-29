@@ -226,9 +226,9 @@ Shader "Xantoz/XZAudioLinkGeometryVectorScope"
                 }
 #else // defined(_OUTMODE_LINE) || defined(_OUTMODE_POINT)
                 int cnt = SAMPLECNT;
-            #if defined(_OUTMODE_LINE)
+  #if defined(_OUTMODE_LINE)
                 cnt++;
-            #endif
+  #endif
                 for (int i = 0; i < cnt; ++i)
                 {
                     uint sampleID = i + operationID * SAMPLECNT;
@@ -250,6 +250,19 @@ Shader "Xantoz/XZAudioLinkGeometryVectorScope"
             float4 getBeatColor()
             {
 
+                float4 colorband[4] = {
+                    _Color_Mul_Band0,
+                    _Color_Mul_Band1,
+                    _Color_Mul_Band2,
+                    _Color_Mul_Band3,
+                };
+
+#if defined(_OUTMODE_LINE) || defined(_OUTMODE_POINT)
+                // Attempt to un-HDR the color
+                for (uint i = 0; i < 4; ++i) {
+                    colorband[i].rgb = colorband[i].rgb/max(colorband[i].r, max(colorband[i].g, colorband[i].g));
+                }
+#endif
                 float al_beat[4] = {
                     AudioLinkData(uint2(0,0)).r,
                     AudioLinkData(uint2(0,1)).r,
@@ -257,10 +270,10 @@ Shader "Xantoz/XZAudioLinkGeometryVectorScope"
                     AudioLinkData(uint2(0,3)).r
                 };
                 float4 al_color_mult =
-                    _Color_Mul_Band0*al_beat[0] +
-                    _Color_Mul_Band1*al_beat[1] +
-                    _Color_Mul_Band2*al_beat[2] +
-                    _Color_Mul_Band3*al_beat[3];
+                    colorband[0]*al_beat[0] +
+                    colorband[1]*al_beat[1] +
+                    colorband[2]*al_beat[2] +
+                    colorband[3]*al_beat[3];
                 return al_color_mult;
             }
 
@@ -298,7 +311,8 @@ Shader "Xantoz/XZAudioLinkGeometryVectorScope"
                 }
 
                 float4 al_color_mult = getBeatColor();
-                float4 col = clamp(_Color1 + _Color2*al_color_mult, 0.0, 2.0);
+                // Try our best to not wash out to white (no proper HDR support here)
+                float4 col = clamp((_Color1 + _Color2*al_color_mult)/2, 0.0, 1.0);
                 col.a *= _AlphaMultiplier;
 
                 UNITY_APPLY_FOG(i.fogCoord, col);
