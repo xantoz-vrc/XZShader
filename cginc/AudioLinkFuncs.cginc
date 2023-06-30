@@ -1,4 +1,6 @@
+#pragma once
 
+#include "common.cginc"
 
 #define ALPASS_DFT            uint2(0,4)   //Size: 128, 2
 #define ALPASS_WAVEFORM       uint2(0,6)   //Size: 128, 16
@@ -24,11 +26,6 @@
     uniform Texture2D<float4> _AudioTexture;
     #define AudioLinkData(xycoord) _AudioTexture[uint2(xycoord)]
 #endif
-
-float mod(float x, float y)
-{
-    return x - y * floor(x/y);
-}
 
 bool AudioLinkIsAvailable()
 {

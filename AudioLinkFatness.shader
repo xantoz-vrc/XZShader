@@ -93,7 +93,7 @@
 
                 // sample the texture
                 fixed4 col = tex2D(_MainTex, i.uv);
-                
+
                 int w, h;
                 _AudioTexture.GetDimensions(w,h);
                 if (w > 16)
