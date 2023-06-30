@@ -102,7 +102,7 @@ Shader "Xantoz/RaymarchedSomething3D"
                 return o;
             }
 
-            #define MAX_MARCHING_STEPS 64
+            #define MAX_MARCHING_STEPS 128
             #define MIN_DIST 0.0
             #define MAX_DIST 100.0
             #define EPSILON 0.001
@@ -110,6 +110,8 @@ Shader "Xantoz/RaymarchedSomething3D"
 
             #define TIME _Time.y
             // #define TIME 1
+
+            float sceneSDF(float3 samplePoint);
 
             /**
             * Signed distance function for a sphere centered at the origin with radius r.
@@ -175,7 +177,7 @@ Shader "Xantoz/RaymarchedSomething3D"
 
                 float balls = MAX_DIST;
                 for (float i = 1.0; i < 4.0*2; i += 1.3) {
-                    float ballRadius = 1.0*(1+AudioLinkData(uint2(i % 4,0)).r);
+                    float ballRadius = 1.0*(1+AudioLinkData(uint2(i, 0)).r);
                     for (float j = 1.0; j < 4.0*2; j += 1.3) {
                         float cost = cos(t * j);
                         balls = smin(balls, sphereSDF(samplePoint + float3(sin(t * i) * j, cost * i, cost * j)*_SceneScale, ballRadius*_SceneScale), _K*_SceneScale);
@@ -183,36 +185,6 @@ Shader "Xantoz/RaymarchedSomething3D"
                 }
 
                 return balls;
-            }
-
-            // 
-            /**
-            * Signed distance function describing the scene.
-            */
-            float sceneSDF(float3 samplePoint)
-            {
-                // return min(balls(samplePoint), tunnel(samplePoint*10));
-                // return tunnel(samplePoint);
-
-                // return min(balls(samplePoint), udRoundBox(samplePoint, 0.1*_SceneScale, 0.1*_SceneScale));
-
-                // return min(
-                //     sphereSDF(
-                //         samplePoint + float3(sin(frac(_Time.x)*2*UNITY_PI), 0, cos(frac(_Time.x)*2*UNITY_PI))*10*_SceneScale,
-                //         1*_SceneScale),
-                //     udRoundBox(samplePoint, (1+AudioLinkData(uint2(1,0)).r)*_SceneScale, AudioLinkData(uint2(0,0)).r*_SceneScale)
-                // );
-
-                return
-                min(
-                    balls(samplePoint+float3(0,0,-10)*_SceneScale),
-                    min(
-                        sphereSDF(
-                            samplePoint + float3(sin(frac(_Time.x)*2*UNITY_PI), 0, cos(frac(_Time.x)*2*UNITY_PI))*10*_SceneScale,
-                            1*_SceneScale),
-                        udRoundBox(samplePoint, (1+AudioLinkData(uint2(1,0)).r)*_SceneScale, AudioLinkData(uint2(0,0)).r*_SceneScale)));
-
-
             }
 
             /**
@@ -257,14 +229,6 @@ Shader "Xantoz/RaymarchedSomething3D"
                     ));
             }
 
-            float3x3 viewMatrix(float3 eye, float3 center, float3 up) {
-                // Based on gluLookAt man page
-                float3 f = normalize(center - eye);
-                float3 s = normalize(cross(f, up));
-                float3 u = cross(s, f);
-                return float3x3(s, u, -f);
-            }
-
             float4 sampleCubeMap(float3 texcoord)
             {
                 float4 tex = texCUBE(_Tex, texcoord);
@@ -286,6 +250,7 @@ Shader "Xantoz/RaymarchedSomething3D"
 	        return float2(s, t);
             }
 
+/*
             float4 frag(v2f i, out float depth : SV_Depth) : SV_Target
             // float4 frag (v2f i, out float depth : SV_DepthLessEqual) : SV_Target
             // float4 frag (v2f i, out float depth : SV_DepthGreaterEqual) : SV_Target
@@ -301,8 +266,9 @@ Shader "Xantoz/RaymarchedSomething3D"
                 float3x3 R = AngleAxis3x3(radians(_SceneRotationAngle), normalize(_SceneRotationAxis));
                 float3 eye = mul(ray_origin + _SceneOffset, R);
                 float3 worldDir = mul(ray_direction, R);
-                float dist = shortestDistanceToSurface(eye, worldDir, MIN_DIST, MAX_DIST);
+                float4 colorDist = shortestDistanceToSurface(eye, worldDir, MIN_DIST, MAX_DIST);
 
+                
                 float4 clip_pos = mul(UNITY_MATRIX_VP, float4(i.worldPos, 1.0));
                 float maxDepth = clip_pos.z / clip_pos.w;
 
@@ -313,12 +279,10 @@ Shader "Xantoz/RaymarchedSomething3D"
                     return col;
                 }
 
-                /*
-                float3 p = eye + dist * worldDir;
-                float3 normal = estimateNormal(p);
-                float4 tex = sampleCubeMap(reflect(worldDir, normal));
-                col = (tex  + (normal.y / 2.0 - 0.2)) * float4(1.0, 0.8, 0.6, 1.0);
-                */
+                //float3 p = eye + dist * worldDir;
+                //float3 normal = estimateNormal(p);
+                //float4 tex = sampleCubeMap(reflect(worldDir, normal));
+                //col = (tex  + (normal.y / 2.0 - 0.2)) * float4(1.0, 0.8, 0.6, 1.0);
 
                 float3 p = eye + dist * worldDir;
                 float3 normal = estimateNormal(p);
@@ -335,10 +299,140 @@ Shader "Xantoz/RaymarchedSomething3D"
                 }
                 depth = max(clip_pos.z / clip_pos.w, maxDepth);
 
+sample                // apply fog
+                UNITY_APPLY_FOG(i.fogCoord, col);
+                return col;
+            }
+*/
+
+
+            /**
+            * Signed distance function describing the scene.
+^^            */
+            float sceneSDF(float3 samplePoint)
+            {
+                float3 metaballsT = float3(0,_SinTime.y,-10)*_SceneScale;
+
+                float3 sphereT = float3(sin(frac(_Time.x)*2*UNITY_PI), 0, cos(frac(_Time.x)*2*UNITY_PI))*10*_SceneScale;
+
+                float3x3 cubeR = AngleAxis3x3(radians(AudioLinkGetChronotensity(0, 0)/1000.0 % 360.0), normalize(float3(1.0,_SinTime.y,_CosTime.y)));
+                float2 cubeSize = float2((1+AudioLinkData(uint2(1,0)).r)*_SceneScale, AudioLinkData(uint2(0,0)).r*_SceneScale);
+
+                return
+                min(
+                    balls(samplePoint+metaballsT),
+                    min(
+                        sphereSDF(
+                            samplePoint + sphereT,
+                            1*_SceneScale),
+                        udRoundBox(mul(samplePoint, cubeR), cubeSize.x, cubeSize.y)));
+
+            }
+
+            float4 shortestDistanceToSurfaceWithColor(float3 eye, float3 marchingDirection, float start, float end)
+            {
+                float depth = start;
+
+                float3 metaballsT = float3(0,_SinTime.y,-10)*_SceneScale;
+
+                float3 sphereT = float3(sin(frac(_Time.x)*2*UNITY_PI), 0, cos(frac(_Time.x)*2*UNITY_PI))*10*_SceneScale;
+
+                float3x3 cubeR = AngleAxis3x3(radians(AudioLinkGetChronotensity(0, 0)/1000.0 % 360.0), normalize(float3(1.0,_SinTime.y,_CosTime.y)));
+                float2 cubeSize = float2((1+AudioLinkData(uint2(1,0)).r)*_SceneScale, AudioLinkData(uint2(0,0)).r*_SceneScale);
+
+                [loop]
+                for (int i = 0; i < MAX_MARCHING_STEPS; i++) {
+                    float3 samplePoint = eye + depth * marchingDirection;
+
+                    float metaballs = balls(samplePoint+metaballsT);
+                    
+                    float sphere = sphereSDF(samplePoint + sphereT, 1*_SceneScale);
+
+                    float cube = udRoundBox(mul(samplePoint, cubeR), cubeSize.x, cubeSize.y);
+
+                    float dist = min(metaballs, min(sphere, cube));
+                    
+                    if (dist < EPSILON) {
+                        float3 p = eye + depth*marchingDirection;
+                        float3 normal = estimateNormal(p);
+
+                        // Undo offset and rotation for UV calculation
+                        if (dist == cube) {
+                            p = mul(transpose(cubeR), p);
+                        } else if (dist == metaballs) {
+                            p = p + metaballsT;
+                        } else {
+                            p = p + sphereT;
+                        }
+
+                        float3 bgCol = sampleCubeMap(marchingDirection).rgb;
+
+                        float2 uv = getUV(normalize(p));
+                        float4 texel = tex2D(_MainTex, uv);
+
+                        // float3 col = texel.rgb + (normal.y / 2.0 - 0.2);
+                        // float3 col = (texel.rgb*texel.a + bgCol.rgb*(1 - texel.a)) + (normal.y / 2.0 - 0.2);
+                        // float3 col = ((texel.rgb + (normal.y / 2.0 - 0.2))*texel.a + bgCol.rgb*(1 - texel.a));
+                        float3 col = ((texel.rgb + (normal.y / 2.0 - 0.2))*texel.a + bgCol.rgb*(1 - bgCol.r));
+
+
+
+                        return float4(col, depth);
+                    }
+
+                    depth += dist;
+                    if (depth >= end) {
+                        float3 col = sampleCubeMap(marchingDirection).rgb;
+                        return float4(col, depth);
+                    }
+                }
+
+                float3 col = sampleCubeMap(marchingDirection).rgb;
+                return float4(col, end);
+            }
+            
+            float4 frag(v2f i, out float depth : SV_Depth) : SV_Target
+            // float4 frag (v2f i, out float depth : SV_DepthLessEqual) : SV_Target
+            // float4 frag (v2f i, out float depth : SV_DepthGreaterEqual) : SV_Target
+            {
+                float4 col = float4(0,0,0,1);
+
+                UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(i);
+
+                float3 ray_origin = i.ray_origin;
+                float3 ray_direction = normalize(i.vert_position - i.ray_origin);
+
+                float3x3 R = AngleAxis3x3(radians(_SceneRotationAngle), normalize(_SceneRotationAxis));
+                float3 eye = mul(ray_origin + _SceneOffset, R);
+                float3 worldDir = mul(ray_direction, R);
+
+                float4 colorDist = shortestDistanceToSurfaceWithColor(eye, worldDir, MIN_DIST, MAX_DIST);
+                col.rgb = colorDist.rgb;
+                float dist = colorDist.a;
+
+                // TODO: fold depth calculcation into the raymarching loop as well?
+                // Output depth
+                float4 clip_pos = mul(UNITY_MATRIX_VP, float4(i.worldPos, 1.0));
+                float maxDepth = clip_pos.z / clip_pos.w;
+                if (dist > MAX_DIST - EPSILON) {
+                    // discard;
+                    depth = maxDepth;
+                } else {
+                    float3 p = eye + dist * worldDir;
+                    p = mul(p, transpose(R)) - _SceneOffset; // undo rotation and offset for depth calculation
+                    if (_InObjectSpace) {
+                        clip_pos = UnityObjectToClipPos(p);
+                    } else {
+                        clip_pos = mul(UNITY_MATRIX_VP, float4(p, 1.0));
+                    }
+                    depth = max(clip_pos.z / clip_pos.w, maxDepth);
+                }
+
                 // apply fog
                 UNITY_APPLY_FOG(i.fogCoord, col);
                 return col;
             }
+
             ENDCG
         }
     }
