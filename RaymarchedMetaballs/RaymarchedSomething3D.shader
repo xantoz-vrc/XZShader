@@ -9,6 +9,7 @@ Shader "Xantoz/RaymarchedSomething3D"
         [NoScaleOffset]_Tex ("Cubemap (HDR)", Cube) = "Cube" {}
         [Gamma] _Exposure ("Exposure", Range(0, 8)) = 0.5
         [NoScaleOffset]_MainTex ("Texture", 2D) = "white" {}
+        [NoScaleOffset]_MainTex2 ("Texture 2", 2D) = "white" {}
         [IntRange]_InObjectSpace ("Raymarch in Object space rather than world space", Range(0, 1)) = 1
         _SceneScale("Scene scale", Range(0,1)) = 0.04
         _SceneRotationAngle("Scene rotation angle", Range(-180,180)) = 0
@@ -50,6 +51,7 @@ Shader "Xantoz/RaymarchedSomething3D"
             float4 _Tint;
             float _Exposure;
             sampler2D _MainTex;
+            sampler2D _MainTex2;
             int _InObjectSpace;
             float _SceneScale;
             float _SceneRotationAngle;
@@ -170,17 +172,20 @@ Shader "Xantoz/RaymarchedSomething3D"
             }
 */
 
+            // #define BALLMULT 2
+            #define BALLMULT 1
             float balls(float3 samplePoint)
             {
                 // float t = TIME / 3.0 + 10500.0;
                 float t = (AudioLinkGetChronotensity(5, 3)/100000.0 + AudioLinkGetChronotensity(0, 0)/100000.0) / 3.0 + 10500.0;
 
                 float balls = MAX_DIST;
-                for (float i = 1.0; i < 4.0*2; i += 1.3) {
+                for (float i = 1.0; i < 4.0*BALLMULT; i += 1.3) {
                     float ballRadius = 1.0*(1+AudioLinkData(uint2(i, 0)).r);
-                    for (float j = 1.0; j < 4.0*2; j += 1.3) {
+                    for (float j = 1.0; j < 4.0*BALLMULT; j += 1.3) {
                         float cost = cos(t * j);
                         balls = smin(balls, sphereSDF(samplePoint + float3(sin(t * i) * j, cost * i, cost * j)*_SceneScale, ballRadius*_SceneScale), _K*_SceneScale);
+                        // balls = min(balls, sphereSDF(samplePoint + float3(sin(t * i) * j, cost * i, cost * j)*_SceneScale, ballRadius*_SceneScale));
                     }
                 }
 
@@ -212,15 +217,34 @@ Shader "Xantoz/RaymarchedSomething3D"
                 return end;
             }
 
+            float shortestDistanceToBalls(float3 eye, float3 T, float3 marchingDirection, float start, float end) {
+                float depth = start;
+                for (int i = 0; i < 8; i++) {
+                    float dist = balls(eye + depth * marchingDirection + T);
+                    if (dist < EPSILON) {
+                        return depth;
+                    }
+                    depth += dist;
+                    if (depth >= end) {
+                        return end;
+                    }
+                }
+                return end;
+            }
+
             float3 rayDirection(float fieldOfView, float2 size, float2 fragCoord) {
                 float2 xy = fragCoord - size / 2.0;
                 float z = size.y / tan(radians(fieldOfView) / 2.0);
                 return normalize(float3(xy, -z));
             }
 
-            /**
-            * Using the gradient of the SDF, estimate the normal on the surface at point p.
-            */
+            #define estimateNormal(fn, p) \
+            normalize(float3( \
+                    fn(float3((p).x + EPSILON, (p).y,           (p).z          )) - fn(float3((p).x - EPSILON, (p).y,           (p).z          )), \
+                    fn(float3((p).x,           (p).y + EPSILON, (p).z          )) - fn(float3((p).x,           (p).y - EPSILON, (p).z          )), \
+                    fn(float3((p).x,           (p).y,           (p).z + EPSILON)) - fn(float3((p).x,           (p).y,           (p).z - EPSILON)) \
+                ));
+/*
             float3 estimateNormal(float3 p) {
                 return normalize(float3(
                         sceneSDF(float3(p.x + EPSILON, p.y, p.z)) - sceneSDF(float3(p.x - EPSILON, p.y, p.z)),
@@ -228,6 +252,15 @@ Shader "Xantoz/RaymarchedSomething3D"
                         sceneSDF(float3(p.x, p.y, p.z  + EPSILON)) - sceneSDF(float3(p.x, p.y, p.z - EPSILON))
                     ));
             }
+
+            float3 estimateNormalBalls(float3 p) {
+                return normalize(float3(
+                        balls(float3(p.x + EPSILON, p.y, p.z)) - balls(float3(p.x - EPSILON, p.y, p.z)),
+                        balls(float3(p.x, p.y + EPSILON, p.z)) - balls(float3(p.x, p.y - EPSILON, p.z)),
+                        balls(float3(p.x, p.y, p.z  + EPSILON)) - balls(float3(p.x, p.y, p.z - EPSILON))
+                    ));
+            }
+*/
 
             float4 sampleCubeMap(float3 texcoord)
             {
@@ -311,7 +344,7 @@ sample                // apply fog
 ^^            */
             float sceneSDF(float3 samplePoint)
             {
-                float3 metaballsT = float3(0,_SinTime.y,-10)*_SceneScale;
+                float3 metaballsT = float3(_CosTime.z*3,_SinTime.y*10,-10)*_SceneScale;
 
                 float3 sphereT = float3(sin(frac(_Time.x)*2*UNITY_PI), 0, cos(frac(_Time.x)*2*UNITY_PI))*10*_SceneScale;
 
@@ -333,7 +366,7 @@ sample                // apply fog
             {
                 float depth = start;
 
-                float3 metaballsT = float3(0,_SinTime.y,-10)*_SceneScale;
+                float3 metaballsT = float3(_CosTime.z*3,_SinTime.y*10,-10)*_SceneScale;
 
                 float3 sphereT = float3(sin(frac(_Time.x)*2*UNITY_PI), 0, cos(frac(_Time.x)*2*UNITY_PI))*10*_SceneScale;
 
@@ -345,7 +378,7 @@ sample                // apply fog
                     float3 samplePoint = eye + depth * marchingDirection;
 
                     float metaballs = balls(samplePoint+metaballsT);
-                    
+
                     float sphere = sphereSDF(samplePoint + sphereT, 1*_SceneScale);
 
                     float cube = udRoundBox(mul(samplePoint, cubeR), cubeSize.x, cubeSize.y);
@@ -353,31 +386,56 @@ sample                // apply fog
                     float dist = min(metaballs, min(sphere, cube));
                     
                     if (dist < EPSILON) {
-                        float3 p = eye + depth*marchingDirection;
-                        float3 normal = estimateNormal(p);
+                        //float3 p = eye + depth*marchingDirection;
+                        float3 p = samplePoint + dist*marchingDirection;
+                        float3 normal = estimateNormal(sceneSDF, p);
 
-                        // Undo offset and rotation for UV calculation
+                        // float3 metaballsP = eye + (depth+metaballs) * marchingDirection;
+                        float3 metaballsP = (samplePoint+metaballsT) + metaballs*marchingDirection;
+                        float3 metaballsNormal = estimateNormal(balls, metaballsP);
+                        float4 metaballsTex = sampleCubeMap(reflect(marchingDirection, metaballsNormal));
+                        float4 metaballsCol = (metaballsTex  + (metaballsNormal.y / 2.0 - 0.2)) * float4(1.0, 0.8, 0.6, 1.0);
+
+                        // Undo the translation and/or rotation when calculating UV
                         if (dist == cube) {
-                            p = mul(transpose(cubeR), p);
+                            float3 newp = mul(transpose(cubeR), p);
+                            // float3 newp = mul(p, transpose(cubeR));
+                            float2 uv = getUV(normalize(newp));
+                            float4 texel = tex2D(_MainTex, uv);
+                            float3 bgCol;
+                            // if (sign(balls(metaballsP-metaballsT)) == sign(metaballs)) {
+                            // if (metaballs >= MAX_DIST - EPSILON) {
+                            // if (shortestDistanceToBalls(p, metaballsT, marchingDirection, start, end) >= MAX_DIST - EPSILON) {
+                            if (shortestDistanceToBalls(metaballsP-metaballsT, metaballsT, marchingDirection, start, end) >= MAX_DIST - EPSILON) {
+                                bgCol = sampleCubeMap(mul(marchingDirection, cubeR)).rgb;
+                            } else {
+                                bgCol = metaballsCol.rgb;
+                            }
+                            float3 col = (texel.rgb/**texel.a*/ + bgCol.rgb*(1 - texel.a));// + (normal.y / 2.0 - 0.2);
+                            return float4(col, depth);
                         } else if (dist == metaballs) {
                             p = p + metaballsT;
+                            float2 uv = getUV(normalize(p));
+                            float4 texel = tex2D(_MainTex, uv);
+                            // float3 col = metaballsCol.rgb + texel.rgb*texel.a;
+                            float3 col = metaballsCol.rgb + texel.rgb;
+                            // float3 col = metaballsCol.rgb;
+                            return float4(col, depth);
                         } else {
                             p = p + sphereT;
+                            float2 uv = getUV(normalize(p));
+                            float4 texel = tex2D(_MainTex, uv);
+                            float4 texel2 = tex2D(_MainTex2, uv);
+                            float3 col = texel.rgb + (texel2.rgb + (normal.y / 2.0 - 0.2))*(1-texel.a);
+                            return float4(col, depth);
                         }
 
-                        float3 bgCol = sampleCubeMap(marchingDirection).rgb;
-
-                        float2 uv = getUV(normalize(p));
-                        float4 texel = tex2D(_MainTex, uv);
 
                         // float3 col = texel.rgb + (normal.y / 2.0 - 0.2);
                         // float3 col = (texel.rgb*texel.a + bgCol.rgb*(1 - texel.a)) + (normal.y / 2.0 - 0.2);
                         // float3 col = ((texel.rgb + (normal.y / 2.0 - 0.2))*texel.a + bgCol.rgb*(1 - texel.a));
-                        float3 col = ((texel.rgb + (normal.y / 2.0 - 0.2))*texel.a + bgCol.rgb*(1 - bgCol.r));
+                        // float3 col = ((texel.rgb + (normal.y / 2.0 - 0.2))*texel.a + bgCol.rgb*(1 - bgCol.r));
 
-
-
-                        return float4(col, depth);
                     }
 
                     depth += dist;
