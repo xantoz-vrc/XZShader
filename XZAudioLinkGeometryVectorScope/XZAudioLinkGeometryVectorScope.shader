@@ -68,7 +68,7 @@ Shader "Xantoz/XZAudioLinkGeometryVectorScope"
             // Blend SrcAlpha OneMinusSrcAlpha
 
             CGPROGRAM
-            #pragma multi_compile _OUTMODE_QUAD _OUTMODE_POINT _OUTMODE_LINE
+            #pragma multi_compile_local _OUTMODE_QUAD _OUTMODE_POINT _OUTMODE_LINE
 
             float _PointSize;
             float _AlphaMultiplier;
