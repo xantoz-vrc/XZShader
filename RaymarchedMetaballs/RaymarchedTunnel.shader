@@ -694,8 +694,12 @@
                         // float3 metaballsP = eye + (depth+metaballs) * marchingDirection;
                         float3 metaballsP = (samplePoint+metaballsT) + metaballs*marchingDirection;
                         float3 metaballsNormal = estimateNormal(balls, metaballsP);
-                        float4 metaballsTex = sampleCubeMap(reflect(marchingDirection, metaballsNormal));
-                        float4 metaballsCol = (metaballsTex  + (metaballsNormal.y / 2.0 - 0.2)) * float4(1.0, 0.8, 0.6, 1.0);
+                        // float4 metaballsTex = sampleCubeMap(reflect(marchingDirection, metaballsNormal));
+                        // float4 metaballsTex = sampleReflectionProbe(reflect(marchingDirection, metaballsNormal));
+                        float4 metaballsTex = sampleCubeMap2(reflect(marchingDirection, metaballsNormal))*float4(1.5,1.0,0.1,1);
+                        // float4 metaballsTex = stars2(reflect(marchingDirection, metaballsNormal));
+
+                        float4 metaballsCol = (metaballsTex  + (metaballsNormal.y / 2.0 - 0.2)/2) * float4(1.0, 0.8, 0.6, 1.0);
 
 /*
                         // Undo the translation and/or rotation when calculating UV
@@ -725,8 +729,9 @@
                             p = p + metaballsT;
                             float2 uv = getUV(normalize(p));
                             float4 texel = tex2D(_MainTex, uv);
+                            float4 texel2 = tex2D(_MainTex2, uv);
                             // float3 col = metaballsCol.rgb + texel.rgb*texel.a;
-                            float3 col = metaballsCol.rgb + texel.rgb;
+                            float3 col = metaballsCol.rgb*(1-texel.a) + (texel.rgb*texel.a + texel2.rgb*(1-texel.a));
                             // float3 col = metaballsCol.rgb;
                             return float4(col, depth);
                         } else {
@@ -798,8 +803,9 @@
 
             // Blend SrcAlpha OneMinusSrcAlpha
             // Blend One One
-            Blend One OneMinusSrcAlpha
-
+            // Blend One OneMinusDstColor
+            Blend One DstColor
+            // Blend SrcAlpha OneMinusDstColor
 
             CGPROGRAM
             #pragma target 5.0
@@ -889,12 +895,13 @@
                         float3 newp = mul(transpose(cubeR), p);
                         float2 uv = getUV(normalize(newp));
                         float4 texel = tex2D(_MainTex, uv);
-                        // float4 texel2 = sampleCubeMap(reflect(marchingDirection, normal));
-                        float4 texel2 = sampleReflectionProbe(reflect(marchingDirection, normal));
+                        float4 texel2 = sampleCubeMap(reflect(marchingDirection, normal));
+                        // float4 texel2 = sampleReflectionProbe(reflect(marchingDirection, normal));
+                        // float4 texel2 = stars2(reflect(marchingDirection, normal));
                         
                         // col.rgb = texel.rgb;
                         texel.a += .2;
-                        col.rgb = texel.rgb + texel2.rgb*(1 - texel.a);
+                        col.rgb = texel.rgb*texel.a + texel2.rgb*(1 - texel.a);
                         col.a = texel.a;
                         col.rgba += (normal.y / 2.0 - 0.2);
 
