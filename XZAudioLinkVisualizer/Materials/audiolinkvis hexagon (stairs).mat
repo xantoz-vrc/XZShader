@@ -7,7 +7,7 @@ Material:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: audiolinkvis hexagon
+  m_Name: audiolinkvis hexagon (stairs)
   m_Shader: {fileID: 4800000, guid: 7555b3ded9a002e408fa2386f5727aa1, type: 3}
   m_ShaderKeywords: 
   m_LightmapFlags: 4
@@ -90,7 +90,7 @@ Material:
     - _Metallic: 0
     - _Mode: 11
     - _OcclusionStrength: 1
-    - _OnlyNormals: 1
+    - _OnlyNormals: 0
     - _PCM_Scale: 1
     - _Parallax: 0.02
     - _Rotation: 0
