@@ -179,6 +179,7 @@
 
         ENDCG
 
+/*
         // Stancil pass to avoid things poking out where they shouldn't
         Pass
         {
@@ -249,16 +250,19 @@
             }
             ENDCG
         }
+*/
 
         Pass
         {
             Cull Back
 
+/*
             Stencil
             {
                 Ref 2
                 Comp NotEqual
             }
+*/
 
             CGPROGRAM
             #pragma target 5.0
@@ -272,7 +276,8 @@
             {
                 float4 vertex : POSITION;
                 float2 uv : TEXCOORD0;
-
+                float3 normal : NORMAL;
+                
                 UNITY_VERTEX_INPUT_INSTANCE_ID
             };
 
@@ -295,6 +300,9 @@
                 UNITY_SETUP_INSTANCE_ID(v);
                 UNITY_INITIALIZE_OUTPUT(v2f, o);
                 UNITY_INITIALIZE_VERTEX_OUTPUT_STEREO(o);
+
+                // Hack for blending and z-fighting reasons
+                v.vertex.xyz -= v.normal*0.01;
 
                 o.vertex = UnityObjectToClipPos(v.vertex);
                 o.worldPos = mul(unity_ObjectToWorld, v.vertex);
@@ -511,6 +519,8 @@
         Pass
         {
             Cull Back
+            // Blend One Zero
+            // ZTest Less
 
             // ZWrite Off
             // ZTest LEqual
@@ -531,6 +541,7 @@
             {
                 float4 vertex : POSITION;
                 float2 uv : TEXCOORD0;
+                float3 normal : NORMAL;
 
                 UNITY_VERTEX_INPUT_INSTANCE_ID
             };
@@ -554,6 +565,9 @@
                 UNITY_SETUP_INSTANCE_ID(v);
                 UNITY_INITIALIZE_OUTPUT(v2f, o);
                 UNITY_INITIALIZE_VERTEX_OUTPUT_STEREO(o);
+
+                // Hack so that this pass does not blend into the background pass when it isn't doing depth writes.
+                v.vertex.xyz += v.normal*0.01;
 
                 o.vertex = UnityObjectToClipPos(v.vertex);
                 o.worldPos = mul(unity_ObjectToWorld, v.vertex);
@@ -786,6 +800,8 @@
                         clip_pos = mul(UNITY_MATRIX_VP, float4(p, 1.0));
                     }
                     depth = max(clip_pos.z / clip_pos.w, maxDepth);
+                    // // Hack to make sure it doesn't blend with the bg pass when not writing depth in that pass
+                    // depth = max(clip_pos.z / clip_pos.w, maxDepth+.001);
                 }
 
                 // apply fog

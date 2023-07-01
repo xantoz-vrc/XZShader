@@ -9,7 +9,7 @@ Material:
   m_PrefabAsset: {fileID: 0}
   m_Name: RaymarchedTunnelMaterial
   m_Shader: {fileID: 4800000, guid: 54305c0fbc4404741a58cfecc23bd017, type: 3}
-  m_ShaderKeywords: _DEPTHWRITE_ON
+  m_ShaderKeywords: 
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 0
   m_DoubleSidedGI: 0
@@ -71,7 +71,7 @@ Material:
     - _BumpScale: 1
     - _Cull: 2
     - _Cutoff: 0.5
-    - _DepthWrite: 1
+    - _DepthWrite: 0
     - _DetailNormalMapScale: 1
     - _DstBlend: 0
     - _Exposure: 0.5
