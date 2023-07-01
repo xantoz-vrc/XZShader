@@ -49,17 +49,6 @@ float _ChronoRot_Effect_Band1;
 float _ChronoRot_Effect_Band2;
 float _ChronoRot_Effect_Band3;
 
-// From: https://stackoverflow.com/questions/5149544/can-i-generate-a-random-number-inside-a-pixel-shader
-float random(float2 p)
-{
-    // We need irrationals for pseudo randomness.
-    // Most (all?) known transcendental numbers will (generally) work.
-    const float2 r = float2(
-        23.1406926327792690,  // e^pi (Gelfond's constant)
-        2.6651441426902251); // 2^sqrt(2) (Gelfond–Schneider constant)
-    return frac(cos(mod(123456789.0, 1e-7 + 256.0 * dot(p,r))));
-}
-
 // A random value that should be the same for a few seconds or so.
 // TODO: Write fallback version using Time_T (might be better: this isn't the most lightweight thing to be calling each pixel)
 float get_rarely_changing_random()
