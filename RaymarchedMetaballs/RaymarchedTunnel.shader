@@ -416,9 +416,8 @@
             float sceneSDF(float3 samplePoint)
             {
                 // return min(sceneTorus(samplePoint), sceneWonkyTorus(samplePoint));
-                // return sceneTorus(samplePoint);
-                return min(sceneTorus(samplePoint), sceneStars(samplePoint));
-
+                return sceneTorus(samplePoint);
+                // return min(sceneTorus(samplePoint), sceneStars(samplePoint));
             }
 
 #if _DEPTHWRITE_ON
