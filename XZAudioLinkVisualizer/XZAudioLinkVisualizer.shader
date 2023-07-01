@@ -191,7 +191,7 @@ Shader "Xantoz/XZAudioLinkVisualizer"
             {
                 UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(i);
 
-                if (_UseVertexColor && !(i.vertexColorRand > 0.97 || i.vertexColorRand < 0.03)) {
+                if (_UseVertexColor && !(i.vertexColorRand > 0.999 || i.vertexColorRand < 0.001)) {
                     discard;
                 }
 
