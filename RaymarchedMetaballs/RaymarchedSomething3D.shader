@@ -135,43 +135,6 @@ Shader "Xantoz/RaymarchedSomething3D"
                 return lerp(b, a, h) - k*h*(1.0-h);
             }
 
-/*
-            // from https://www.shadertoy.com/view/Mds3Rn
-//            #define speed (_Time.x*0.2975)
-            #define speed 0
-            #define ground_x (1.0-0.325*sin(PI*speed*0.25))
-            float ground_y=1.0;
-            float ground_z=0.5;
-
-            float tunnel(float3 p)
-            {
-                float tunnel_m=0.125*cos(UNITY_PI*p.z*1.0+speed*4.0-UNITY_PI);
-                float tunnel1_p=2.0;
-                float tunnel1_w=tunnel1_p*0.225;
-                float tunnel1=length(mod(p.xy,tunnel1_p)-tunnel1_p*0.5)-tunnel1_w;	// tunnel1
-                float tunnel2_p=2.0;
-                float tunnel2_w=tunnel2_p*0.2125+tunnel2_p*0.0125*cos(UNITY_PI*p.y*8.0)+tunnel2_p*0.0125*cos(UNITY_PI*p.z*8.0);
-                float tunnel2=length(mod(p.xy,tunnel2_p)-tunnel2_p*0.5)-tunnel2_w;	// tunnel2
-                float hole1_p=1.0;
-                float hole1_w=hole1_p*0.5;
-                float hole1=length(mod(p.xz,hole1_p).xy-hole1_p*0.5)-hole1_w;	// hole1
-                float hole2_p=0.25;
-                float hole2_w=hole2_p*0.375;
-                float hole2=length(mod(p.yz,hole2_p).xy-hole2_p*0.5)-hole2_w;	// hole2
-                float hole3_p=0.5;
-                float hole3_w=hole3_p*0.25+0.125*sin(UNITY_PI*p.z*2.0);
-                float hole3=length(mod(p.xy,hole3_p).xy-hole3_p*0.5)-hole3_w;	// hole3
-                float tube_m=0.075*sin(UNITY_PI*p.z*1.0);
-                float tube_p=0.5+tube_m;
-                float tube_w=tube_p*0.025+0.00125*cos(UNITY_PI*p.z*128.0);
-                float tube=length(mod(p.xy,tube_p)-tube_p*0.5)-tube_w;			// tube
-                float bubble_p=0.05;
-                float bubble_w=bubble_p*0.5+0.025*cos(UNITY_PI*p.z*2.0);
-                float bubble=length(mod(p.yz,bubble_p)-bubble_p*0.5)-bubble_w;	// bubble
-                return max(min(min(-tunnel1,lerp(tunnel2,-bubble,0.375)),max(min(-hole1,hole2),-hole3)),-tube);
-            }
-*/
-
             // #define BALLMULT 2
             #define BALLMULT 1
             float balls(float3 samplePoint)
@@ -244,23 +207,6 @@ Shader "Xantoz/RaymarchedSomething3D"
                     fn(float3((p).x,           (p).y + EPSILON, (p).z          )) - fn(float3((p).x,           (p).y - EPSILON, (p).z          )), \
                     fn(float3((p).x,           (p).y,           (p).z + EPSILON)) - fn(float3((p).x,           (p).y,           (p).z - EPSILON)) \
                 ));
-/*
-            float3 estimateNormal(float3 p) {
-                return normalize(float3(
-                        sceneSDF(float3(p.x + EPSILON, p.y, p.z)) - sceneSDF(float3(p.x - EPSILON, p.y, p.z)),
-                        sceneSDF(float3(p.x, p.y + EPSILON, p.z)) - sceneSDF(float3(p.x, p.y - EPSILON, p.z)),
-                        sceneSDF(float3(p.x, p.y, p.z  + EPSILON)) - sceneSDF(float3(p.x, p.y, p.z - EPSILON))
-                    ));
-            }
-
-            float3 estimateNormalBalls(float3 p) {
-                return normalize(float3(
-                        balls(float3(p.x + EPSILON, p.y, p.z)) - balls(float3(p.x - EPSILON, p.y, p.z)),
-                        balls(float3(p.x, p.y + EPSILON, p.z)) - balls(float3(p.x, p.y - EPSILON, p.z)),
-                        balls(float3(p.x, p.y, p.z  + EPSILON)) - balls(float3(p.x, p.y, p.z - EPSILON))
-                    ));
-            }
-*/
 
             float4 sampleCubeMap(float3 texcoord)
             {
@@ -283,65 +229,10 @@ Shader "Xantoz/RaymarchedSomething3D"
 	        return float2(s, t);
             }
 
-/*
-            float4 frag(v2f i, out float depth : SV_Depth) : SV_Target
-            // float4 frag (v2f i, out float depth : SV_DepthLessEqual) : SV_Target
-            // float4 frag (v2f i, out float depth : SV_DepthGreaterEqual) : SV_Target
-            {
-                float4 col = 0.0f;
-
-
-                UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(i);
-
-                float3 ray_origin = i.ray_origin;
-                float3 ray_direction = normalize(i.vert_position - i.ray_origin);
-
-                float3x3 R = AngleAxis3x3(radians(_SceneRotationAngle), normalize(_SceneRotationAxis));
-                float3 eye = mul(ray_origin + _SceneOffset, R);
-                float3 worldDir = mul(ray_direction, R);
-                float4 colorDist = shortestDistanceToSurface(eye, worldDir, MIN_DIST, MAX_DIST);
-
-                
-                float4 clip_pos = mul(UNITY_MATRIX_VP, float4(i.worldPos, 1.0));
-                float maxDepth = clip_pos.z / clip_pos.w;
-
-                if (dist > MAX_DIST - EPSILON) {
-                    // discard;
-                    col = sampleCubeMap(worldDir);
-                    depth = maxDepth;
-                    return col;
-                }
-
-                //float3 p = eye + dist * worldDir;
-                //float3 normal = estimateNormal(p);
-                //float4 tex = sampleCubeMap(reflect(worldDir, normal));
-                //col = (tex  + (normal.y / 2.0 - 0.2)) * float4(1.0, 0.8, 0.6, 1.0);
-
-                float3 p = eye + dist * worldDir;
-                float3 normal = estimateNormal(p);
-                float2 uv = getUV(normalize(p));
-                col = tex2D(_MainTex, uv) + (normal.y / 2.0 - 0.2);
-
-                // Output depth
-                // undo rotation and offset for depth calculation
-                p = mul(p, transpose(R)) - _SceneOffset;
-                if (_InObjectSpace) {
-                    clip_pos = UnityObjectToClipPos(p);
-                } else {
-                    clip_pos = mul(UNITY_MATRIX_VP, float4(p, 1.0));
-                }
-                depth = max(clip_pos.z / clip_pos.w, maxDepth);
-
-sample                // apply fog
-                UNITY_APPLY_FOG(i.fogCoord, col);
-                return col;
-            }
-*/
-
 
             /**
             * Signed distance function describing the scene.
-^^            */
+            */
             float sceneSDF(float3 samplePoint)
             {
                 float3 metaballsT = float3(_CosTime.z*3,_SinTime.y*10,-10)*_SceneScale;
@@ -429,13 +320,6 @@ sample                // apply fog
                             float3 col = texel.rgb + (texel2.rgb + (normal.y / 2.0 - 0.2))*(1-texel.a);
                             return float4(col, depth);
                         }
-
-
-                        // float3 col = texel.rgb + (normal.y / 2.0 - 0.2);
-                        // float3 col = (texel.rgb*texel.a + bgCol.rgb*(1 - texel.a)) + (normal.y / 2.0 - 0.2);
-                        // float3 col = ((texel.rgb + (normal.y / 2.0 - 0.2))*texel.a + bgCol.rgb*(1 - texel.a));
-                        // float3 col = ((texel.rgb + (normal.y / 2.0 - 0.2))*texel.a + bgCol.rgb*(1 - bgCol.r));
-
                     }
 
                     depth += dist;
@@ -450,8 +334,6 @@ sample                // apply fog
             }
             
             float4 frag(v2f i, out float depth : SV_Depth) : SV_Target
-            // float4 frag (v2f i, out float depth : SV_DepthLessEqual) : SV_Target
-            // float4 frag (v2f i, out float depth : SV_DepthGreaterEqual) : SV_Target
             {
                 float4 col = float4(0,0,0,1);
 
