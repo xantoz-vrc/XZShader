@@ -109,19 +109,6 @@ Shader "Xantoz/RaymarchedMetaballs3D"
             // #define TIME 1
 
             /**
-            * Rotation matrix around the Y axis.
-            */
-            float3x3 rotateY(float theta) {
-                float c = cos(theta);
-                float s = sin(theta);
-                return float3x3(
-                    c, 0, s,
-                    0, 1, 0,
-                    -s, 0, c
-                );
-            }
-
-            /**
             * Signed distance function for a sphere centered at the origin with radius r.
             */
             float sphereSDF(float3 p, float r) {

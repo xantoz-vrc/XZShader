@@ -14,6 +14,11 @@ Shader "Xantoz/RaymarchedMetaballs"
         LOD 100
         Cull Off
 
+        CGINCLUDE
+        #include "UnityCG.cginc"
+        #include "../cginc/rotation.cginc"
+        ENDCG
+
         Pass
         {
             CGPROGRAM
@@ -23,7 +28,6 @@ Shader "Xantoz/RaymarchedMetaballs"
             #pragma multi_compile_instancing
             #pragma multi_compile_fog
 
-            #include "UnityCG.cginc"
 
             samplerCUBE _Tex;
             float4 _Tex_HDR;
@@ -72,19 +76,6 @@ Shader "Xantoz/RaymarchedMetaballs"
 
             #define TIME _Time.y
             // #define TIME 1
-
-            /**
-            * Rotation matrix around the Y axis.
-            */
-            float3x3 rotateY(float theta) {
-                float c = cos(theta);
-                float s = sin(theta);
-                return float3x3(
-                    c, 0, s,
-                    0, 1, 0,
-                    -s, 0, c
-                );
-            }
 
             /**
             * Signed distance function for a sphere centered at the origin with radius r.
