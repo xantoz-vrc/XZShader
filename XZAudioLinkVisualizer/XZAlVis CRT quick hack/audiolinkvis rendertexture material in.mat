@@ -83,12 +83,14 @@ Material:
     - _DstBlend: 0
     - _DstBlendMode: 8
     - _Effect_Scale: 1
+    - _Fat: 0
     - _GlossMapScale: 1
     - _Glossiness: 0.5
     - _GlossyReflections: 1
     - _Metallic: 0
-    - _Mode: 11
+    - _Mode: 12
     - _OcclusionStrength: 1
+    - _OnlyNormals: 0
     - _PCM_Scale: 1
     - _Parallax: 0.02
     - _Rotation: 0
@@ -101,6 +103,7 @@ Material:
     - _Tiling_Scale: 1
     - _Tilling_Scale: 0
     - _UVSec: 0
+    - _UseVertexColor: 0
     - _Vignette_Inner_Radius: 0.85
     - _Vignette_Intensity: 0
     - _Vignette_Outer_Radius: 1
@@ -121,3 +124,6 @@ Material:
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
     - _Potato: {r: 1, g: 1, b: 1, a: 1}
     - _ST: {r: 1, g: 1, b: 0, a: 0}
+    - _ST0: {r: 1, g: 1, b: 0, a: 0}
+    - _ShowNormal1: {r: 0, g: 0, b: 0, a: 0}
+    - _ShowNormal2: {r: 0, g: 0, b: 0, a: 0}
