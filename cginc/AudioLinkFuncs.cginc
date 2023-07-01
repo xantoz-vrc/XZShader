@@ -49,6 +49,16 @@ uint AudioLinkGetChronotensity(uint effect, uint band)
     return AudioLinkDecodeDataAsUInt(ALPASS_CHRONOTENSITY + uint2(effect, band));
 }
 
+float AudioLinkGetChronoTime(uint index, uint band)
+{
+    return (AudioLinkGetChronotensity(index, band)) / 100000.0;
+}
+
+float AudioLinkGetChronoTimeNormalized(uint index, uint band, float speed)
+{
+    return frac(AudioLinkGetChronoTime(index, band)) * speed;
+}
+
 float4 AudioLinkLerp(float2 xy)
 {
     return lerp(
