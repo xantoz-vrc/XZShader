@@ -4,6 +4,7 @@
     {
         _Tint ("Tint Color", Color) = (1, 1, 1, 1)
         [NoScaleOffset]_Tex ("Cubemap (HDR)", Cube) = "Cube" {}
+        [NoScaleOffset]_Tex2 ("Cubemap2 (HDR)", Cube) = "Cube" {}
         [Gamma] _Exposure ("Exposure", Range(0, 8)) = 0.5
         [NoScaleOffset]_MainTex ("Texture", 2D) = "white" {}
         [NoScaleOffset]_MainTex2 ("Texture 2", 2D) = "white" {}
@@ -28,6 +29,9 @@
 
         samplerCUBE _Tex;
         float4 _Tex_HDR;
+        TextureCube<float> _Tex2;
+        SamplerState sampler_Tex2;
+        float4 _Tex2_HDR;
         float4 _Tint;
         float _Exposure;
         sampler2D _MainTex;
@@ -81,6 +85,15 @@
             return float4(c, 1);
         }
 
+        float sampleCubeMap2(float3 texcoord)
+        {
+            float tex = _Tex2.Sample(sampler_Tex2, texcoord);
+            float3 c = DecodeHDR(tex, _Tex2_HDR);
+            c = c * _Tint.rgb * unity_ColorSpaceDouble.rgb;
+            c *= _Exposure;
+            return float4(c, 1);
+        }
+
         float4 sampleReflectionProbe(float3 texcoord)
         {
             float3 col;
@@ -111,6 +124,11 @@
             return float4(col, 1);
         }
 
+        float linefn(float val)
+        {
+            return val = -clamp((1.0-pow(0.1/abs(val), .1)), -2, 0);
+        }
+
         // from https://gist.github.com/ishikawash/4648390
         // 'p' must be normalized
         float2 getUV(float3 p)
@@ -122,23 +140,27 @@
 	    float t = theta*rcp(UNITY_PI);
 	    return float2(s, t);
         }
+
         // does not actually look like stars
         float4 stars(float3 coord) {
-            // float2 uv = getUV(normalize(coord));
-            // float val = pow(clamp(.04-random(uv), 0, 1), .5);
-
-            // float val = .5-sqrt(length(random3(coord*1000)));
-
-            // Back and forth filtered
-            // float t = frac(AudioLinkGetChronotensity(3, 3)/100000000000.0);
-            // float a = AudioLinkData(uint2(mod(coord.z, 128), 0));
-            // float b = AudioLinkData(uint2(mod(coord.z, 128), 1));
-            // float3 t = float3(0,b,a);
-
+            /*
+            const int nsamples = 2000;
+            float angle = atan2(coord.x, coord.y);
+            float pcm_val = PCMConditional(AudioLinkPCMLerpMirror(((angle+UNITY_PI)/(2*UNITY_PI))*nsamples*2, nsamples), 0);
+            float val = simplex3d_fractal(coord+t) + pcm_val/10;
+            */
             
             float3 t = float3(0,0,_Time.x);
 
+            float val = simplex3d_fractal(coord+t);
+            val = -clamp((1.0-pow(0.1/abs(val), .1)), -2, 0);
 
+            float3 col = float3(val,val,val);
+            return float4(col, 1);
+        }
+
+        // does not actually look like stars
+        float4 stars2(float3 coord) {
             /*
             const int nsamples = 2000;
             float angle = atan2(coord.x, coord.y);
@@ -146,12 +168,15 @@
             float val = simplex3d_fractal(coord+t) + pcm_val/10;
             */
 
-            float val = simplex3d_fractal(coord+t);
+            float3 t = float3(0,0,_Time.x);
+
+            float val = sampleCubeMap2(coord);
             val = -clamp((1.0-pow(0.1/abs(val), .1)), -2, 0);
             
             float3 col = float3(val,val,val);
             return float4(col, 1);
         }
+
         ENDCG
 
         // Stancil pass to avoid things poking out where they shouldn't
@@ -421,8 +446,8 @@
             }
 
 #if _DEPTHWRITE_ON
-            // float4 frag(v2f i, out float depth : SV_DepthLessEqual) : SV_Target
-            float4 frag(v2f i, out float depth : SV_Depth) : SV_Target
+            float4 frag(v2f i, out float depth : SV_DepthLessEqual) : SV_Target
+            // float4 frag(v2f i, out float depth : SV_Depth) : SV_Target
 #else
             float4 frag(v2f i) : SV_Target
 #endif
@@ -445,10 +470,11 @@
 
                 if (dist > MAX_DIST - EPSILON) {
                     // discard;
-                    // col = sampleCubeMap(worldDir);
-                    col = stars(worldDir);
-                    // col = stars(i.worldPos);
-                    // col = float4(0,0,0,1);
+                    // col = sampleCubeMap(worldDir)*0.1;
+
+                    col = stars2(worldDir);
+
+                    // col = stars(worldDir);
 
 #if _DEPTHWRITE_ON
                     depth = maxDepth;
@@ -460,6 +486,7 @@
                 float3 normal = estimateNormal(sceneSDF, p);
                 float4 tex = sampleCubeMap(reflect(worldDir, normal));
                 // float4 tex = stars(reflect(worldDir, normal));
+                // float4 tex = stars2(reflect(worldDir, normal));
 
                 col = (tex + (normal.y / 2.0 - 0.2)) * float4(1.0, 0.8, 0.6, 1.0);
 
