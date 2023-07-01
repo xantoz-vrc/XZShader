@@ -60,6 +60,10 @@ Shader "Xantoz/RaymarchedSomething3D"
 
             float _K;
 
+            UNITY_DECLARE_TEXCUBE(_RealtimeCubemap);
+            // samplerCUBE _RealtimeCubemap;
+            // float4 _RealtimeCubemap_HDR;
+
             struct appdata
             {
                 float4 vertex : POSITION;
@@ -217,6 +221,25 @@ Shader "Xantoz/RaymarchedSomething3D"
                 return float4(c, 1);
             }
 
+            float4 sampleReflectionProbe(float3 texcoord)
+            {
+                // float4 tex = texCUBE(_RealtimeCubemap, texcoord);
+                // float3 c = DecodeHDR(tex, _RealtimeCubemap_HDR);
+                // c = c * _Tint.rgb * unity_ColorSpaceDouble.rgb;
+                // c *= _Exposure;
+                // return float4(c, 1);
+
+                // float3 x = DecodeHDR(UNITY_SAMPLE_TEXCUBE_LOD(_RealtimeCubemap, texcoord, 0.0),
+                //                      _RealtimeCubemap_HDR);
+
+                // float3 x = DecodeHDR(UNITY_SAMPLE_TEXCUBE_LOD(UNITY_PASS_TEXCUBE(_RealtimeCubemap), texcoord, 0), _RealtimeCubemap_HDR);
+                // float3 x = DecodeHDR(UNITY_SAMPLE_TEXCUBE_LOD(UNITY_PASS_TEXCUBE(_RealtimeCubemap), texcoord, 0), _RealtimeCubemap_HDR);
+                // float3 x = DecodeHDR(UNITY_SAMPLE_TEXCUBE_LOD(_RealtimeCubemap, texcoord, 0), _RealtimeCubemap_HDR);
+
+                float3 x = UNITY_SAMPLE_TEXCUBE(_RealtimeCubemap, texcoord);
+                return float4(x, 1);
+            }
+
             // from https://gist.github.com/ishikawash/4648390
             // 'p' must be normalized
             float2 getUV(float3 p)
@@ -229,6 +252,7 @@ Shader "Xantoz/RaymarchedSomething3D"
 	        return float2(s, t);
             }
 
+            #define MOONSCALE 1
 
             /**
             * Signed distance function describing the scene.
@@ -237,7 +261,7 @@ Shader "Xantoz/RaymarchedSomething3D"
             {
                 float3 metaballsT = float3(_CosTime.z*3,_SinTime.y*10,-10)*_SceneScale;
 
-                float3 sphereT = float3(sin(frac(_Time.x)*2*UNITY_PI), 0, cos(frac(_Time.x)*2*UNITY_PI))*10*_SceneScale;
+                float3 sphereT = float3(sin(frac(_Time.x)*2*UNITY_PI), 0, cos(frac(_Time.x)*2*UNITY_PI))*10*_SceneScale*MOONSCALE;
 
                 float3x3 cubeR = AngleAxis3x3(radians(AudioLinkGetChronotensity(0, 0)/1000.0 % 360.0), normalize(float3(1.0,_SinTime.y,_CosTime.y)));
                 float2 cubeSize = float2((1+AudioLinkData(uint2(1,0)).r)*_SceneScale, AudioLinkData(uint2(0,0)).r*_SceneScale);
@@ -248,7 +272,7 @@ Shader "Xantoz/RaymarchedSomething3D"
                     min(
                         sphereSDF(
                             samplePoint + sphereT,
-                            1*_SceneScale),
+                            1*_SceneScale*MOONSCALE),
                         udRoundBox(mul(samplePoint, cubeR), cubeSize.x, cubeSize.y)));
 
             }
@@ -259,10 +283,12 @@ Shader "Xantoz/RaymarchedSomething3D"
 
                 float3 metaballsT = float3(_CosTime.z*3,_SinTime.y*10,-10)*_SceneScale;
 
-                float3 sphereT = float3(sin(frac(_Time.x)*2*UNITY_PI), 0, cos(frac(_Time.x)*2*UNITY_PI))*10*_SceneScale;
+                float3 sphereT = float3(sin(frac(_Time.x)*2*UNITY_PI), 0, cos(frac(_Time.x)*2*UNITY_PI))*10*_SceneScale*MOONSCALE;
 
                 float3x3 cubeR = AngleAxis3x3(radians(AudioLinkGetChronotensity(0, 0)/1000.0 % 360.0), normalize(float3(1.0,_SinTime.y,_CosTime.y)));
                 float2 cubeSize = float2((1+AudioLinkData(uint2(1,0)).r)*_SceneScale, AudioLinkData(uint2(0,0)).r*_SceneScale);
+
+                float3 bgCol = sampleCubeMap(marchingDirection).rgb;
 
                 [loop]
                 for (int i = 0; i < MAX_MARCHING_STEPS; i++) {
@@ -270,7 +296,7 @@ Shader "Xantoz/RaymarchedSomething3D"
 
                     float metaballs = balls(samplePoint+metaballsT);
 
-                    float sphere = sphereSDF(samplePoint + sphereT, 1*_SceneScale);
+                    float sphere = sphereSDF(samplePoint + sphereT, MOONSCALE*_SceneScale);
 
                     float cube = udRoundBox(mul(samplePoint, cubeR), cubeSize.x, cubeSize.y);
 
@@ -293,16 +319,18 @@ Shader "Xantoz/RaymarchedSomething3D"
                             // float3 newp = mul(p, transpose(cubeR));
                             float2 uv = getUV(normalize(newp));
                             float4 texel = tex2D(_MainTex, uv);
-                            float3 bgCol;
+                            float3 bCol;
                             // if (sign(balls(metaballsP-metaballsT)) == sign(metaballs)) {
                             // if (metaballs >= MAX_DIST - EPSILON) {
                             // if (shortestDistanceToBalls(p, metaballsT, marchingDirection, start, end) >= MAX_DIST - EPSILON) {
                             if (shortestDistanceToBalls(metaballsP-metaballsT, metaballsT, marchingDirection, start, end) >= MAX_DIST - EPSILON) {
-                                bgCol = sampleCubeMap(mul(marchingDirection, cubeR)).rgb;
+                                bCol = sampleCubeMap(mul(marchingDirection, cubeR)).rgb;
+                                // bCol = sampleReflectionProbe(mul(marchingDirection, cubeR)).rgb;
+                                // bCol = sampleCubeMap(reflect(marchingDirection, normal))
                             } else {
-                                bgCol = metaballsCol.rgb;
+                                bCol = metaballsCol.rgb;
                             }
-                            float3 col = (texel.rgb/**texel.a*/ + bgCol.rgb*(1 - texel.a));// + (normal.y / 2.0 - 0.2);
+                            float3 col = (texel.rgb + bCol.rgb*(1 - texel.a)) + (normal.y / 2.0 - 0.2)/4;
                             return float4(col, depth);
                         } else if (dist == metaballs) {
                             p = p + metaballsT;
@@ -317,20 +345,18 @@ Shader "Xantoz/RaymarchedSomething3D"
                             float2 uv = getUV(normalize(p));
                             float4 texel = tex2D(_MainTex, uv);
                             float4 texel2 = tex2D(_MainTex2, uv);
-                            float3 col = texel.rgb + (texel2.rgb + (normal.y / 2.0 - 0.2))*(1-texel.a);
+                            float3 col = texel.rgb + (texel2.rgb + (normal.y / 2.0 - 0.2)/2)*(1-texel.a);
                             return float4(col, depth);
                         }
                     }
 
                     depth += dist;
                     if (depth >= end) {
-                        float3 col = sampleCubeMap(marchingDirection).rgb;
-                        return float4(col, depth);
+                        return float4(bgCol, depth);
                     }
                 }
 
-                float3 col = sampleCubeMap(marchingDirection).rgb;
-                return float4(col, end);
+                return float4(bgCol, end);
             }
             
             float4 frag(v2f i, out float depth : SV_Depth) : SV_Target
