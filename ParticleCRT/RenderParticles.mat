@@ -1,0 +1,135 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!21 &2100000
+Material:
+  serializedVersion: 6
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: RenderParticles
+  m_Shader: {fileID: 4800000, guid: 163a4dd3cc222a472ba4ed32cfdd3ca1, type: 3}
+  m_ShaderKeywords: 
+  m_LightmapFlags: 4
+  m_EnableInstancingVariants: 0
+  m_DoubleSidedGI: 0
+  m_CustomRenderQueue: -1
+  stringTagMap: {}
+  disabledShaderPasses: []
+  m_SavedProperties:
+    serializedVersion: 3
+    m_TexEnvs:
+    - _BumpMap:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _DetailAlbedoMap:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _DetailMask:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _DetailNormalMap:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _EmissionMap:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _MainTex:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _MetallicGlossMap:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _OcclusionMap:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _ParallaxMap:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _ParticleCRT:
+        m_Texture: {fileID: 8600000, guid: 6afd5aee6bc80fb668c199c844b3bc67, type: 2}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    m_Floats:
+    - _AlphaMultiplier: 2
+    - _Amplitude_Scale: 2
+    - _Bounds: 2
+    - _BumpScale: 1
+    - _ChronoRot_Band0: 4
+    - _ChronoRot_Band1: 3
+    - _ChronoRot_Band2: 1
+    - _ChronoRot_Band3: 1
+    - _ChronoRot_Effect_Band0: 1
+    - _ChronoRot_Effect_Band1: 1
+    - _ChronoRot_Effect_Band2: 1
+    - _ChronoRot_Effect_Band3: 4
+    - _ChronoRot_Order_0: 0
+    - _ChronoRot_Order_1: 1
+    - _ChronoRot_Order_2: 2
+    - _ChronoRot_Order_3: 3
+    - _ChronoRot_Scale: 0
+    - _Chronotensity_Effect_Band0: 1
+    - _Chronotensity_Effect_Band1: 1
+    - _Chronotensity_Effect_Band2: 1
+    - _Chronotensity_Effect_Band3: 1
+    - _Chronotensity_Offset_Scale: 1
+    - _Chronotensity_Scale: 1
+    - _Chronotensity_Tiling_Scale: 1
+    - _Chronotensity_Tiling_Wrap_U: 3
+    - _Chronotensity_Tiling_Wrap_V: 3
+    - _Cull: 0
+    - _Cutoff: 0.5
+    - _DetailNormalMapScale: 1
+    - _DstBlend: 0
+    - _DstBlendMode: 1
+    - _GlossMapScale: 1
+    - _Glossiness: 0.5
+    - _GlossyReflections: 1
+    - _Metallic: 0
+    - _Mode: 11
+    - _OcclusionStrength: 1
+    - _Parallax: 0.02
+    - _PointSize: 0.03
+    - _RotateAxis: 1
+    - _Rotation: 0
+    - _Rotation_Reversing: 0
+    - _SmoothnessTextureChannel: 0
+    - _SpecularHighlights: 1
+    - _SrcBlend: 1
+    - _SrcBlendMode: 5
+    - _Tiling_Scale: 1
+    - _UVSec: 0
+    - _UseVertexColor: 0
+    - _Vignette_Inner_Radius: 0.85
+    - _Vignette_Intensity: 1
+    - _Vignette_Outer_Radius: 1
+    - _Vignette_Type: 0
+    - _ZWrite: 1
+    m_Colors:
+    - _ChronoRot_Axis_Band0: {r: 1, g: 1, b: 0, a: 0}
+    - _ChronoRot_Axis_Band1: {r: 0, g: 1, b: 0, a: 0}
+    - _ChronoRot_Axis_Band2: {r: 1, g: 0, b: 0, a: 0}
+    - _ChronoRot_Axis_Band3: {r: 1, g: 0, b: 1, a: 0}
+    - _Chronotensity_ST_Band0: {r: 0, g: 0, b: 0, a: 0}
+    - _Chronotensity_ST_Band1: {r: 0, g: 0, b: 0, a: 0}
+    - _Chronotensity_ST_Band2: {r: 0, g: 0, b: 0, a: 0}
+    - _Chronotensity_ST_Band3: {r: 0, g: 0, b: 0, a: 0}
+    - _Color: {r: 1, g: 1, b: 1, a: 1}
+    - _Color1: {r: 1, g: 1, b: 1, a: 1}
+    - _Color2: {r: 1, g: 1, b: 1, a: 1}
+    - _Color_Mul_Band0: {r: 0, g: 0, b: 0, a: 0}
+    - _Color_Mul_Band1: {r: 0, g: 0, b: 0, a: 0}
+    - _Color_Mul_Band2: {r: 0, g: 0, b: 0, a: 0}
+    - _Color_Mul_Band3: {r: 0, g: 0, b: 0, a: 0}
+    - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
+    - _ST: {r: 1, g: 1, b: 0, a: 0}
+    - _ST0: {r: 1, g: 1, b: 0, a: 0}
