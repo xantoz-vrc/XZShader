@@ -2,20 +2,44 @@ Shader "Xantoz/ParticleCRT/RenderParticles"
 {
     Properties
     {
-        _MainTex ("Texture", 2D) = "white" {}
+        [NoScale]_ParticleCRT ("Texture", 2D) = "white" {}
 
         _PointSize ("Point Size", Float) = 0.1
         _AlphaMultiplier ("Alpha Multiplier (lower makes more transparent)", Range(0.0, 2.0)) = 0.5
     }
 
     CGINCLUDE
-    #pragma fragment frag
-    #pragma geometry geom
-    #pragma multi_compile_fog
-    #pragma multi_compile_instancing
-    #pragma target 5.0
-    #pragma exclude_renderers gles metal
     #include "UnityCG.cginc"
+
+    Texture2D<float4> _ParticleCRT;
+    SamplerState sampler_ParticleCRT;
+
+    #define TTLSCALE 60 // Largest TTL is expected to be 60 seconds
+    #define SPEEDSCALE 4
+    float3 particle_getPos(uint idx)
+    {
+        return _ParticleCRT[uint2(idx,0)].xyz;
+    }
+
+    float particle_getTTL(uint idx)
+    {
+        return _ParticleCRT[uint2(idx,0)].w*TTLSCALE;
+    }
+
+    float3 particle_getSpeed(uint idx)
+    {
+        return _ParticleCRT[uint2(idx,1)].xyz*SPEEDSCALE;
+    }
+
+    float3 particle_getAcc(uint idx)
+    {
+        return _ParticleCRT[uint2(idx,2)].xyz*SPEEDSCALE;
+    }
+
+    float4 particle_getColor(uint idx)
+    {
+        return _ParticleCRT[uint2(idx,3)];
+    }
     ENDCG
 
     SubShader
@@ -40,6 +64,7 @@ Shader "Xantoz/ParticleCRT/RenderParticles"
             #pragma exclude_renderers gles metal
 
             float _PointSize;
+            float _AlphaMultiplier;
 
             struct appdata
             {
@@ -62,6 +87,7 @@ Shader "Xantoz/ParticleCRT/RenderParticles"
             {
                 float2 uv : TEXCOORD0;
                 float4 vertex : POSITION0;
+                float4 color : COLOR0;
 
                 UNITY_FOG_COORDS(1)
                 UNITY_VERTEX_OUTPUT_STEREO
@@ -122,10 +148,13 @@ Shader "Xantoz/ParticleCRT/RenderParticles"
 		const float2 uvBL = (BL + float2(1.0, 1.0))/2;
 		const float2 uvBR = (BR + float2(1.0, 1.0))/2;
 
+                int width, height;
+                _ParticleCRT.GetDimensions(width, height);
+
                 for (int i = 0; i < SAMPLECNT; ++i)
                 {
                     uint idx = i + operationID * SAMPLECNT;
-                    if (idx > _CustomRenderTextureWidth) {
+                    if (idx > width) { // This is esentially just manual clamp I guess. But it is needed since it isn't really possible to get a multiple of 6 (=2*3) to line up perfect with a power of two
                         break;
                     }
 
@@ -133,20 +162,11 @@ Shader "Xantoz/ParticleCRT/RenderParticles"
                     float4 color = particle_getColor(idx);
 
                     float4 pointTL, pointTR, pointBL, pointBR;
-                    if (_3D) {
-                        pointOut.z = pcm.g;
-
-                        pointTL = UnityObjectToClipPos(pointOut + billboard(TL*_PointSize, IN[0].worldScale.xy));
-			pointTR = UnityObjectToClipPos(pointOut + billboard(TR*_PointSize, IN[0].worldScale.xy));
-			pointBL = UnityObjectToClipPos(pointOut + billboard(BL*_PointSize, IN[0].worldScale.xy));
-			pointBR = UnityObjectToClipPos(pointOut + billboard(BR*_PointSize, IN[0].worldScale.xy));
-                    } else {
-                        pointTL = UnityObjectToClipPos(pointOut + float3(TL*_PointSize, 0.0));
-                        pointTR = UnityObjectToClipPos(pointOut + float3(TR*_PointSize, 0.0));
-                        pointBL = UnityObjectToClipPos(pointOut + float3(BL*_PointSize, 0.0));
-                        pointBR = UnityObjectToClipPos(pointOut + float3(BR*_PointSize, 0.0));
-                    }
-
+                    pointTL = UnityObjectToClipPos(pointOut + billboard(TL*_PointSize, IN[0].worldScale.xy));
+		    pointTR = UnityObjectToClipPos(pointOut + billboard(TR*_PointSize, IN[0].worldScale.xy));
+		    pointBL = UnityObjectToClipPos(pointOut + billboard(BL*_PointSize, IN[0].worldScale.xy));
+		    pointBR = UnityObjectToClipPos(pointOut + billboard(BR*_PointSize, IN[0].worldScale.xy));
+                    
                     o.vertex = pointTL; o.uv = uvTL;
                     UNITY_TRANSFER_FOG(o, o.vertex);
                     stream.Append(o);
@@ -180,14 +200,9 @@ Shader "Xantoz/ParticleCRT/RenderParticles"
             {
                 UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(i);
 
-                if (!AudioLinkIsAvailable())
-                {
-                    return float4(0,0,0,0);
-                }
-
                 float val = linefn(length((frac(i.uv.xy) - float2(0.5, 0.5))*2));
 
-                float4 col = clamp(val*(_Color1 + _Color2*al_color_mult), 0.0, 1.0);
+                float4 col = clamp(val*i.color, 0.0, 1.0);
                 col.a *= _AlphaMultiplier;
 
                 UNITY_APPLY_FOG(i.fogCoord, col);
