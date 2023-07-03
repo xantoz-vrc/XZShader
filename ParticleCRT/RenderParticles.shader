@@ -1,3 +1,21 @@
+// ISC License
+//
+// Copyright 2023 xantoz
+//
+// Permission to use, copy, modify, and/or distribute this software
+// for any purpose with or without fee is hereby granted, provided
+// that the above copyright notice and this permission notice appear
+// in all copies.
+//
+// THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL
+// WARRANTIES WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED
+// WARRANTIES OF MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE
+// AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT, INDIRECT, OR
+// CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS
+// OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT,
+// NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
+// CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+
 Shader "Xantoz/ParticleCRT/RenderParticles"
 {
     Properties
@@ -9,37 +27,17 @@ Shader "Xantoz/ParticleCRT/RenderParticles"
     }
 
     CGINCLUDE
+    #pragma vertex vert
+    #pragma fragment frag
+    #pragma geometry geom
+    #pragma multi_compile_fog
+    #pragma multi_compile_instancing
+    #pragma target 5.0
+    #pragma exclude_renderers gles metal
+
     #include "UnityCG.cginc"
+    #include "../cginc/AudioLinkFuncs.cginc"
 
-    Texture2D<float4> _ParticleCRT;
-    SamplerState sampler_ParticleCRT;
-
-    #define TTLSCALE 60 // Largest TTL is expected to be 60 seconds
-    #define SPEEDSCALE 4
-    float3 particle_getPos(uint idx)
-    {
-        return _ParticleCRT[uint2(idx,0)].xyz;
-    }
-
-    float particle_getTTL(uint idx)
-    {
-        return _ParticleCRT[uint2(idx,0)].w*TTLSCALE;
-    }
-
-    float3 particle_getSpeed(uint idx)
-    {
-        return _ParticleCRT[uint2(idx,1)].xyz*SPEEDSCALE;
-    }
-
-    float3 particle_getAcc(uint idx)
-    {
-        return _ParticleCRT[uint2(idx,2)].xyz*SPEEDSCALE;
-    }
-
-    float4 particle_getColor(uint idx)
-    {
-        return _ParticleCRT[uint2(idx,3)];
-    }
     ENDCG
 
     SubShader
@@ -48,6 +46,7 @@ Shader "Xantoz/ParticleCRT/RenderParticles"
         LOD 100
         Cull Off
         ZWrite Off
+        // ZTest always
 
         Pass
         {
@@ -55,13 +54,7 @@ Shader "Xantoz/ParticleCRT/RenderParticles"
             // Blend SrcAlpha OneMinusSrcAlpha
 
             CGPROGRAM
-            #pragma vertex vert
-            #pragma fragment frag
-            #pragma geometry geom
-            #pragma multi_compile_fog
-            #pragma multi_compile_instancing
-            #pragma target 5.0
-            #pragma exclude_renderers gles metal
+            #pragma multi_compile_local _OUTMODE_QUAD _OUTMODE_POINT _OUTMODE_LINE
 
             float _PointSize;
             float _AlphaMultiplier;
@@ -86,12 +79,43 @@ Shader "Xantoz/ParticleCRT/RenderParticles"
             struct g2f
             {
                 float2 uv : TEXCOORD0;
+                float4 color : COLOR1;
                 float4 vertex : POSITION0;
-                float4 color : COLOR0;
 
                 UNITY_FOG_COORDS(1)
                 UNITY_VERTEX_OUTPUT_STEREO
             };
+
+            Texture2D<float4> _ParticleCRT;
+            SamplerState sampler_ParticleCRT;
+
+            #define TTLSCALE 60 // Largest TTL is expected to be 60 seconds
+            #define SPEEDSCALE 4
+
+            float3 particle_getPos(uint idx)
+            {
+                return _ParticleCRT[uint2(idx,0)].xyz;
+            }
+
+            float particle_getTTL(uint idx)
+            {
+                return _ParticleCRT[uint2(idx,0)].w*TTLSCALE;
+            }
+
+            float3 particle_getSpeed(uint idx)
+            {
+                return _ParticleCRT[uint2(idx,1)].xyz*SPEEDSCALE;
+            }
+
+            float3 particle_getAcc(uint idx)
+            {
+                return _ParticleCRT[uint2(idx,2)].xyz*SPEEDSCALE;
+            }
+
+            float4 particle_getColor(uint idx)
+            {
+                return _ParticleCRT[uint2(idx,3)];
+            }
 
             v2g vert(appdata v)
             {
@@ -121,13 +145,13 @@ Shader "Xantoz/ParticleCRT/RenderParticles"
                 );
             }
 
-            // 6 input points * 32 instances * 5 samples per instance = 1152 particles out (in practice will be 1024 or so)
+            // 6 input points * 32 instances * 6 samples per instance = 1152 samples out
             #define SAMPLECNT 6
 
-            [maxvertexcount(SAMPLECNT*6)]
 	    [instance(32)]
-	    void geom(point v2g IN[1], inout TriangleStream<g2f> stream,
-		uint instanceID : SV_GSInstanceID, uint geoPrimID : SV_PrimitiveID)
+            // 8 samples * 6 vertices out (quad)
+            [maxvertexcount(SAMPLECNT*6)]
+	    void geom(point v2g IN[1], inout TriangleStream<g2f> stream, uint instanceID : SV_GSInstanceID, uint geoPrimID : SV_PrimitiveID)
             {
                 UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(IN[0]);
 
@@ -148,25 +172,26 @@ Shader "Xantoz/ParticleCRT/RenderParticles"
 		const float2 uvBL = (BL + float2(1.0, 1.0))/2;
 		const float2 uvBR = (BR + float2(1.0, 1.0))/2;
 
-                int width, height;
-                _ParticleCRT.GetDimensions(width, height);
-
                 for (int i = 0; i < SAMPLECNT; ++i)
                 {
-                    uint idx = i + operationID * SAMPLECNT;
-                    if (idx > width) { // This is esentially just manual clamp I guess. But it is needed since it isn't really possible to get a multiple of 6 (=2*3) to line up perfect with a power of two
-                        break;
+                    uint sampleID = i + operationID * SAMPLECNT;
+                    float ttl = particle_getTTL(i);
+                    if (!(ttl > 0)) {
+                        continue;
                     }
-
-                    float3 pointOut = particle_getPos(idx);
-                    float4 color = particle_getColor(idx);
+                    // float3 pointOut = random3(_Time.xyz + i);
+                    float3 pointOut = particle_getPos(i);
+                    float4 color = particle_getColor(i);
+                    // color += .5;
+                    // color.a = 1;
+                    o.color = color;
 
                     float4 pointTL, pointTR, pointBL, pointBR;
                     pointTL = UnityObjectToClipPos(pointOut + billboard(TL*_PointSize, IN[0].worldScale.xy));
 		    pointTR = UnityObjectToClipPos(pointOut + billboard(TR*_PointSize, IN[0].worldScale.xy));
 		    pointBL = UnityObjectToClipPos(pointOut + billboard(BL*_PointSize, IN[0].worldScale.xy));
 		    pointBR = UnityObjectToClipPos(pointOut + billboard(BR*_PointSize, IN[0].worldScale.xy));
-                    
+
                     o.vertex = pointTL; o.uv = uvTL;
                     UNITY_TRANSFER_FOG(o, o.vertex);
                     stream.Append(o);
@@ -200,10 +225,14 @@ Shader "Xantoz/ParticleCRT/RenderParticles"
             {
                 UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(i);
 
+                /*
                 float val = linefn(length((frac(i.uv.xy) - float2(0.5, 0.5))*2));
-
-                float4 col = clamp(val*i.color, 0.0, 1.0);
+                float4 col = clamp(val, 0.0, 1.0);
                 col.a *= _AlphaMultiplier;
+                */
+                
+                float4 col = float4(1,0,0,1);
+                // float4 col = i.color;
 
                 UNITY_APPLY_FOG(i.fogCoord, col);
                 return col;
@@ -212,3 +241,4 @@ Shader "Xantoz/ParticleCRT/RenderParticles"
         }
     }
 }
+

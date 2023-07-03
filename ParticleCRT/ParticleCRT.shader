@@ -81,7 +81,7 @@ Shader "Xantoz/ParticleCRT/ParticleCRT"
 		return o;
 	    }
 
-/*
+            #if 0
             void particle_setPosTTL(inout g2f o, inout PointStream<g2f> stream, uint idx, float3 pos, float ttl)
             {
 		o.vertex = FlexCRTCoordinateOut(uint2(idx,0));
@@ -109,7 +109,8 @@ Shader "Xantoz/ParticleCRT/ParticleCRT"
 		o.color = color;
 		stream.Append(o);
             }
-*/
+            #endif
+
             #define particle_setPosTTL(idx, pos, ttl)            \
 		o.vertex = FlexCRTCoordinateOut(uint2((idx),0)); \
 		o.color = float4((pos), (ttl)/SPEEDSCALE);	 \
@@ -150,8 +151,8 @@ Shader "Xantoz/ParticleCRT/ParticleCRT"
 
                 // Emit when true (TODO: make configurable and other cool things?
                 // TODO: make configurable
-                bool doEmit = AudioLinkData(uint2(0,0)).r > 0.8;
-                // bool doEmit = true;
+                // bool doEmit = AudioLinkData(uint2(0,0)).r > 0.8;
+                bool doEmit = true;
 
                 if (doEmit) {
                     // We can have as many active particles as the CRT is wide
@@ -161,10 +162,10 @@ Shader "Xantoz/ParticleCRT/ParticleCRT"
                         // no TTL. This slot is free
                         if (particle_getTTL(i) <= 0)
                         {
-                            particle_setPosTTL(i, float3(0,4,0), 30.0);
-                            particle_setSpeed(i, random3(_Time.xyz));
-                            particle_setAcc(i, random3(_SinTime.xzw)*0.1);
-                            particle_setColor(i, float4(random3(_CosTime.xyw), 1.0));
+                            particle_setPosTTL(i, float3(0,1,0), 30.0);
+                            particle_setSpeed(i, random3(_Time.xyz+i)*0.001);
+                            particle_setAcc(i, random3(_SinTime.xzw+i)*0.01);
+                            particle_setColor(i, float4(random3(_CosTime.xyw+i), 1.0));
 
                             // We emitted our particle. Job done!
                             break;
@@ -215,6 +216,7 @@ Shader "Xantoz/ParticleCRT/ParticleCRT"
                     break;
                     default:
                         // For now let's just let it be black
+                    col = random(i.globalTexcoord);
                     break;
                 }
                 return col;
