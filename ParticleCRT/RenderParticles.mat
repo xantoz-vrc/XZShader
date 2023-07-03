@@ -56,11 +56,11 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _ParticleCRT:
-        m_Texture: {fileID: 8600000, guid: 9ebbcc7a3ff0953fc80de027fd724d46, type: 2}
+        m_Texture: {fileID: 8600000, guid: 6afd5aee6bc80fb668c199c844b3bc67, type: 2}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     m_Floats:
-    - _AlphaMultiplier: 0.5
+    - _AlphaMultiplier: 2
     - _BumpScale: 1
     - _Cutoff: 0.5
     - _DetailNormalMapScale: 1

@@ -170,7 +170,10 @@ v2f_init_customrendertexture DefaultInitCustomRenderTextureVertexShader (appdata
 
 float4 FlexCRTCoordinateOut( uint2 coordOut )
 {
-	return float4((coordOut.xy*2-FlexCRTSize+1)/FlexCRTSize, 0.5, 1 );
+#if UNITY_UV_STARTS_AT_TOP
+    coordOut.y = _CustomRenderTextureHeight - coordOut.y -1;
+#endif
+    return float4((coordOut.xy*2-FlexCRTSize+1)/FlexCRTSize, 0.5, 1 );
 }
 
 #endif

@@ -35,6 +35,8 @@ Shader "Xantoz/ParticleCRT/RenderParticles"
     #pragma target 5.0
     #pragma exclude_renderers gles metal
 
+    #include "common.cginc"
+
     #include "UnityCG.cginc"
     #include "../cginc/AudioLinkFuncs.cginc"
 
@@ -86,35 +88,34 @@ Shader "Xantoz/ParticleCRT/RenderParticles"
                 UNITY_VERTEX_OUTPUT_STEREO
             };
 
-            Texture2D<float4> _ParticleCRT;
+            Texture2D<TEXTURETYPE> _ParticleCRT;
             SamplerState sampler_ParticleCRT;
+            float _ParticleCRT_HDR;
 
-            #define TTLSCALE 60 // Largest TTL is expected to be 60 seconds
-            #define SPEEDSCALE 4
-
-            float3 particle_getPos(uint idx)
+            part3 particle_getPos(uint idx)
             {
-                return _ParticleCRT[uint2(idx,0)].xyz;
+                return _ParticleCRT[uint2(idx,0)].xyz*POSSCALE;
             }
 
-            float particle_getTTL(uint idx)
+            part particle_getTTL(uint idx)
             {
                 return _ParticleCRT[uint2(idx,0)].w*TTLSCALE;
             }
 
-            float3 particle_getSpeed(uint idx)
+            part3 particle_getSpeed(uint idx)
             {
-                return _ParticleCRT[uint2(idx,1)].xyz*SPEEDSCALE;
+                return _ParticleCRT[uint2(idx,1)].xyz*POSSCALE;
             }
 
-            float3 particle_getAcc(uint idx)
+            part3 particle_getAcc(uint idx)
             {
-                return _ParticleCRT[uint2(idx,2)].xyz*SPEEDSCALE;
+                return _ParticleCRT[uint2(idx,2)].xyz*POSSCALE;
             }
 
             float4 particle_getColor(uint idx)
             {
                 return _ParticleCRT[uint2(idx,3)];
+                // return float4(DecodeHDR(_ParticleCRT[uint2(idx,3)], _ParticleCRT_HDR), 1);
             }
 
             v2g vert(appdata v)
@@ -174,14 +175,20 @@ Shader "Xantoz/ParticleCRT/RenderParticles"
 
                 for (int i = 0; i < SAMPLECNT; ++i)
                 {
-                    uint sampleID = i + operationID * SAMPLECNT;
-                    float ttl = particle_getTTL(i);
-                    if (!(ttl > 0)) {
+                    uint idx = i + operationID * SAMPLECNT;
+
+                    if (idx > 1024) {
+                        break;
+                    }
+
+                    float ttl = particle_getTTL(idx);
+                    if (ttl <= 0) {
                         continue;
                     }
+
                     // float3 pointOut = random3(_Time.xyz + i);
-                    float3 pointOut = particle_getPos(i);
-                    float4 color = particle_getColor(i);
+                    part3 pointOut = particle_getPos(idx);
+                    float4 color = particle_getColor(idx);
                     // color += .5;
                     // color.a = 1;
                     o.color = color;
@@ -218,20 +225,19 @@ Shader "Xantoz/ParticleCRT/RenderParticles"
 
             float linefn(float a)
             {
-                return -clamp((1.0-pow(0.5/abs(a), .1)), -2, 0);
+                return -clamp((1.0-pow(0.5/abs(a), .9)), -2, 0);
             }
 
             float4 frag(g2f i) : SV_Target
             {
                 UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(i);
 
-                /*
-                float val = linefn(length((frac(i.uv.xy) - float2(0.5, 0.5))*2));
-                float4 col = clamp(val, 0.0, 1.0);
-                col.a *= _AlphaMultiplier;
-                */
                 
-                float4 col = float4(1,0,0,1);
+                float val = linefn(length((frac(i.uv.xy) - float2(0.5, 0.5))*2));
+                float4 col = clamp(val*i.color, 0.0, 4.0);
+                col.a *= _AlphaMultiplier;
+                
+                // float4 col = float4(1,1,0,1);
                 // float4 col = i.color;
 
                 UNITY_APPLY_FOG(i.fogCoord, col);
