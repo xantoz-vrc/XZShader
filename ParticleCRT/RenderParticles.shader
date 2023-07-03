@@ -24,6 +24,34 @@ Shader "Xantoz/ParticleCRT/RenderParticles"
 
         _PointSize ("Point Size", Float) = 0.1
         _AlphaMultiplier ("Alpha Multiplier (lower makes more transparent)", Range(0.0, 2.0)) = 0.5
+
+        [Header(Chronotensity Rotation)]
+        // Can be used to toggle chronotensity rotation on/off, and to reverse it
+        _ChronoRot_Scale ("Chronotensity Rotation Scale", Range(-1.0, 1.0)) = 1.0
+
+        [Enum(AudioLinkChronotensityEnum)]_ChronoRot_Effect_Band0 ("Chronotensity Rotation Type, Bass", Int) = 1
+        _ChronoRot_Band0 ("Chronotensity Rotation, Bass", Float) = 0.0
+        _ChronoRot_Axis_Band0 ("Chronotensity Rotation Axis, Bass", Vector) = (1,0,0,0)
+
+        [Enum(AudioLinkChronotensityEnum)]_ChronoRot_Effect_Band1 ("Chronotensity Rotation Type, Low Mid", Int) = 1
+        _ChronoRot_Band1 ("Chronotensity Rotation, Low Mid", Float) = 0.0
+        _ChronoRot_Axis_Band1 ("Chronotensity Rotation Axis, Low Mid", Vector) = (1,0,0,0)
+
+        [Enum(AudioLinkChronotensityEnum)]_ChronoRot_Effect_Band2 ("Chronotensity Rotation Type, High Mid", Int) = 1
+        _ChronoRot_Band2 ("Chronotensity Rotation, High Mid", Float) = 0.0
+        _ChronoRot_Axis_Band2 ("Chronotensity Rotation Axis, High Mid", Vector) = (1,0,0,0)
+
+        [Enum(AudioLinkChronotensityEnum)]_ChronoRot_Effect_Band3 ("Chronotensity Rotation Type, Treble", Int) = 1
+        _ChronoRot_Band3 ("Chronotensity Rotation, Treble", Float) = 0.0
+        _ChronoRot_Axis_Band3 ("Chronotensity Rotation Axis, Treble", Vector) = (1,0,0,0)
+
+        [Header(Order to apply rotations above (optimally each number should only be present once))]
+        [Enum(Bass,0, Low Mid,1, High Mid,2, Treble,3)]_ChronoRot_Order_0 ("Rotation to apply first",  Int) = 0
+        [Enum(Bass,0, Low Mid,1, High Mid,2, Treble,3)]_ChronoRot_Order_1 ("Rotation to apply second", Int) = 1
+        [Enum(Bass,0, Low Mid,1, High Mid,2, Treble,3)]_ChronoRot_Order_2 ("Rotation to apply third",  Int) = 2
+        [Enum(Bass,0, Low Mid,1, High Mid,2, Treble,3)]_ChronoRot_Order_3 ("Rotation to apply fourth", Int) = 3
+
+        [ToggleUI]_RotateAxis("Let the rotation affect the other axis of rotation", Int) = 0
     }
 
     CGINCLUDE
@@ -39,6 +67,7 @@ Shader "Xantoz/ParticleCRT/RenderParticles"
 
     #include "UnityCG.cginc"
     #include "../cginc/AudioLinkFuncs.cginc"
+    #include "../cginc/rotation.cginc"
 
     ENDCG
 
@@ -54,12 +83,32 @@ Shader "Xantoz/ParticleCRT/RenderParticles"
         {
             Blend SrcAlpha One
             // Blend SrcAlpha OneMinusSrcAlpha
+            // Blend [_SrcBlendMode] [_DstBlendMode]
 
             CGPROGRAM
             #pragma multi_compile_local _OUTMODE_QUAD _OUTMODE_POINT _OUTMODE_LINE
 
             float _PointSize;
             float _AlphaMultiplier;
+
+            float _ChronoRot_Scale;
+            float _ChronoRot_Band0;
+            float _ChronoRot_Band1;
+            float _ChronoRot_Band2;
+            float _ChronoRot_Band3;
+            float _ChronoRot_Effect_Band0;
+            float _ChronoRot_Effect_Band1;
+            float _ChronoRot_Effect_Band2;
+            float _ChronoRot_Effect_Band3;
+            float3 _ChronoRot_Axis_Band0;
+            float3 _ChronoRot_Axis_Band1;
+            float3 _ChronoRot_Axis_Band2;
+            float3 _ChronoRot_Axis_Band3;
+            uint _ChronoRot_Order_0;
+	    uint _ChronoRot_Order_1;
+	    uint _ChronoRot_Order_2;
+	    uint _ChronoRot_Order_3;
+            int _RotateAxis;
 
             struct appdata
             {
@@ -107,6 +156,11 @@ Shader "Xantoz/ParticleCRT/RenderParticles"
                 return _ParticleCRT[uint2(idx,1)].xyz*POSSCALE;
             }
 
+            uint particle_getType(uint idx)
+            {
+                return _ParticleCRT[uint2(idx,1)].w;
+            }
+
             part3 particle_getAcc(uint idx)
             {
                 return _ParticleCRT[uint2(idx,2)].xyz*POSSCALE;
@@ -115,7 +169,6 @@ Shader "Xantoz/ParticleCRT/RenderParticles"
             float4 particle_getColor(uint idx)
             {
                 return _ParticleCRT[uint2(idx,3)];
-                // return float4(DecodeHDR(_ParticleCRT[uint2(idx,3)], _ParticleCRT_HDR), 1);
             }
 
             v2g vert(appdata v)
@@ -138,6 +191,47 @@ Shader "Xantoz/ParticleCRT/RenderParticles"
                 return o;
             }
 
+            float3 rotate(float3 pos)
+            {
+                float chronorot_band[4] = {
+                    _ChronoRot_Band0 * AudioLinkGetChronotensity(_ChronoRot_Effect_Band0, 0)/1000000.0,
+                    _ChronoRot_Band1 * AudioLinkGetChronotensity(_ChronoRot_Effect_Band1, 1)/1000000.0,
+                    _ChronoRot_Band2 * AudioLinkGetChronotensity(_ChronoRot_Effect_Band2, 2)/1000000.0,
+                    _ChronoRot_Band3 * AudioLinkGetChronotensity(_ChronoRot_Effect_Band3, 3)/1000000.0
+                };
+                float3 chronorot_axis[4] = {
+                    normalize(_ChronoRot_Axis_Band0),
+                    normalize(_ChronoRot_Axis_Band1),
+                    normalize(_ChronoRot_Axis_Band2),
+                    normalize(_ChronoRot_Axis_Band3),
+                };
+                uint chronorot_order[4] = {
+                    _ChronoRot_Order_0,
+                    _ChronoRot_Order_1,
+                    _ChronoRot_Order_2,
+                    _ChronoRot_Order_3,
+                };
+
+                if (_RotateAxis) {
+                    float3 axis = chronorot_axis[chronorot_order[0]];
+                    for (uint i = 0; i < 4; ++i) {
+                        uint idx = chronorot_order[i];
+                        float angle = _ChronoRot_Scale*frac(chronorot_band[idx])*360;
+                        float3x3 R = AngleAxis3x3(radians(angle), axis);
+                        pos = mul(R, pos);
+                        axis = mul(R, chronorot_axis[chronorot_order[(i+1) % 4]]);
+                    }
+                } else {
+                    for (uint i = 0; i < 4; ++i) {
+                        uint idx = chronorot_order[i];
+                        float angle = _ChronoRot_Scale*frac(chronorot_band[idx])*360;
+                        pos = mul(AngleAxis3x3(radians(angle), chronorot_axis[idx]), pos);
+                    }
+                }
+                
+                return pos;
+            }
+
             float4 billboard(float2 xy, float2 scale)
             {
                 return mul(transpose(UNITY_MATRIX_IT_MV),
@@ -147,7 +241,7 @@ Shader "Xantoz/ParticleCRT/RenderParticles"
             }
 
             // 6 input points * 32 instances * 6 samples per instance = 1152 samples out
-            #define SAMPLECNT 6
+            #define SAMPLECNT 6*2
 
 	    [instance(32)]
             // 8 samples * 6 vertices out (quad)
@@ -188,16 +282,25 @@ Shader "Xantoz/ParticleCRT/RenderParticles"
 
                     // float3 pointOut = random3(_Time.xyz + i);
                     part3 pointOut = particle_getPos(idx);
+                    pointOut = rotate(pointOut);
                     float4 color = particle_getColor(idx);
-                    // color += .5;
-                    // color.a = 1;
                     o.color = color;
 
+                    float al_beat[4] = {
+                        AudioLinkData(uint2(0,0)).r,
+                        AudioLinkData(uint2(0,1)).r,
+                        AudioLinkData(uint2(0,2)).r,
+                        AudioLinkData(uint2(0,3)).r
+                    };
+
+                    uint type = particle_getType(idx);
+                    float pointSize = _PointSize + al_beat[type]*_PointSize*2;
+
                     float4 pointTL, pointTR, pointBL, pointBR;
-                    pointTL = UnityObjectToClipPos(pointOut + billboard(TL*_PointSize, IN[0].worldScale.xy));
-		    pointTR = UnityObjectToClipPos(pointOut + billboard(TR*_PointSize, IN[0].worldScale.xy));
-		    pointBL = UnityObjectToClipPos(pointOut + billboard(BL*_PointSize, IN[0].worldScale.xy));
-		    pointBR = UnityObjectToClipPos(pointOut + billboard(BR*_PointSize, IN[0].worldScale.xy));
+                    pointTL = UnityObjectToClipPos(pointOut + billboard(TL*pointSize, IN[0].worldScale.xy));
+		    pointTR = UnityObjectToClipPos(pointOut + billboard(TR*pointSize, IN[0].worldScale.xy));
+		    pointBL = UnityObjectToClipPos(pointOut + billboard(BL*pointSize, IN[0].worldScale.xy));
+		    pointBR = UnityObjectToClipPos(pointOut + billboard(BR*pointSize, IN[0].worldScale.xy));
 
                     o.vertex = pointTL; o.uv = uvTL;
                     UNITY_TRANSFER_FOG(o, o.vertex);
@@ -232,9 +335,10 @@ Shader "Xantoz/ParticleCRT/RenderParticles"
             {
                 UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(i);
 
-                
+
                 float val = linefn(length((frac(i.uv.xy) - float2(0.5, 0.5))*2));
-                float4 col = clamp(val*i.color, 0.0, 4.0);
+                float4 color_in = i.color + float4(.5, .5, .3, 0);
+                float4 col = clamp(val*color_in, 0.0, 4.0);
                 col.a *= _AlphaMultiplier;
                 
                 // float4 col = float4(1,1,0,1);

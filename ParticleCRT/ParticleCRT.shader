@@ -3,6 +3,7 @@ Shader "Xantoz/ParticleCRT/ParticleCRT"
     Properties
     {
         _Bounds ("Bounding Sphere", Float) = 10
+        _EmitCount ("How many particles to emit at one time", Int) = 10
     }
 
     CGINCLUDE
@@ -69,6 +70,8 @@ Shader "Xantoz/ParticleCRT/ParticleCRT"
             #pragma geometry geo
             #pragma multi_compile_fog
             #pragma target 5.0
+
+            int _EmitCount;
 
 	    struct v2g
 	    {
@@ -149,8 +152,9 @@ Shader "Xantoz/ParticleCRT/ParticleCRT"
                 };
 
                 part4 col = part4(1,1,1,1);
-                // float4 colrandom = float4(0.01*random3(float3(al_beat[1], al_beat[2], al_beat[3])), 1);
-                float4 colrandom = float4(0,0,0,0);
+                float3 ran = random3(float3(al_beat[1], al_beat[2], al_beat[3]));
+                float4 colrandom = float4(0.0000001*ran, 1);
+                // float4 colrandom = float4(0,0,0,0);
                 part3 speed, acc;
                 part type;
                 bool doEmit = false;
@@ -169,28 +173,44 @@ Shader "Xantoz/ParticleCRT/ParticleCRT"
                     // acc = float3(sin(random(_Time.xy)*2*UNITY_PI), 0, cos(random(_Time.xy)*2*UNITY_PI))*0.0001;
                     type = 0;
                     doEmit = true;
+                } else if (al_beat[2] > 0.2) {
+                    col = float4(0, .2, .8, 1) + colrandom;
+                    // speed = random3(_Time.xyz)*0.01;
+                    speed = float3(sin(random(_Time.xy)*2*UNITY_PI), -0.2, cos(random(_Time.xy)*2*UNITY_PI))*0.01;
+                    acc = float3(0,0,0);
+                    // acc = float3(sin(random(_Time.xy)*2*UNITY_PI), 0, cos(random(_Time.xy)*2*UNITY_PI))*0.0001;
+                    type = 2;
+                    doEmit = true;
                 }
 
+                // col += float4(.5, .5, .3, 0);
+
+/*
+                float3x3 R = rotateY(frac(_Time.y)*2*UNITY_PI);
+                speed = mul(R, speed);
+                acc = mul(R, acc);
+*/
+
+                int emitted = 0;
                 if (doEmit) {
                     // We can have as many active particles as the CRT is wide
                     // We loop through to find one free slot to write in
 		    for(int i = 0; i < _CustomRenderTextureWidth; i++ )
 		    {
+                        if (emitted > _EmitCount) {
+                            break;
+                        }
+
                         // no TTL. This slot is free
                         if (particle_getTTL(i) <= 0)
-                        // if (true)
                         {
                             particle_setPosTTL(o, stream, i, part3(0,0,0), random(_Time.xy)*4);
-                            // particle_setPosTTL(i,random3(_Time.xyz+i), 1.0);
-                            // particle_setPosTTL(i, part3(_SinTime.x*0.5,_CosTime.x*0.5,random(_Time.xy)), 2.0);
-
                             particle_setSpeedType(o, stream, i, speed, type);
                             particle_setAcc(o, stream, i, acc);
 
                             particle_setColor(o, stream, i, part4(random3(col), 1.0));
 
-                            // We emitted our particle. Job done!
-                            break;
+                            emitted++;
                         }
 		    }
                 }
@@ -245,8 +265,12 @@ Shader "Xantoz/ParticleCRT/ParticleCRT"
                     case 0:
                         // Update position & TTL
                         // col.rgb = particle_getPos(x) + particle_getSpeed(x);
-                        col.rgb = particle_getPos(x) + particle_getSpeed(x);
-                        col.rgb += al_beat[3]*float3(0,0.04,0);
+
+                        col.rgb = particle_getPos(x) + particle_getSpeed(x)*(0.3 + al_beat[0]);
+                        // col.rgb += al_beat[3]*float3(0,1,0)*0.02;
+
+
+                        // col.rgb += al_beat[3]*mul(AngleAxis3x3(normalize(float3(1,1,0)), frac(_Time.y)*2*UNITY_PI), float3(0,1,0))*0.02;
                         if (length(col.rgb) < _Bounds) {
                            col.a = (particle_getTTL(x) - unity_DeltaTime.x)/TTLSCALE;
                         } else {
@@ -260,11 +284,15 @@ Shader "Xantoz/ParticleCRT/ParticleCRT"
                     break;
                     case 2:
                         // Update Acceleration
-                        // col.rgb = particle_getAcc(x);
+                        col.rgb = particle_getAcc(x);
+    
+                        if (particle_getType(x) != 3) {
+                            col.rgb += random3(_Time.xyz+x)*0.001*al_beat[1];
+                        }
                     
                         // col.rgb = particle_getAcc(x)  + random3(_Time.xyz)*0.001*al_beat[1];
                         // col.rgb = particle_getAcc(x)  + random3(t)*0.0001;
-                        col.rgb = particle_getAcc(x)  + random3(t)*0.001*al_beat[1];
+                        // col.rgb = particle_getAcc(x)  + random3(t)*0.001*al_beat[1];
 
 
                         // col.rgb = particle_getAcc(x)  + length(particle_getAcc(x))*random3(_Time.xyz)*0.01;
