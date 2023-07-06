@@ -63,12 +63,12 @@ Shader "Xantoz/ParticleCRT/RenderParticles"
     #pragma target 5.0
     #pragma exclude_renderers gles metal
 
-    #include "common.cginc"
-
     #include "UnityCG.cginc"
     #include "../cginc/AudioLinkFuncs.cginc"
     #include "../cginc/rotation.cginc"
 
+    #define RENDER_PARTICLES
+    #include "particles.cginc"
     ENDCG
 
     SubShader
@@ -136,40 +136,6 @@ Shader "Xantoz/ParticleCRT/RenderParticles"
                 UNITY_FOG_COORDS(1)
                 UNITY_VERTEX_OUTPUT_STEREO
             };
-
-            Texture2D<TEXTURETYPE> _ParticleCRT;
-            SamplerState sampler_ParticleCRT;
-            float _ParticleCRT_HDR;
-
-            part3 particle_getPos(uint idx)
-            {
-                return _ParticleCRT[uint2(idx,0)].xyz*POSSCALE;
-            }
-
-            part particle_getTTL(uint idx)
-            {
-                return _ParticleCRT[uint2(idx,0)].w*TTLSCALE;
-            }
-
-            part3 particle_getSpeed(uint idx)
-            {
-                return _ParticleCRT[uint2(idx,1)].xyz*POSSCALE;
-            }
-
-            uint particle_getType(uint idx)
-            {
-                return _ParticleCRT[uint2(idx,1)].w;
-            }
-
-            part3 particle_getAcc(uint idx)
-            {
-                return _ParticleCRT[uint2(idx,2)].xyz*POSSCALE;
-            }
-
-            float4 particle_getColor(uint idx)
-            {
-                return _ParticleCRT[uint2(idx,3)];
-            }
 
             v2g vert(appdata v)
             {
@@ -240,11 +206,10 @@ Shader "Xantoz/ParticleCRT/RenderParticles"
                 );
             }
 
-            // 6 input points * 32 instances * 6 samples per instance = 1152 samples out
-            #define SAMPLECNT 6*2
+            // 12 input points * 32 instances * 6 samples per instance = up to 2304 particles renderable (i practice limited by CRT size)
+            #define SAMPLECNT 12
 
 	    [instance(32)]
-            // 8 samples * 6 vertices out (quad)
             [maxvertexcount(SAMPLECNT*6)]
 	    void geom(point v2g IN[1], inout TriangleStream<g2f> stream, uint instanceID : SV_GSInstanceID, uint geoPrimID : SV_PrimitiveID)
             {
@@ -340,9 +305,6 @@ Shader "Xantoz/ParticleCRT/RenderParticles"
                 float4 color_in = i.color + float4(.5, .5, .3, 0);
                 float4 col = clamp(val*color_in, 0.0, 4.0);
                 col.a *= _AlphaMultiplier;
-                
-                // float4 col = float4(1,1,0,1);
-                // float4 col = i.color;
 
                 UNITY_APPLY_FOG(i.fogCoord, col);
                 return col;
