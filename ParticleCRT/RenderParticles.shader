@@ -236,7 +236,9 @@ Shader "Xantoz/ParticleCRT/RenderParticles"
                 {
                     uint idx = i + operationID * SAMPLECNT;
 
-                    if (idx > 1024) {
+                    int width, height;
+                    _ParticleCRT.GetDimensions(width, height);
+                    if (idx > width) {
                         break;
                     }
 
