@@ -62,8 +62,8 @@ Shader "Xantoz/ParticleCRT/ParticleCRT"
 
                 part4 col = part4(1,1,1,1);
                 float3 ran = random3(float3(al_beat[1], al_beat[2], al_beat[3]));
-                // float4 colrandom = float4(0.0000001*ran, 1);
-                float4 colrandom = float4(0,0,0,0);
+                float4 colrandom = float4(1*ran, 1);
+                // float4 colrandom = float4(0,0,0,0);
                 part3 speed, acc;
                 uint type;
                 bool doEmit = false;
@@ -72,6 +72,12 @@ Shader "Xantoz/ParticleCRT/ParticleCRT"
                     speed = random3(_Time.xyz)*0.01;
                     acc = part3(0,1,0)*0.0001;
                     type = PARTICLE_TYPE_4;
+                    doEmit = true;
+                } else if (al_beat[1] > 0.2) {
+                    col = float4(.3, 3, .2, 1)*2 + colrandom;
+                    speed = random3(_Time.xyz)*0.01;
+                    acc = part3(0,-1,0)*0.0001;
+                    type = PARTICLE_TYPE_2;
                     doEmit = true;
                 } else if (al_beat[0] > 0.4) {
                     col = float4(0, .8, .2, 1) + colrandom;
@@ -151,8 +157,13 @@ Shader "Xantoz/ParticleCRT/ParticleCRT"
                 switch (y) {
                 case ROW_POS_TTL:
                     // Update position & TTL
-                    col.rgb = particle_getPos(x) + particle_getSpeed(x);
-                    // col.rgb = particle_getPos(x) + particle_getSpeed(x)*(0.3 + al_beat[0]);
+                    if (particle_getColor(x).g > .5) {
+                        col.rgb = particle_getPos(x) + particle_getSpeed(x)*(0.3 + al_beat[2]);
+                    } else {
+                        // col.rgb = particle_getPos(x) + particle_getSpeed(x)*0.1;
+                        col.rgb = particle_getPos(x) + particle_getSpeed(x)*(0.3 + al_beat[0]);
+                    }
+
                     if (length(col.rgb) < _Bounds) {
                         col.a = (particle_getTTL(x) - unity_DeltaTime.x);
                     } else {
@@ -163,7 +174,9 @@ Shader "Xantoz/ParticleCRT/ParticleCRT"
                     // Update speed & Type
 
                     float3 attractorAcc = float3(0,0,0);
-                    if ((particle_getType(x) & PARTICLE_TYPE_1) != 0) {
+                    float3 attractorAcc2 = float3(0,0,0);
+                    if (true) {
+                    // if ((particle_getType(x) & PARTICLE_TYPE_1) != 0) {
                         // float3 attractorPos = float3(_SinTime.x,_CosTime.x,_CosTime.y)*0.5;
                         // float3 attractorPos = float3(_SinTime.x,_CosTime.x,_CosTime.y)*frac(_Time.x);
                         float3 attractorPos = float3(_SinTime.x,_CosTime.x,_CosTime.y)*frac(_Time.x)*0.5;
@@ -172,19 +185,32 @@ Shader "Xantoz/ParticleCRT/ParticleCRT"
                         float attractorScale = (length(attractorDir) == 0.0f) ? 0.0f : (1/sqrt(length(attractorDir)));
                         // attractorAcc = attractorDir*attractorScale*0.0011;
                         // attractorAcc = attractorDir*attractorScale*0.003*al_beat[0];
-                        attractorAcc = attractorDir*attractorScale*0.003*(1-al_beat[0]);
-
+                        // attractorAcc = attractorDir*attractorScale*0.003*(1-al_beat[0]);
+                        attractorAcc = attractorDir*attractorScale*0.003*(1-al_beat[0]*0.3);
+                    }
+                    // if ((particle_getType(x) & PARTICLE_TYPE_4) != 0) {
+                    // if (true) {
+                    // if (particle_getColor(x).r > .5) {
+                    if (particle_getColor(x).g > .5) {
+                    // if (particle_getColor(x).b > .5) {
+                        float3 attractorPos2 = -float3(_SinTime.x,_CosTime.x,_CosTime.y)*frac(_Time.x+0.5)*0.5;;
+                        float3 attractorDir2 = attractorPos2 - particle_getPos(x);
+                        float attractorScale2 = (length(attractorDir2) == 0.0f) ? 0.0f : (1/sqrt(length(attractorDir2)));
+                        // attractorAcc = attractorDir2*attractorScale2*0.0011;
+                        attractorAcc = attractorDir2*attractorScale2*0.002*(0.5+al_beat[3]);
+                        // attractorAcc2 = attractorDir2*attractorScale2*0.002*(1-al_beat[3]);
+                        // attractorAcc2 = attractorDir2*attractorScale2*0.004*(1-al_beat[1]);
                     }
 
-                    col.rgb = particle_getSpeed(x) + particle_getAcc(x) + attractorAcc;
+                    col.rgb = particle_getSpeed(x) + particle_getAcc(x) + attractorAcc + attractorAcc2;
                     col.w = col.w; // Type is kept unmodified
                     break;
                 case ROW_ACC:
                     // Update Acceleration
 
                     col.rgb = particle_getAcc(x);
-
-                    if (0 != (particle_getType(x) & (PARTICLE_TYPE_1 | PARTICLE_TYPE_3))) {
+                    // if (0 != (particle_getType(x) & (PARTICLE_TYPE_1 | PARTICLE_TYPE_3))) {
+                    if (true) {
                         // col.rgb += random3(_Time.xyz+x)*0.001*al_beat[1];
                         col.rgb += random3(_Time.xyz+x)*0.0001*al_beat[1];
                     }
