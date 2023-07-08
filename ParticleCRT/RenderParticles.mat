@@ -62,6 +62,7 @@ Material:
     m_Floats:
     - _AlphaMultiplier: 2
     - _Amplitude_Scale: 2
+    - _Bounds: 10
     - _BumpScale: 1
     - _ChronoRot_Band0: 4
     - _ChronoRot_Band1: 3
@@ -75,7 +76,7 @@ Material:
     - _ChronoRot_Order_1: 1
     - _ChronoRot_Order_2: 2
     - _ChronoRot_Order_3: 3
-    - _ChronoRot_Scale: 1
+    - _ChronoRot_Scale: 0
     - _Chronotensity_Effect_Band0: 1
     - _Chronotensity_Effect_Band1: 1
     - _Chronotensity_Effect_Band2: 1
@@ -97,7 +98,7 @@ Material:
     - _Mode: 11
     - _OcclusionStrength: 1
     - _Parallax: 0.02
-    - _PointSize: 0.05
+    - _PointSize: 0.02
     - _RotateAxis: 1
     - _Rotation: 0
     - _Rotation_Reversing: 0

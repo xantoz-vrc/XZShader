@@ -2,7 +2,7 @@ Shader "Xantoz/ParticleCRT/ParticleCRT"
 {
     Properties
     {
-        _Bounds ("Bounding Sphere", Float) = 10
+        _Bounds ("Bounding Sphere (particles will get killed if they go outside)", Float) = 10
         _EmitCount ("How many particles to emit at one time", Int) = 10
     }
 
@@ -62,8 +62,8 @@ Shader "Xantoz/ParticleCRT/ParticleCRT"
 
                 part4 col = part4(1,1,1,1);
                 float3 ran = random3(float3(al_beat[1], al_beat[2], al_beat[3]));
-                float4 colrandom = float4(0.0000001*ran, 1);
-                // float4 colrandom = float4(0,0,0,0);
+                // float4 colrandom = float4(0.0000001*ran, 1);
+                float4 colrandom = float4(0,0,0,0);
                 part3 speed, acc;
                 uint type;
                 bool doEmit = false;
@@ -151,7 +151,8 @@ Shader "Xantoz/ParticleCRT/ParticleCRT"
                 switch (y) {
                 case ROW_POS_TTL:
                     // Update position & TTL
-                    col.rgb = particle_getPos(x) + particle_getSpeed(x)*(0.3 + al_beat[0]);
+                    col.rgb = particle_getPos(x) + particle_getSpeed(x);
+                    // col.rgb = particle_getPos(x) + particle_getSpeed(x)*(0.3 + al_beat[0]);
                     if (length(col.rgb) < _Bounds) {
                         col.a = (particle_getTTL(x) - unity_DeltaTime.x);
                     } else {
@@ -160,15 +161,32 @@ Shader "Xantoz/ParticleCRT/ParticleCRT"
                     break;
                 case ROW_SPEED_TYPE:
                     // Update speed & Type
-                    col.rgb = particle_getSpeed(x) + particle_getAcc(x);
+
+                    float3 attractorAcc = float3(0,0,0);
+                    if ((particle_getType(x) & PARTICLE_TYPE_1) != 0) {
+                        // float3 attractorPos = float3(_SinTime.x,_CosTime.x,_CosTime.y)*0.5;
+                        // float3 attractorPos = float3(_SinTime.x,_CosTime.x,_CosTime.y)*frac(_Time.x);
+                        float3 attractorPos = float3(_SinTime.x,_CosTime.x,_CosTime.y)*frac(_Time.x)*0.5;
+
+                        float3 attractorDir = attractorPos - particle_getPos(x);
+                        float attractorScale = (length(attractorDir) == 0.0f) ? 0.0f : (1/sqrt(length(attractorDir)));
+                        // attractorAcc = attractorDir*attractorScale*0.0011;
+                        // attractorAcc = attractorDir*attractorScale*0.003*al_beat[0];
+                        attractorAcc = attractorDir*attractorScale*0.003*(1-al_beat[0]);
+
+                    }
+
+                    col.rgb = particle_getSpeed(x) + particle_getAcc(x) + attractorAcc;
                     col.w = col.w; // Type is kept unmodified
                     break;
                 case ROW_ACC:
                     // Update Acceleration
+
                     col.rgb = particle_getAcc(x);
-                    
+
                     if (0 != (particle_getType(x) & (PARTICLE_TYPE_1 | PARTICLE_TYPE_3))) {
-                        col.rgb += random3(_Time.xyz+x)*0.001*al_beat[1];
+                        // col.rgb += random3(_Time.xyz+x)*0.001*al_beat[1];
+                        col.rgb += random3(_Time.xyz+x)*0.0001*al_beat[1];
                     }
                     break;
                 case ROW_COLOR:
