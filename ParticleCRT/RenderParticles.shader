@@ -261,7 +261,12 @@ Shader "Xantoz/ParticleCRT/RenderParticles"
                     };
 
                     uint type = particle_getType(idx);
-                    float pointSize = _PointSize + al_beat[type]*_PointSize*2;
+                    float pointSize = _PointSize;
+                    for (uint i = 0; i < 4; ++i) {
+                        if ((type & (1 << i)) != 0) {
+                            pointSize += al_beat[i]*_PointSize*2;
+                        }
+                    }
 
                     float4 pointTL, pointTR, pointBL, pointBR;
                     pointTL = UnityObjectToClipPos(pointOut + billboard(TL*pointSize, IN[0].worldScale.xy));
