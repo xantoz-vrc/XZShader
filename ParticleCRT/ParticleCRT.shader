@@ -157,12 +157,14 @@ Shader "Xantoz/ParticleCRT/ParticleCRT"
                 switch (y) {
                 case ROW_POS_TTL:
                     // Update position & TTL
+                    float3 speed;
                     if (particle_getColor(x).g > .5) {
-                        col.rgb = particle_getPos(x) + particle_getSpeed(x)*(0.3 + al_beat[2]);
+                        speed = particle_getSpeed(x)*(0.3 + al_beat[2]);
                     } else {
-                        // col.rgb = particle_getPos(x) + particle_getSpeed(x)*0.1;
-                        col.rgb = particle_getPos(x) + particle_getSpeed(x)*(0.3 + al_beat[0]);
+                        // speed = particle_getSpeed(x)*0.1;
+                        speed = particle_getSpeed(x)*(0.3 + al_beat[0]);
                     }
+                    col.rgb = particle_getPos(x) + speed*unity_DeltaTime.x*165;
 
                     if (length(col.rgb) < _Bounds) {
                         col.a = (particle_getTTL(x) - unity_DeltaTime.x);
@@ -202,7 +204,7 @@ Shader "Xantoz/ParticleCRT/ParticleCRT"
                         // attractorAcc2 = attractorDir2*attractorScale2*0.004*(1-al_beat[1]);
                     }
 
-                    col.rgb = particle_getSpeed(x) + particle_getAcc(x) + attractorAcc + attractorAcc2;
+                    col.rgb = particle_getSpeed(x) + (particle_getAcc(x) + attractorAcc + attractorAcc2)*unity_DeltaTime.x*165;
                     col.w = col.w; // Type is kept unmodified
                     break;
                 case ROW_ACC:
@@ -212,7 +214,7 @@ Shader "Xantoz/ParticleCRT/ParticleCRT"
                     // if (0 != (particle_getType(x) & (PARTICLE_TYPE_1 | PARTICLE_TYPE_3))) {
                     if (true) {
                         // col.rgb += random3(_Time.xyz+x)*0.001*al_beat[1];
-                        col.rgb += random3(_Time.xyz+x)*0.0001*al_beat[1];
+                        col.rgb += random3(_Time.xyz+x)*0.0001*al_beat[1]*unity_DeltaTime.x*165;
                     }
                     break;
                 case ROW_COLOR:
