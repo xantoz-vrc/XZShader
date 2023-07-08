@@ -148,7 +148,7 @@ Shader "Xantoz/XZAudioLinkVisualizer"
 
                 float vertexColorRand : COLOR1;
                 int mode_add : COLOR2;
-                UNITY_FOG_COORDS(2)
+                UNITY_FOG_COORDS(3)
 
                 UNITY_VERTEX_OUTPUT_STEREO
             };
