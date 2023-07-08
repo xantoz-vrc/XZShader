@@ -240,7 +240,7 @@ Shader "Xantoz/ParticleCRT/RenderParticles"
 
                     int width, height;
                     _ParticleCRT.GetDimensions(width, height);
-                    if (idx > width) {
+                    if (idx > uint(width)) {
                         break;
                     }
 
