@@ -24,6 +24,7 @@ Shader "Xantoz/ParticleCRT/RenderParticles"
 
         _PointSize ("Point Size", Float) = 0.1
         _AlphaMultiplier ("Alpha Multiplier (lower makes more transparent)", Range(0.0, 2.0)) = 0.5
+        _Bounds ("Bounding Sphere (particles will not be shown but not killed)", Float) = 2.0
 
         [Header(Chronotensity Rotation)]
         // Can be used to toggle chronotensity rotation on/off, and to reverse it
@@ -90,6 +91,7 @@ Shader "Xantoz/ParticleCRT/RenderParticles"
 
             float _PointSize;
             float _AlphaMultiplier;
+            float _Bounds;
 
             float _ChronoRot_Scale;
             float _ChronoRot_Band0;
@@ -249,6 +251,9 @@ Shader "Xantoz/ParticleCRT/RenderParticles"
 
                     // float3 pointOut = random3(_Time.xyz + i);
                     part3 pointOut = particle_getPos(idx);
+                    if (length(pointOut) > _Bounds) {
+                        continue;
+                    }
                     pointOut = rotate(pointOut);
                     float4 color = particle_getColor(idx);
                     o.color = color;
