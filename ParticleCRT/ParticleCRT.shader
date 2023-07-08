@@ -171,7 +171,7 @@ Shader "Xantoz/ParticleCRT/ParticleCRT"
                         col.rgb += random3(_Time.xyz+x)*0.001*al_beat[1];
                     }
                     break;
-                case 3:
+                case ROW_COLOR:
                     // Update color (just keep the same color)
                     col.rgb = particle_getColor(x);
                     break;
