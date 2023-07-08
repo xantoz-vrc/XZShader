@@ -26,11 +26,11 @@
 #define ROW_ACC 2
 #define ROW_COLOR 3
 
-#define PARTICLE_TYPE_1 0x01
-#define PARTICLE_TYPE_2 0x02
-#define PARTICLE_TYPE_3 0x04
-#define PARTICLE_TYPE_4 0x08
-#define PARTICLE_TYPE_ALL 0xff
+#define PARTICLE_TYPE_1 uint(0x01)
+#define PARTICLE_TYPE_2 uint(0x02)
+#define PARTICLE_TYPE_3 uint(0x04)
+#define PARTICLE_TYPE_4 uint(0x08)
+#define PARTICLE_TYPE_ALL uint(0xff)
 
 part3 particle_getPos(uint idx)
 {
