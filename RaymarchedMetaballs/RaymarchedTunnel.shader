@@ -289,7 +289,7 @@
                 float3 vert_position : TEXCOORD2;
                 float3 worldPos : TEXCOORD3;
 
-                UNITY_FOG_COORDS(2)
+                UNITY_FOG_COORDS(7)
                 UNITY_VERTEX_OUTPUT_STEREO
             };
 
@@ -554,7 +554,7 @@
                 float3 vert_position : TEXCOORD2;
                 float3 worldPos : TEXCOORD3;
 
-                UNITY_FOG_COORDS(2)
+                UNITY_FOG_COORDS(7)
                 UNITY_VERTEX_OUTPUT_STEREO
             };
 
@@ -847,7 +847,7 @@
                 float3 vert_position : TEXCOORD2;
                 float3 worldPos : TEXCOORD3;
 
-                UNITY_FOG_COORDS(2)
+                UNITY_FOG_COORDS(7)
                 UNITY_VERTEX_OUTPUT_STEREO
             };
 
