@@ -254,7 +254,7 @@
 
         Pass
         {
-            Cull Back
+            Cull Front
 
 /*
             Stencil
@@ -302,7 +302,7 @@
                 UNITY_INITIALIZE_VERTEX_OUTPUT_STEREO(o);
 
                 // Hack for blending and z-fighting reasons
-                v.vertex.xyz -= v.normal*0.01;
+                v.vertex.xyz += v.normal*0.01;
 
                 o.vertex = UnityObjectToClipPos(v.vertex);
                 o.worldPos = mul(unity_ObjectToWorld, v.vertex);
@@ -518,7 +518,7 @@
 
         Pass
         {
-            Cull Back
+            Cull Front
             // Blend One Zero
             // ZTest Less
 
@@ -567,7 +567,7 @@
                 UNITY_INITIALIZE_VERTEX_OUTPUT_STEREO(o);
 
                 // Hack so that this pass does not blend into the background pass when it isn't doing depth writes.
-                v.vertex.xyz += v.normal*0.01;
+                v.vertex.xyz -= v.normal*0.01;
 
                 o.vertex = UnityObjectToClipPos(v.vertex);
                 o.worldPos = mul(unity_ObjectToWorld, v.vertex);
@@ -814,7 +814,7 @@
         // One pass for the transparent cube (I could do it all inside one pass if I relly felt like it I guess)
         Pass
         {
-            Cull Back
+            Cull Front
 
 
             // Blend SrcAlpha OneMinusSrcAlpha
