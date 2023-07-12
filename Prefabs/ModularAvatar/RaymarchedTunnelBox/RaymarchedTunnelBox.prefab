@@ -188,7 +188,7 @@ GameObject:
   - component: {fileID: 7184458914139497616}
   - component: {fileID: 4714073180460761108}
   m_Layer: 0
-  m_Name: RaymarchedTunnelBox ModularAvatar
+  m_Name: RaymarchedTunnelBox
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
