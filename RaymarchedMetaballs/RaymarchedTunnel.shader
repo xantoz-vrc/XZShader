@@ -301,9 +301,6 @@
                 UNITY_INITIALIZE_OUTPUT(v2f, o);
                 UNITY_INITIALIZE_VERTEX_OUTPUT_STEREO(o);
 
-                // Hack for blending and z-fighting reasons
-                v.vertex.xyz -= v.normal*0.01;
-
                 o.vertex = UnityObjectToClipPos(v.vertex);
                 o.worldPos = mul(unity_ObjectToWorld, v.vertex);
                 o.uv = v.uv;
@@ -566,8 +563,11 @@
                 UNITY_INITIALIZE_OUTPUT(v2f, o);
                 UNITY_INITIALIZE_VERTEX_OUTPUT_STEREO(o);
 
+#if _DEPTHWRITE_ON
+#else
                 // Hack so that this pass does not blend into the background pass when it isn't doing depth writes.
                 v.vertex.xyz += v.normal*0.01;
+#endif
 
                 o.vertex = UnityObjectToClipPos(v.vertex);
                 o.worldPos = mul(unity_ObjectToWorld, v.vertex);
@@ -800,8 +800,6 @@
                         clip_pos = mul(UNITY_MATRIX_VP, float4(p, 1.0));
                     }
                     depth = max(clip_pos.z / clip_pos.w, maxDepth);
-                    // // Hack to make sure it doesn't blend with the bg pass when not writing depth in that pass
-                    // depth = max(clip_pos.z / clip_pos.w, maxDepth+.001);
                 }
 
                 // apply fog
