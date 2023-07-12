@@ -474,10 +474,8 @@
                 float3 worldDir = mul(ray_direction, R);
                 float dist = shortestDistanceToSurface(eye, worldDir, MIN_DIST, MAX_DIST);
 
-                //float cameraInObjectSpace = mul(unity_WorldToObject, float4(_WorldSpaceCameraPos, 1));
-                float cameraInObjectSpace = i.ray_origin;
 #if _DEPTHWRITE_ON
-
+                float cameraInObjectSpace = mul(unity_WorldToObject, float4(_WorldSpaceCameraPos, 1));
                 float4 clip_pos = mul(UNITY_MATRIX_VP, float4(i.worldPos, 1.0));
                 float mDepth = clip_pos.z / clip_pos.w;
 #endif
@@ -500,8 +498,7 @@
                         depth = mDepth;
                     }
 */
-                    //depth = isInside(cameraInObjectSpace) ? 0 : mDepth;
-                    depth = mDepth;
+                    depth = isInside(cameraInObjectSpace) ? 0 : mDepth;
 #endif
                     return col;
                 }
