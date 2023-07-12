@@ -62,6 +62,7 @@ Material:
     m_Floats:
     - _AlphaMultiplier: 2
     - _Amplitude_Scale: 2
+    - _BlinkMode: 0
     - _Bounds: 2
     - _BumpScale: 1
     - _ChronoRot_Band0: 4

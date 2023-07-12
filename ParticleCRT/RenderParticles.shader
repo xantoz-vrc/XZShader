@@ -26,6 +26,9 @@ Shader "Xantoz/ParticleCRT/RenderParticles"
         _AlphaMultiplier ("Alpha Multiplier (lower makes more transparent)", Range(0.0, 2.0)) = 0.5
         _Bounds ("Bounding Sphere (particles will not be shown but not killed)", Float) = 2.0
 
+        // Particle Type blinks based on particle type (set by the CRT, but currently it is broken)
+        [Enum(Bass,0,LowMid,1,HighMid,2,Treble,3,ParticleType,4)] _BlinkMode ("Blink on which band", Int) = 0
+
         [Header(Chronotensity Rotation)]
         // Can be used to toggle chronotensity rotation on/off, and to reverse it
         _ChronoRot_Scale ("Chronotensity Rotation Scale", Range(-1.0, 1.0)) = 1.0
@@ -92,6 +95,8 @@ Shader "Xantoz/ParticleCRT/RenderParticles"
             float _PointSize;
             float _AlphaMultiplier;
             float _Bounds;
+
+            int _BlinkMode;
 
             float _ChronoRot_Scale;
             float _ChronoRot_Band0;
@@ -258,18 +263,23 @@ Shader "Xantoz/ParticleCRT/RenderParticles"
                     float4 color = particle_getColor(idx);
                     o.color = color;
 
-                    float al_beat[4] = {
-                        AudioLinkData(uint2(0,0)).r,
-                        AudioLinkData(uint2(0,1)).r,
-                        AudioLinkData(uint2(0,2)).r,
-                        AudioLinkData(uint2(0,3)).r
-                    };
-
-                    uint type = particle_getType(idx);
                     float pointSize = _PointSize;
-                    for (uint i = 0; i < 4; ++i) {
-                        if ((type & (1 << i)) != 0) {
-                            pointSize += al_beat[i]*_PointSize*2;
+                    if (_BlinkMode < 4) {
+                        float al_beat = AudioLinkData(uint2(0,_BlinkMode)).r;
+                        pointSize += al_beat*_PointSize*2;
+                    } else {
+                        float al_beat[4] = {
+                            AudioLinkData(uint2(0,0)).r,
+                            AudioLinkData(uint2(0,1)).r,
+                            AudioLinkData(uint2(0,2)).r,
+                            AudioLinkData(uint2(0,3)).r
+                        };
+
+                        uint type = particle_getType(idx);
+                        for (uint i = 0; i < 4; ++i) {
+                            if ((type & (1 << i)) != 0) {
+                                pointSize += al_beat[i]*_PointSize*2;
+                            }
                         }
                     }
 
