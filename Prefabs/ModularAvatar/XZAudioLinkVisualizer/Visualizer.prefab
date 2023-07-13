@@ -208,7 +208,7 @@ MonoBehaviour:
     isPrefix: 0
     syncType: 2
     localOnly: 0
-    defaultValue: 1
+    defaultValue: 0.5
     saved: 1
   - nameOrPrefix: VisTiling
     remapTo: 
@@ -224,7 +224,7 @@ MonoBehaviour:
     isPrefix: 0
     syncType: 2
     localOnly: 0
-    defaultValue: 1
+    defaultValue: 0.5
     saved: 1
   - nameOrPrefix: VisChronoRot
     remapTo: 
