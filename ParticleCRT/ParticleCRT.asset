@@ -45,13 +45,13 @@ CustomRenderTexture:
   m_UpdateZoneSpace: 1
   m_CurrentUpdateZoneSpace: 1
   m_UpdateZones:
-  - updateZoneCenter: {x: 512, y: 512, z: 0.5}
-    updateZoneSize: {x: 1024, y: 1024, z: 1}
+  - updateZoneCenter: {x: 1024, y: 2, z: 0.5}
+    updateZoneSize: {x: 2048, y: 4, z: 1}
     rotation: 0
     passIndex: 1
     needSwap: 0
-  - updateZoneCenter: {x: 512, y: 512, z: 0.5}
-    updateZoneSize: {x: 1024, y: 1024, z: 1}
+  - updateZoneCenter: {x: 1024, y: 2, z: 0.5}
+    updateZoneSize: {x: 2048, y: 4, z: 1}
     rotation: 0
     passIndex: 2
     needSwap: 1
