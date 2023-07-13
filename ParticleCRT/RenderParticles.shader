@@ -84,13 +84,10 @@ Shader "Xantoz/ParticleCRT/RenderParticles"
         LOD 100
         Cull Off
         ZWrite Off
-        // ZTest always
 
         Pass
         {
             Blend SrcAlpha One
-            // Blend SrcAlpha OneMinusSrcAlpha
-            // Blend [_SrcBlendMode] [_DstBlendMode]
 
             CGPROGRAM
             #pragma multi_compile_local _OUTMODE_QUAD _OUTMODE_POINT _OUTMODE_LINE
@@ -228,7 +225,9 @@ Shader "Xantoz/ParticleCRT/RenderParticles"
 
             float4 billboard3(float3 xyz, float2 xy, float2 scale)
             {
-                return mul(UNITY_MATRIX_P, mul(UNITY_MATRIX_MV, float4(xyz, 1.0)) + float4(xy, 0.0, 0.0) * float4(scale, 1.0, 1.0));
+                return mul(UNITY_MATRIX_P,
+                    mul(UNITY_MATRIX_MV, float4(xyz, 1.0))
+                    + float4(xy, 0.0, 0.0) * float4(scale, 1.0, 1.0));
             }
 
             // 12 input points * 32 instances * 6 samples per instance = up to 2304 particles renderable (i practice limited by CRT size)
@@ -272,7 +271,6 @@ Shader "Xantoz/ParticleCRT/RenderParticles"
                         continue;
                     }
 
-                    // float3 pointOut = random3(_Time.xyz + i);
                     part3 pointOut = particle_getPos(idx);
                     if (length(pointOut) > _Bounds) {
                         continue;
@@ -309,60 +307,14 @@ Shader "Xantoz/ParticleCRT/RenderParticles"
 		        pointBR = UnityObjectToClipPos(pointOut + billboard(BR*pointSize, IN[0].worldScale.xy));
                     } else {
                         float3 speed = rotate(particle_getSpeed(idx))*_LengthScale;
-                        // pointTL = UnityObjectToClipPos(pointOut + billboard2(speed, TL*pointSize, IN[0].worldScale.xy));
-			// pointTR = UnityObjectToClipPos(pointOut + billboard2(speed, TR*pointSize, IN[0].worldScale.xy));
-			// pointBL = UnityObjectToClipPos(pointOut + billboard2(-speed, BL*pointSize, IN[0].worldScale.xy));
-			// pointBR = UnityObjectToClipPos(pointOut + billboard2(-speed, BR*pointSize, IN[0].worldScale.xy));
-                        // pointTL = UnityObjectToClipPos(billboard2(pointOut + speed, TL*pointSize, IN[0].worldScale.xy));
-			// pointTR = UnityObjectToClipPos(billboard2(pointOut + speed, TR*pointSize, IN[0].worldScale.xy));
-			// pointBL = UnityObjectToClipPos(billboard2(pointOut - speed, BL*pointSize, IN[0].worldScale.xy));
-			// pointBR = UnityObjectToClipPos(billboard2(pointOut - speed, BR*pointSize, IN[0].worldScale.xy));
                         // pointTL = billboard3(pointOut + speed, TL*pointSize, IN[0].worldScale.xy);
 			// pointTR = billboard3(pointOut + speed, TR*pointSize, IN[0].worldScale.xy);
-			// pointBL = billboard3(pointOut - speed, BL*pointSize, IN[0].worldScale.xy);
+		        // pointBL = billboard3(pointOut - speed, BL*pointSize, IN[0].worldScale.xy);
 			// pointBR = billboard3(pointOut - speed, BR*pointSize, IN[0].worldScale.xy);
-
-
-                        // Alt 1
-                        // pointTL = UnityObjectToClipPos(pointOut + speed + billboard(TL*pointSize, IN[0].worldScale.xy)); 
-			// pointTR = UnityObjectToClipPos(pointOut + speed + billboard(TR*pointSize, IN[0].worldScale.xy)); 
-			// pointBL = UnityObjectToClipPos(pointOut - speed + billboard(BL*pointSize, IN[0].worldScale.xy)); 
-			// pointBR = UnityObjectToClipPos(pointOut - speed + billboard(BR*pointSize, IN[0].worldScale.xy)); 
-
-                        // pointTL = UnityObjectToClipPos(pointOut - speed + billboard(TL*pointSize, IN[0].worldScale.xy)); 
-			// pointTR = UnityObjectToClipPos(pointOut - speed + billboard(TR*pointSize, IN[0].worldScale.xy)); 
-			// pointBL = UnityObjectToClipPos(pointOut + speed + billboard(BL*pointSize, IN[0].worldScale.xy)); 
-			// pointBR = UnityObjectToClipPos(pointOut + speed + billboard(BR*pointSize, IN[0].worldScale.xy)); 
-
-                        // pointTL = UnityObjectToClipPos(pointOut + speed + billboard(TL*pointSize*length(speed), IN[0].worldScale.xy)); 
-			// pointTR = UnityObjectToClipPos(pointOut - speed + billboard(TR*pointSize*length(speed), IN[0].worldScale.xy)); 
-			// pointBL = UnityObjectToClipPos(pointOut + speed + billboard(BL*pointSize*length(speed), IN[0].worldScale.xy)); 
-			// pointBR = UnityObjectToClipPos(pointOut - speed + billboard(BR*pointSize*length(speed), IN[0].worldScale.xy)); 
-
-                        // Alt 2
-                        // pointTL = UnityObjectToClipPos(pointOut + speed + billboard(float2(-length(speed), -1)*pointSize, IN[0].worldScale.xy));
-		        // pointTR = UnityObjectToClipPos(pointOut + speed + billboard(float2(-length(speed),  1)*pointSize, IN[0].worldScale.xy));
-		        // pointBL = UnityObjectToClipPos(pointOut - speed + billboard(float2(length(speed) , -1)*pointSize, IN[0].worldScale.xy));
-			// pointBR = UnityObjectToClipPos(pointOut - speed + billboard(float2(length(speed) ,  1)*pointSize, IN[0].worldScale.xy));
                         pointTL = billboard3(pointOut + speed, float2(-length(speed), -1)*pointSize, IN[0].worldScale.xy);
 		        pointTR = billboard3(pointOut + speed, float2(-length(speed),  1)*pointSize, IN[0].worldScale.xy);
 		        pointBL = billboard3(pointOut - speed, float2(length(speed),  -1)*pointSize, IN[0].worldScale.xy);
-			pointBR = billboard3(pointOut - speed, float2(length(speed),   1)*pointSize, IN[0].worldScale.xy);                        
-
-                        // pointTL = UnityObjectToClipPos(pointOut - speed + billboard(float2(-length(speed), -1)*pointSize, IN[0].worldScale.xy));
-		        // pointTR = UnityObjectToClipPos(pointOut - speed + billboard(float2(-length(speed),  1)*pointSize, IN[0].worldScale.xy));
-		        // pointBL = UnityObjectToClipPos(pointOut + speed + billboard(float2(length(speed) , -1)*pointSize, IN[0].worldScale.xy));
-			// pointBR = UnityObjectToClipPos(pointOut + speed + billboard(float2(length(speed) ,  1)*pointSize, IN[0].worldScale.xy));
-
-                        // pointTL = UnityObjectToClipPos(pointOut + speed + billboard(float2(-length(speed), -1)*pointSize, IN[0].worldScale.xy));
-		        // pointTR = UnityObjectToClipPos(pointOut - speed + billboard(float2(-length(speed),  1)*pointSize, IN[0].worldScale.xy));
-		        // pointBL = UnityObjectToClipPos(pointOut + speed + billboard(float2(length(speed) , -1)*pointSize, IN[0].worldScale.xy));
-			// pointBR = UnityObjectToClipPos(pointOut - speed + billboard(float2(length(speed) ,  1)*pointSize, IN[0].worldScale.xy));
-
-                        // pointTL = UnityObjectToClipPos(pointOut - speed + billboard(float2(length(speed), -pointSize), IN[0].worldScale.xy));
-			// pointTR = UnityObjectToClipPos(pointOut - speed + billboard(float2(length(speed),  pointSize), IN[0].worldScale.xy));
-			// pointBL = UnityObjectToClipPos(pointOut + speed + billboard(float2(-length(speed) , -pointSize), IN[0].worldScale.xy));
-			// pointBR = UnityObjectToClipPos(pointOut + speed + billboard(float2(-length(speed) ,  pointSize), IN[0].worldScale.xy));
+			pointBR = billboard3(pointOut - speed, float2(length(speed),   1)*pointSize, IN[0].worldScale.xy);
                     }
 
                     o.vertex = pointTL; o.uv = uvTL;
