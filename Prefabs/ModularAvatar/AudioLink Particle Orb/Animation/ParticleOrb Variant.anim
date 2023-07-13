@@ -23,6 +23,8 @@ AnimationClip:
       value: {fileID: 2100000, guid: 3ed453a57f7bb160ead36fc499e3e3c4, type: 2}
     - time: 0.5
       value: {fileID: 2100000, guid: fa7fe023a7fa9094b8d10e140cc161ea, type: 2}
+    - time: 0.9166667
+      value: {fileID: 2100000, guid: b50197e98ad812b409ba8d4dfbc53b0d, type: 2}
     attribute: m_Materials.Array.data[0]
     path: Hand/ParticleOrb top/World Constraint/Container/AudioLink Particle Orb
     classID: 23
@@ -35,7 +37,7 @@ AnimationClip:
   m_ClipBindingConstant:
     genericBindings:
     - serializedVersion: 2
-      path: 3495509301
+      path: 1922247845
       attribute: 0
       script: {fileID: 0}
       typeID: 23
@@ -44,12 +46,13 @@ AnimationClip:
     pptrCurveMapping:
     - {fileID: 2100000, guid: 3ed453a57f7bb160ead36fc499e3e3c4, type: 2}
     - {fileID: 2100000, guid: fa7fe023a7fa9094b8d10e140cc161ea, type: 2}
+    - {fileID: 2100000, guid: b50197e98ad812b409ba8d4dfbc53b0d, type: 2}
   m_AnimationClipSettings:
     serializedVersion: 2
     m_AdditiveReferencePoseClip: {fileID: 0}
     m_AdditiveReferencePoseTime: 0
     m_StartTime: 0
-    m_StopTime: 0.51666665
+    m_StopTime: 0.93333334
     m_OrientationOffsetY: 0
     m_Level: 0
     m_CycleOffset: 0
