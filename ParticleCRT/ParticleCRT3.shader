@@ -197,10 +197,10 @@ Shader "Xantoz/ParticleCRT/ParticleCRT3"
                     // if (!(particle_getColor(x).g > .5)) {
                     if (particle_getColor(x).g > .5) {
                         // float attractor2Radius = .2 + .5*al_beat[3];
-                        float attractor2Radius = (.2 + .5*al_beat[0])*0.7;
-                        // float3 attractor2Pos = -float3(_SinTime.x,_CosTime.x,_CosTime.y)*frac(_Time.x+0.5)*0.5;;
+                        float attractor2Radius = (.2 + .5*al_beat[0]);
+                        float3 attractor2Pos = -float3(_SinTime.x,_CosTime.x,_CosTime.y)*frac(_Time.x+0.5)*0.5;;
                         // const float3 attractor2Pos = float3(.5,0,.5);
-                        const float3 attractor2Pos = float3(0.001,0.001,0.001);
+                        // const float3 attractor2Pos = float3(0.001,0.001,0.001);
 
                         // float3 attractor2ClosestPoint = attractor2Pos + normalize(particle_getPos(x) - attractor2Pos) * attractor2Radius;
                         // float3 attractor2Dir = attractor2ClosestPoint - particle_getPos(x);
@@ -213,6 +213,7 @@ Shader "Xantoz/ParticleCRT/ParticleCRT3"
                         float attractor2Scale = (1/sqrt(attractor2Length));
 
                         // attractoracc = attractor2Dir*attractor2Scale*0.004*(0.5+al_beat[3]);
+                        attractorAcc *= 0.5;
                         attractorAcc += attractor2Dir*attractor2Scale*0.004*0.5;
                     }
 
