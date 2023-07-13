@@ -240,7 +240,7 @@ MonoBehaviour:
     isPrefix: 0
     syncType: 3
     localOnly: 0
-    defaultValue: 0
+    defaultValue: 1
     saved: 1
   - nameOrPrefix: VisChronotensity
     remapTo: 

@@ -74,7 +74,7 @@ MonoBehaviour:
       name: 
     value: 1
     style: 0
-    subMenu: {fileID: 0}
+    subMenu: {fileID: 11400000, guid: d8997ab71234797428102084837a6374, type: 2}
     subParameters: []
     labels: []
   - name: Rotation
