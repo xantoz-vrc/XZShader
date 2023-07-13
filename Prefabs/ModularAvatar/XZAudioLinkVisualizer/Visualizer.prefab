@@ -206,9 +206,9 @@ MonoBehaviour:
     remapTo: 
     internalParameter: 0
     isPrefix: 0
-    syncType: 3
+    syncType: 2
     localOnly: 0
-    defaultValue: 0
+    defaultValue: 1
     saved: 1
   - nameOrPrefix: VisTiling
     remapTo: 
