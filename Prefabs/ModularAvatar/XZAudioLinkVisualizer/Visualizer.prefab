@@ -128,7 +128,7 @@ GameObject:
   - component: {fileID: 2929086332187968543}
   - component: {fileID: 7996665789334891805}
   - component: {fileID: 7184458914139497616}
-  - component: {fileID: 4714073180460761108}
+  - component: {fileID: 6997530992871197822}
   m_Layer: 0
   m_Name: Visualizer
   m_TagString: Untagged
@@ -180,7 +180,7 @@ MonoBehaviour:
   parameters:
   - nameOrPrefix: VisRotation
     remapTo: 
-    internalParameter: 1
+    internalParameter: 0
     isPrefix: 0
     syncType: 2
     localOnly: 0
@@ -188,7 +188,7 @@ MonoBehaviour:
     saved: 1
   - nameOrPrefix: VisReverseRot
     remapTo: 
-    internalParameter: 1
+    internalParameter: 0
     isPrefix: 0
     syncType: 3
     localOnly: 0
@@ -196,7 +196,7 @@ MonoBehaviour:
     saved: 1
   - nameOrPrefix: VisMode
     remapTo: 
-    internalParameter: 1
+    internalParameter: 0
     isPrefix: 0
     syncType: 2
     localOnly: 0
@@ -204,7 +204,7 @@ MonoBehaviour:
     saved: 1
   - nameOrPrefix: VisBlink
     remapTo: 
-    internalParameter: 1
+    internalParameter: 0
     isPrefix: 0
     syncType: 3
     localOnly: 0
@@ -212,7 +212,7 @@ MonoBehaviour:
     saved: 1
   - nameOrPrefix: VisTiling
     remapTo: 
-    internalParameter: 1
+    internalParameter: 0
     isPrefix: 0
     syncType: 2
     localOnly: 0
@@ -220,7 +220,7 @@ MonoBehaviour:
     saved: 1
   - nameOrPrefix: VisAmplitude
     remapTo: 
-    internalParameter: 1
+    internalParameter: 0
     isPrefix: 0
     syncType: 2
     localOnly: 0
@@ -228,15 +228,15 @@ MonoBehaviour:
     saved: 1
   - nameOrPrefix: VisChronoRot
     remapTo: 
-    internalParameter: 1
+    internalParameter: 0
     isPrefix: 0
     syncType: 3
     localOnly: 0
-    defaultValue: 0
+    defaultValue: 1
     saved: 1
   - nameOrPrefix: Visualizer
     remapTo: 
-    internalParameter: 1
+    internalParameter: 0
     isPrefix: 0
     syncType: 3
     localOnly: 0
@@ -244,7 +244,7 @@ MonoBehaviour:
     saved: 1
   - nameOrPrefix: VisChronotensity
     remapTo: 
-    internalParameter: 1
+    internalParameter: 0
     isPrefix: 0
     syncType: 3
     localOnly: 0
@@ -252,13 +252,13 @@ MonoBehaviour:
     saved: 1
   - nameOrPrefix: WorldConstraint
     remapTo: 
-    internalParameter: 1
+    internalParameter: 0
     isPrefix: 0
     syncType: 3
     localOnly: 0
     defaultValue: 0
     saved: 0
---- !u!114 &4714073180460761108
+--- !u!114 &6997530992871197822
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -272,7 +272,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   Control:
     name: 
-    icon: {fileID: 2800000, guid: a06282136d558c54aa15d533f163ff59, type: 3}
+    icon: {fileID: 0}
     type: 103
     parameter:
       name: 
