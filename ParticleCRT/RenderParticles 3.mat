@@ -60,7 +60,7 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     m_Floats:
-    - _AlphaMultiplier: 1
+    - _AlphaMultiplier: 0.5
     - _Amplitude_Scale: 2
     - _BlinkMode: 0
     - _Bounds: 2
@@ -95,10 +95,12 @@ Material:
     - _GlossMapScale: 1
     - _Glossiness: 0.5
     - _GlossyReflections: 1
+    - _LengthScale: 3
     - _Metallic: 0
     - _Mode: 11
     - _OcclusionStrength: 1
     - _Parallax: 0.02
+    - _ParticleType: 1
     - _PointSize: 0.03
     - _RotateAxis: 1
     - _Rotation: 0

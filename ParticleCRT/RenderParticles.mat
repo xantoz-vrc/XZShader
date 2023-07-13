@@ -95,10 +95,12 @@ Material:
     - _GlossMapScale: 1
     - _Glossiness: 0.5
     - _GlossyReflections: 1
+    - _LengthScale: 5
     - _Metallic: 0
     - _Mode: 11
     - _OcclusionStrength: 1
     - _Parallax: 0.02
+    - _ParticleType: 1
     - _PointSize: 0.03
     - _RotateAxis: 1
     - _Rotation: 0
