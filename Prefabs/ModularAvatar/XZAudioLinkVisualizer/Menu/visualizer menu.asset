@@ -67,16 +67,6 @@ MonoBehaviour:
     subParameters:
     - name: VisBlink
     labels: []
-  - name: Visualizer Plane
-    icon: {fileID: 0}
-    type: 102
-    parameter:
-      name: VisPlane
-    value: 1
-    style: 0
-    subMenu: {fileID: 0}
-    subParameters: []
-    labels: []
   - name: Visualizer Chronotensity
     icon: {fileID: 0}
     type: 103
@@ -97,4 +87,14 @@ MonoBehaviour:
     subMenu: {fileID: 0}
     subParameters:
     - name: VisRotation
+    labels: []
+  - name: World Constraint
+    icon: {fileID: 0}
+    type: 102
+    parameter:
+      name: WorldConstraint
+    value: 1
+    style: 0
+    subMenu: {fileID: 0}
+    subParameters: []
     labels: []

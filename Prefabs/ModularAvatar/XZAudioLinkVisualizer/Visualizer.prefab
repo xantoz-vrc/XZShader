@@ -184,7 +184,7 @@ MonoBehaviour:
     isPrefix: 0
     syncType: 2
     localOnly: 0
-    defaultValue: 0
+    defaultValue: 0.5
     saved: 1
   - nameOrPrefix: VisReverseRot
     remapTo: 
@@ -200,7 +200,7 @@ MonoBehaviour:
     isPrefix: 0
     syncType: 2
     localOnly: 0
-    defaultValue: 0
+    defaultValue: 1
     saved: 1
   - nameOrPrefix: VisBlink
     remapTo: 
@@ -216,7 +216,7 @@ MonoBehaviour:
     isPrefix: 0
     syncType: 2
     localOnly: 0
-    defaultValue: 0
+    defaultValue: 0.1
     saved: 1
   - nameOrPrefix: VisAmplitude
     remapTo: 
@@ -224,7 +224,7 @@ MonoBehaviour:
     isPrefix: 0
     syncType: 2
     localOnly: 0
-    defaultValue: 0
+    defaultValue: 1
     saved: 1
   - nameOrPrefix: VisChronoRot
     remapTo: 
