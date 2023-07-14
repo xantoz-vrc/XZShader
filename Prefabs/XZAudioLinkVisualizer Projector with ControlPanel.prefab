@@ -370,6 +370,11 @@ PrefabInstance:
         type: 2}
     - target: {fileID: 6894640295946574408, guid: 8d63a8e330369e94bb2d7abae473622f,
         type: 3}
+      propertyPath: tilingScale
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 6894640295946574408, guid: 8d63a8e330369e94bb2d7abae473622f,
+        type: 3}
       propertyPath: materials.Array.size
       value: 2
       objectReference: {fileID: 0}
