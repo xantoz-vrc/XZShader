@@ -90,7 +90,6 @@ Material:
     - _Metallic: 0
     - _Mode: 11
     - _OcclusionStrength: 1
-    - _OnlyNormals: 1
     - _PCM_Scale: 1
     - _Parallax: 0.02
     - _Rotation: 0
@@ -125,5 +124,3 @@ Material:
     - _Potato: {r: 1, g: 1, b: 1, a: 1}
     - _ST: {r: 1, g: 1, b: 0, a: 0}
     - _ST0: {r: 0.5, g: 0.5, b: 0.5, a: 0.5}
-    - _ShowNormal1: {r: 0, g: -1, b: 0, a: 1}
-    - _ShowNormal2: {r: 1, g: 0, b: 0, a: 1}

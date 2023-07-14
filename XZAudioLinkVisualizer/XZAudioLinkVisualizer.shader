@@ -97,10 +97,6 @@ Shader "Xantoz/XZAudioLinkVisualizer"
         [ToggleUI]_UseVertexColor ("Use vertex color to randomly show/not show and mix things up", Int) = 0
 
         _Fat ("Fattening", Float) = 0
-        // quick hack for vket2023 because I can't be bothered to open blender
-        [ToggleUI]_OnlyNormals ("Only show when normals are one of the below", Int) = 0
-        _ShowNormal1 ("Normal 1", Vector) = (0,0,0,0)
-        _ShowNormal2 ("Normal 2", Vector) = (0,0,0,0)
     }
 
     CGINCLUDE
@@ -143,8 +139,6 @@ Shader "Xantoz/XZAudioLinkVisualizer"
                 float2 uv : TEXCOORD0;
                 float2 unmodified_uv : TEXCOORD1;
                 float4 vertex : SV_POSITION;
-                float3 vertexNormal : NORMAL_nointerpolation;
-                float3 objectPos : TEXCOORD2;
 
                 float vertexColorRand : COLOR1;
                 int mode_add : COLOR2;
@@ -156,11 +150,6 @@ Shader "Xantoz/XZAudioLinkVisualizer"
             float4 _ST0;
             int _UseVertexColor;
             float _Fat;
-
-            int _OnlyNormals;
-            float3 _ShowNormal1;
-            float3 _ShowNormal2;
-
 
             v2f vert(appdata v)
             {
@@ -188,8 +177,6 @@ Shader "Xantoz/XZAudioLinkVisualizer"
                 v.vertex.xyz += v.normal*_Fat;
 
                 o.vertex = UnityObjectToClipPos(v.vertex);
-                o.vertexNormal = v.normal;
-                o.objectPos = v.vertex;
 
                 float2 uv = v.uv * _ST0.xy + _ST0.zw;
                 o.unmodified_uv = uv;
@@ -204,17 +191,7 @@ Shader "Xantoz/XZAudioLinkVisualizer"
             {
                 UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(i);
 
-                if (_OnlyNormals) {
-                    const float epsilon = 0.01;
-                    if (length(normalize(i.vertexNormal) - normalize(_ShowNormal1)) < epsilon || length(normalize(i.vertexNormal) - normalize(_ShowNormal2)) < epsilon) {
-                        discard;
-                    }
-                    if (!(i.objectPos.x + (9.5 - i.objectPos.y) > 0)) {
-                        discard;
-                    }
-                }
-
-                if (_UseVertexColor && !(i.vertexColorRand > 0.97 || i.vertexColorRand < 0.03)) {
+                if (_UseVertexColor && !(i.vertexColorRand > 0.999 || i.vertexColorRand < 0.001)) {
                     discard;
                 }
 
