@@ -253,7 +253,7 @@ namespace XZShader
 
             int newMode = modeConversion((int)modeSlider.value);
             amplitudeScale = amplitudeSlider.value;
-            mode = mode;
+            mode = newMode;
             ctensity = ctensityToggle.isOn;
             ctensityTilingScale = ctensityTilingScaleSlider.value;
             ctensityOffsetScale = ctensityOffsetScaleSlider.value;
