@@ -5,6 +5,7 @@ using System;
 
 namespace XZShader
 {
+#if UDON
     using UdonSharp;
     using VRC.Udon;
 
@@ -340,4 +341,9 @@ namespace XZShader
                 return "???";
         }
     }
+#else
+    public class XZAlVisController2 : MonoBehaviour
+    {
+    }
+#endif
 }
