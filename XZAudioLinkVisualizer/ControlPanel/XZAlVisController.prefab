@@ -448,7 +448,7 @@ GameObject:
   - component: {fileID: 925336297959556803}
   - component: {fileID: 6900474161347995110}
   m_Layer: 14
-  m_Name: PreviewPlane
+  m_Name: ActivePlane
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -2823,8 +2823,8 @@ MonoBehaviour:
   ctensityRotation_Band3: 0
   tilingScale: 1
   rotation: 0
-  previewView: {fileID: 6900474161347995110}
-  activeView: {fileID: 574495265727228377}
+  previewView: {fileID: 574495265727228377}
+  activeView: {fileID: 6900474161347995110}
   amplitudeLabel: {fileID: 2461958662854257800}
   amplitudeSlider: {fileID: 2461958663213379424}
   modeLabel: {fileID: 7209488953309823651}
@@ -3813,7 +3813,7 @@ GameObject:
   - component: {fileID: 5673212132479021990}
   - component: {fileID: 574495265727228377}
   m_Layer: 14
-  m_Name: ActivePlane
+  m_Name: PreviewPlane
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
