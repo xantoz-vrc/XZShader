@@ -106,7 +106,7 @@ Shader "Xantoz/XZAudioLinkVisualizer"
 
     SubShader
     {
-        Tags { "Queue"="Transparent" "RenderType"="Transparent" "IgnoreProjector"="True" "VRCFallback"="Hidden" }
+        Tags { "Queue"="Transparent" "RenderType"="Transparent" "IgnoreProjector"="True" "VRCFallback"="Hidden" "DisableBatching"="True" }
         LOD 100
         Cull[_CullMode]
 
