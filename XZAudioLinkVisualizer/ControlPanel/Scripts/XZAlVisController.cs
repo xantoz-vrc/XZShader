@@ -88,13 +88,19 @@ namespace XZShader
             localPlayer = Networking.LocalPlayer;
             deserializing = false;
 
-/*
             // Copy properties over to the active view and preview view meshrenderers. It is
             // neccessary to do it this way, since the materials in question might be another
             // variant of XZAlVis such as the projector one, for instance
             activeView.material.CopyPropertiesFromMaterial(materials[0]);
             previewView.material.CopyPropertiesFromMaterial(materials[0]);
-*/
+            activeView.material.SetInt("_DstBlend", 0);
+            activeView.material.SetInt("_DstBlendMode", 1);
+            activeView.material.SetInt("_SrcBlend", 1);
+            activeView.material.SetInt("_SrcBlendMode", 5);
+            previewView.material.SetInt("_DstBlend", 0);
+            previewView.material.SetInt("_DstBlendMode", 1);
+            previewView.material.SetInt("_SrcBlend", 1);
+            previewView.material.SetInt("_SrcBlendMode", 5);
 
             // TODO: consider just grabbing default values from the material instead?
             _initAmplitudeScale         = amplitudeScale;
