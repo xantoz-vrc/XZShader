@@ -2817,7 +2817,7 @@ MonoBehaviour:
   ctensity: 1
   ctensityTilingScale: 5.28
   ctensityOffsetScale: 9
-  ctensityRotationScale: 0
+  ctensityRotationScale: 1
   ctensityRotation_Band0: 0.5
   ctensityRotation_Band1: 0
   ctensityRotation_Band2: 0
