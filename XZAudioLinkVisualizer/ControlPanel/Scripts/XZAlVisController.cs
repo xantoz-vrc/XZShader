@@ -88,6 +88,7 @@ namespace XZShader
             localPlayer = Networking.LocalPlayer;
             deserializing = false;
 
+/*
             // Copy properties over to the active view and preview view meshrenderers. It is
             // neccessary to do it this way, since the materials in question might be another
             // variant of XZAlVis such as the projector one, for instance
@@ -101,6 +102,7 @@ namespace XZShader
             previewView.material.SetInt("_DstBlendMode", 1);
             previewView.material.SetInt("_SrcBlend", 1);
             previewView.material.SetInt("_SrcBlendMode", 5);
+*/
 
             // TODO: consider just grabbing default values from the material instead?
             _initAmplitudeScale         = amplitudeScale;
@@ -183,7 +185,7 @@ namespace XZShader
             amplitudeLabel.text = "Amplitude Scale: " + amplitudeSlider.value.ToString("0.00");
             modeLabel.text =
                 "Mode: " + modeToString(newMode) + "(" + newMode.ToString() + ")" +
-                ((newMode >= 11) ? " <sub>Note: Auto modes do not sync perfectly</sub>" : "");
+                ((newMode >= 11) ? " \nNote: Auto modes do not sync perfectly" : "");
             ctensityTilingScaleLabel.text = "Chronotensity Tiling Scale: " + ctensityTilingScaleSlider.value.ToString("0.00");
             ctensityOffsetScaleLabel.text = "Chronotensity Offset Scale: " + ctensityOffsetScaleSlider.value.ToString("0.00");
             ctensityRotationScaleLabel.text = "Chronotensity Rotation Scale: " + ctensityRotationScaleSlider.value.ToString("0.00");
