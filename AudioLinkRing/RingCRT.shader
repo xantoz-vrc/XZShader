@@ -66,7 +66,7 @@ Shader "Xantoz/AudioLinkRing/RingCRT"
                     // 0th colum is normal that starts moving outwards immediately
                     case 0:
                     // Retriggering requires a slightly higher than configured threshold
-                    if ((al_beat > _UpperThreshold[y] && tex.r < cooledDownTime) ||
+                    if ((al_beat > _UpperThreshold[y] && tex.r <= cooledDownTime) ||
                         (al_beat > _LowerThreshold[y] && tex.r <= 0.0)) {
                         col.r = _TimeBand[y];
                     } else if (tex.r > 0.0) {
