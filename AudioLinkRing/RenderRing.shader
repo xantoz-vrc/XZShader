@@ -3,6 +3,8 @@ Shader "Xantoz/AudioLinkRing/RenderRing"
     Properties
     {
         [NoScaleOffset]_RingCRTTex ("RenderTexture", 2D) = "black" {}
+        // Normal triggers on normal attack, HoldUntilStop is held until "note" stops
+        [Enum(Normal,0,HoldUntilStop,1)]_HoldMode ("Hold mode", Int) = 0
 
         _Tint ("Tint Color", Color) = (1, 1, 1, 1)
         [NoScaleOffset]_Tex ("Cubemap (HDR)", Cube) = "Cube" {}
@@ -33,6 +35,7 @@ Shader "Xantoz/AudioLinkRing/RenderRing"
             #pragma multi_compile_fog
 
             Texture2D<float4> _RingCRTTex;
+            int _HoldMode;
             samplerCUBE _Tex;
             float4 _Tex_HDR;
             float4 _Tint;
@@ -84,7 +87,7 @@ Shader "Xantoz/AudioLinkRing/RenderRing"
             #define MAX_DIST 100.0
             #define EPSILON 0.001
 
-            #define VALUE _RingCRTTex[uint2(0,_Band)].a
+            #define VALUE ((_HoldMode) ? _RingCRTTex[uint2(0,_Band)].a : _RingCRTTex[uint2(0,_Band)].b)
 
             float4 sdgTorus(float3 p, float ra, float rb)
             {
