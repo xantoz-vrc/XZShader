@@ -35,7 +35,7 @@ Shader "Xantoz/AudioLinkRing/RenderRing"
             #pragma multi_compile_fog
 
             Texture2D<float4> _RingCRTTex;
-            int _HoldMode;
+            uint _HoldMode;
             samplerCUBE _Tex;
             float4 _Tex_HDR;
             float4 _Tint;
@@ -87,7 +87,18 @@ Shader "Xantoz/AudioLinkRing/RenderRing"
             #define MAX_DIST 100.0
             #define EPSILON 0.001
 
-            #define VALUE ((_HoldMode) ? _RingCRTTex[uint2(0,_Band)].a : _RingCRTTex[uint2(0,_Band)].b)
+            float getValue()
+            {
+                return _RingCRTTex[uint2(_HoldMode,_Band)].g;
+            }
+
+            float getHeldCount()
+            {
+                if (_HoldMode < 1) {
+                    return 0.0;
+                }
+                return _RingCRTTex[uint2(_HoldMode,_Band)].b;
+            }
 
             float4 sdgTorus(float3 p, float ra, float rb)
             {
@@ -97,10 +108,11 @@ Shader "Xantoz/AudioLinkRing/RenderRing"
             }
 
             float sceneSDF(float3 samplePoint) {
-                float val = VALUE;
+                float val = getValue();
+                float count = getHeldCount();
 
                 // return sdgTorus(samplePoint, 0.001, 0.001 + (1.0 - val)/2.0);
-                return sdgTorus(samplePoint, 0.04 + (1.0 - val)/3.0, 0.01);
+                return sdgTorus(samplePoint, 0.04 + (1.0 - val)/3.0, 0.01 + count/100.0);
 
             }
 
@@ -144,7 +156,7 @@ Shader "Xantoz/AudioLinkRing/RenderRing"
 
                 UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(i);
 
-                if (!AudioLinkIsAvailable() || VALUE <= 0.0) {
+                if (!AudioLinkIsAvailable() || getValue() <= 0.0) {
                     discard;
                 }
 

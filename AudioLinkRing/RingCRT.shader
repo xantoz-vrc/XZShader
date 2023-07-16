@@ -45,12 +45,12 @@ Shader "Xantoz/AudioLinkRing/RingCRT"
    
             float4 frag(v2f_customrendertexture i) : COLOR
             {
-                if (!AudioLinkIsAvailable()) {
-                    return float4(0,0,0,0);
-                }
-
                 uint x = i.globalTexcoord.x * _CustomRenderTextureWidth;
                 uint y = i.globalTexcoord.y * _CustomRenderTextureHeight;
+
+                if (!AudioLinkIsAvailable() || y > 3) {
+                    return float4(0,0,0,0);
+                }
 
                 float4 tex = _SelfTexture2D[uint2(x,y)];
                 float4 col = float4(0,0,0,0);
@@ -58,27 +58,53 @@ Shader "Xantoz/AudioLinkRing/RingCRT"
 
                 float cooledDownTime = _TimeBand[y] - _CooldownBand[y];
 
-                // .r is normal raw value attack on beat, .g is raw inverted hold until beat releases
-                // .b and .a is normalized, and made to grow rather than shrink, to be between 1.0 and 0.0 of the previous two
+                // .r is raw value starting at _TimeBand and counting down to 0
+                // .g is a normalized value that starts at 1 and counts down to 0
+                // .b counts seconds upwards while held in held modes
 
-                // Retriggering requires a slightly higher than configured threshold
-                if ((al_beat > _UpperThreshold[y] && tex.r < cooledDownTime) ||
-                    (al_beat > _LowerThreshold[y] && tex.r <= 0.0)) {
-                    col.r = _TimeBand[y];
-                } else if (tex.r > 0.0) {
-                    col.r = tex.r - unity_DeltaTime.x;
+                switch (x) {
+                    // 0th colum is normal that starts moving outwards immediately
+                    case 0:
+                    // Retriggering requires a slightly higher than configured threshold
+                    if ((al_beat > _UpperThreshold[y] && tex.r < cooledDownTime) ||
+                        (al_beat > _LowerThreshold[y] && tex.r <= 0.0)) {
+                        col.r = _TimeBand[y];
+                    } else if (tex.r > 0.0) {
+                        col.r = tex.r - unity_DeltaTime.x;
+                    }
+                    break;
+
+                    // 1st column is hold while active, release when it goes below the lowewr threshold
+                    case 1:
+                    // First appearing or retriggering on the higher threshold, but releasing when it goes below the low threshold
+                    if ((tex.r ==_TimeBand[y] && al_beat > _LowerThreshold[y]) ||
+                        (tex.r <= cooledDownTime && al_beat > _UpperThreshold[y])) {
+                        col.r = _TimeBand[y];
+                        col.b = tex.b + unity_DeltaTime.x;
+                    } else if (tex.r > 0.0) {
+                        col.r = tex.r - unity_DeltaTime.x;
+                    }
+                    break;
+
+                    // Appear on band y, release on band 0
+                    case 2:
+                    break;
+
+                    // Appear on band y, release on band 1
+                    case 3:
+                    break;
+
+                    // Appear on band y, release on band 2
+                    case 4:
+                    break;
+
+                    // Appear on band y, release on band 3
+                    case 5:
+                    break;
                 }
 
-                // First appearing or retriggering on the higher threshold, but releasing when it goes below the low threshold
-                if ((tex.g ==_TimeBand[y] && al_beat > _LowerThreshold[y]) ||
-                    (tex.g <= cooledDownTime && al_beat > _UpperThreshold[y])) {
-                    col.g = _TimeBand[y];
-                } else if (tex.g > 0.0) {
-                    col.g = tex.g - unity_DeltaTime.x;
-                }
-
-                col.b = col.r / _TimeBand[y];
-                col.a = col.g / _TimeBand[y];
+                // Scaled value at .b
+                col.g = col.r / _TimeBand[y];
                 
                 return col;
             }
