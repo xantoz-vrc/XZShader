@@ -84,7 +84,7 @@ Shader "Xantoz/AudioLinkRing/RenderRing"
             #define MAX_DIST 100.0
             #define EPSILON 0.001
 
-            #define VALUE _RingCRTTex[uint2(0,_Band)].b
+            #define VALUE _RingCRTTex[uint2(0,_Band)].a
 
             float4 sdgTorus(float3 p, float ra, float rb)
             {

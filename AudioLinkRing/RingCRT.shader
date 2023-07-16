@@ -50,7 +50,7 @@ Shader "Xantoz/AudioLinkRing/RingCRT"
                 } else if (al_beat > _Threshold[y]) { 
                     col.r = _TimeBand[y];
                 }
-                if (al_beat > _Threshold[y]) {
+                if ((tex.g ==_TimeBand[y] || tex.g <= 0.0) && al_beat > _Threshold[y]) {
                     col.g = _TimeBand[y];
                 } else if (tex.g > 0.0) {
                     col.g = tex.g - unity_DeltaTime.x;
