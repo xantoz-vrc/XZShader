@@ -113,6 +113,13 @@ Shader "Xantoz/AudioLinkRing/RenderRing"
 
                 // return sdgTorus(samplePoint, 0.001, 0.001 + (1.0 - val)/2.0);
                 return sdgTorus(samplePoint, 0.04 + (1.0 - val)/3.0, 0.01 + count/100.0);
+                const int nsamples = 256;
+                float angle = atan2(samplePoint.x, samplePoint.z);
+                float pcm_val = PCMConditional(
+                    AudioLinkPCMLerpWrap(((angle+UNITY_PI)/(2*UNITY_PI))*nsamples, nsamples),
+                    0);
+
+                float3 p = samplePoint + float3(0,pcm_val/100,0);
 
             }
 
