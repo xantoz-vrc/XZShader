@@ -73,7 +73,7 @@ Material:
     - _GlossMapScale: 1
     - _Glossiness: 0.5
     - _GlossyReflections: 1
-    - _HoldMode: 1
+    - _HoldMode: 4
     - _InnerRadius: 0.04
     - _Metallic: 0
     - _Mode: 0
