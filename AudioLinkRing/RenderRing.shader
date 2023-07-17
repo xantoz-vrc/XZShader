@@ -4,7 +4,7 @@ Shader "Xantoz/AudioLinkRing/RenderRing"
     {
         [NoScaleOffset]_RingCRTTex ("RenderTexture", 2D) = "black" {}
         // Normal triggers on normal attack, HoldUntilStop is held until "note" stops
-        [Enum(Normal,0,HoldUntilStop,1)]_HoldMode ("Hold mode", Int) = 0
+        [Enum(AudioLinkRingModeEnum)]_HoldMode ("Hold mode", Int) = 0
 
         _InnerRadius ("Radius when smallest", Float) = 0.04
 
