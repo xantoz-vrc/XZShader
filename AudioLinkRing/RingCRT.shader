@@ -42,7 +42,7 @@ Shader "Xantoz/AudioLinkRing/RingCRT"
             float4 _UpperThreshold;
             float4 _CooldownBand;
             float4 _TimeBand;
-   
+
             float4 frag(v2f_customrendertexture i) : COLOR
             {
                 uint x = i.globalTexcoord.x * _CustomRenderTextureWidth;
@@ -54,7 +54,12 @@ Shader "Xantoz/AudioLinkRing/RingCRT"
 
                 float4 tex = _SelfTexture2D[uint2(x,y)];
                 float4 col = float4(0,0,0,0);
-                float al_beat = AudioLinkData(uint2(0,y)).r;
+                float al_beat[4] = {
+                    AudioLinkData(uint2(0,0)).r,
+                    AudioLinkData(uint2(0,1)).r,
+                    AudioLinkData(uint2(0,2)).r,
+                    AudioLinkData(uint2(0,3)).r
+                };
 
                 float cooledDownTime = _TimeBand[y] - _CooldownBand[y];
 
@@ -66,8 +71,8 @@ Shader "Xantoz/AudioLinkRing/RingCRT"
                     // 0th colum is normal that starts moving outwards immediately
                     case 0:
                     // Retriggering requires a slightly higher than configured threshold
-                    if ((al_beat > _UpperThreshold[y] && tex.r <= cooledDownTime) ||
-                        (al_beat > _LowerThreshold[y] && tex.r <= 0.0)) {
+                    if ((al_beat[y] > _UpperThreshold[y] && tex.r <= cooledDownTime) ||
+                        (al_beat[y] > _LowerThreshold[y] && tex.r <= 0.0)) {
                         col.r = _TimeBand[y];
                     } else if (tex.r > 0.0) {
                         col.r = tex.r - unity_DeltaTime.x;
@@ -77,8 +82,8 @@ Shader "Xantoz/AudioLinkRing/RingCRT"
                     // 1st column is hold while active, release when it goes below the lowewr threshold
                     case 1:
                     // First appearing or retriggering on the higher threshold, but releasing when it goes below the low threshold
-                    if ((tex.r ==_TimeBand[y] && al_beat > _LowerThreshold[y]) ||
-                        (tex.r <= cooledDownTime && al_beat > _UpperThreshold[y])) {
+                    if ((tex.r ==_TimeBand[y] && al_beat[y] > _LowerThreshold[y]) ||
+                        (tex.r <= cooledDownTime && al_beat[y] > _UpperThreshold[y])) {
                         col.r = _TimeBand[y];
                         col.b = tex.b + unity_DeltaTime.x;
                     } else if (tex.r > 0.0) {
@@ -86,21 +91,38 @@ Shader "Xantoz/AudioLinkRing/RingCRT"
                     }
                     break;
 
+                    #define bandYtoX(yy, xx)                                                           \
+                        do {                                                                           \
+                            if ((tex.r ==_TimeBand[yy] && al_beat[xx] < _UpperThreshold[yy]) ||        \
+                                (tex.r <= cooledDownTime && al_beat[yy] > _UpperThreshold[yy])) {      \
+                                col.r = _TimeBand[yy];                                                 \
+                                col.b = tex.b + unity_DeltaTime.x;                                     \
+                            } else if (tex.r > 0.0) {                                                  \
+                                col.r = tex.r - unity_DeltaTime.x;                                     \
+                            }                                                                          \
+                        } while (0)
+
                     // Appear on band y, release on band 0
                     case 2:
+                    bandYtoX(y, 0);
                     break;
 
                     // Appear on band y, release on band 1
                     case 3:
+                    bandYtoX(y, 1);
                     break;
 
                     // Appear on band y, release on band 2
                     case 4:
+                    bandYtoX(y, 2);
                     break;
 
                     // Appear on band y, release on band 3
                     case 5:
+                    bandYtoX(y, 3);
                     break;
+
+                    #undef bandYtoX
                 }
 
                 // Scaled value at .b
