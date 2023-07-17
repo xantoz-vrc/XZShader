@@ -87,8 +87,10 @@ Shader "Xantoz/AudioLinkRing/RingCRT"
                         (tex.r <= cooledDownTime && al_beat[y] > _UpperThreshold[y])) {
                         col.r = _TimeBand[y];
                         col.b = tex.b + unity_DeltaTime.x;
+                        col.a = col.b;
                     } else if (tex.r > 0.0) {
                         col.r = tex.r - unity_DeltaTime.x;
+                        col.a = tex.a;
                     }
                     break;
 
@@ -99,8 +101,10 @@ Shader "Xantoz/AudioLinkRing/RingCRT"
                                 (tex.r <= cooledDownTime && al_beat[yy] > _UpperThreshold[yy])) {                                                                 \
                                 col.r = _TimeBand[yy];                                                                                                            \
                                 col.b = tex.b + unity_DeltaTime.x;                                                                                                \
+                                col.a = col.b;                                                                                                                    \
                             } else if (tex.r > 0.0) {                                                                                                             \
                                 col.r = tex.r - unity_DeltaTime.x;                                                                                                \
+                                col.a = tex.a;                                                                                                                    \
                             }                                                                                                                                     \
                         } while (0)
 

@@ -3,15 +3,15 @@ Shader "Xantoz/AudioLinkRing/RenderRing"
     Properties
     {
         [NoScaleOffset]_RingCRTTex ("RenderTexture", 2D) = "black" {}
-        // Normal triggers on normal attack, HoldUntilStop is held until "note" stops
-        [Enum(AudioLinkRingModeEnum)]_HoldMode ("Hold mode", Int) = 0
-
-        _InnerRadius ("Radius when smallest", Float) = 0.04
 
         _Tint ("Tint Color", Color) = (1, 1, 1, 1)
         [NoScaleOffset]_Tex ("Cubemap (HDR)", Cube) = "Cube" {}
         [Gamma] _Exposure ("Exposure", Range(0, 8)) = 0.5
+
+        _InnerRadius ("Radius when smallest", Float) = 0.04
         [Enum(AudioLinkBandEnum)]_Band ("Band", Int) = 0
+        [Enum(AudioLinkRingModeEnum)]_HoldMode ("Hold mode", Int) = 0
+        [IntRange]_Scene ("Ring look", Range(0,7)) = 7
     }
     SubShader
     {
@@ -37,13 +37,15 @@ Shader "Xantoz/AudioLinkRing/RenderRing"
             #pragma multi_compile_fog
 
             Texture2D<float4> _RingCRTTex;
-            uint _HoldMode;
-            float _InnerRadius;
             samplerCUBE _Tex;
             float4 _Tex_HDR;
             float4 _Tint;
             float _Exposure;
+
+            float _InnerRadius;
+            uint _HoldMode;
             uint _Band;
+            uint _Scene;
 
             struct appdata
             {
@@ -103,6 +105,14 @@ Shader "Xantoz/AudioLinkRing/RenderRing"
                 return _RingCRTTex[uint2(_HoldMode,_Band)].b;
             }
 
+            float getHeldCountMemory()
+            {
+                if (_HoldMode < 1) {
+                    return 0.0;
+                }
+                return _RingCRTTex[uint2(_HoldMode,_Band)].a;
+            }
+
             float4 sdgTorus(float3 p, float ra, float rb)
             {
                 float h = length(p.xz);
@@ -110,7 +120,52 @@ Shader "Xantoz/AudioLinkRing/RenderRing"
                     normalize(p*float3(h-ra,h,h-ra)) );
             }
 
-            float sceneSDF(float3 samplePoint) {
+            float sdBox(float3 p, float3 b)
+            {
+                float3 q = abs(p) - b;
+                return length(max(q,0.0)) + min(max(q.x,max(q.y,q.z)),0.0);
+            }
+
+            float sdHexPrism(float3 p, float2 h)
+            {
+                const float3 k = float3(-0.8660254, 0.5, 0.57735);
+                p = abs(p);
+                p.xy -= 2.0*min(dot(k.xy, p.xy), 0.0)*k.xy;
+                float2 d = float2(
+                    length(p.xy-float2(clamp(p.x,-k.z*h.x,k.z*h.x), h.x))*sign(p.y-h.x),
+                    p.z-h.y );
+                return min(max(d.x,d.y),0.0) + length(max(d,0.0));
+            }
+
+/*
+            // Wonk
+            float sceneSDFWonk(float3 samplePoint)
+            {
+                float val = getValue();
+                float count = getHeldCount();
+
+                const int nsamples = 256;
+                float angle = atan2(samplePoint.x, samplePoint.z);
+                float pcm_val = PCMConditional(
+                    AudioLinkPCMLerpWrap(((angle+UNITY_PI)/(2*UNITY_PI))*nsamples, nsamples),
+                    0);
+
+                // float3 p = samplePoint;
+                float3 p = samplePoint + float3(0,pcm_val/100,0);
+
+                // p = mul(rotateX(radians(90)), p);
+                // p = mul(rotateZ(angle), p);
+                p = (p+0.1)  - float3(cos(angle), 0, sin(angle))*0.1;
+
+
+                return min(sdHexPrism(p, float2(0.01 + count/100.0, (1.0 - val)/3.0)), sdgTorus(p, _InnerRadius + (1.0 - val)/3.0, 0.01 + count/100.0));
+                // return sdHexPrism(p, float2((1.0 - val)/3.0, 0.01 + count/100.0));
+                // return ;
+            }
+*/
+
+            float sceneSDF0(float3 samplePoint)
+            {
                 float val = getValue();
                 float count = getHeldCount();
 
@@ -123,7 +178,165 @@ Shader "Xantoz/AudioLinkRing/RenderRing"
                 float3 p = samplePoint + float3(0,pcm_val/100,0);
 
                 return sdgTorus(p, _InnerRadius + (1.0 - val)/3.0, 0.01 + count/100.0);
+            }
 
+            float sceneSDF1(float3 samplePoint)
+            {
+                float val = getValue();
+                float count = getHeldCount();
+
+                const int nsamples = 256;
+                float angle = atan2(samplePoint.x, samplePoint.z);
+                float pcm_val = PCMConditional(
+                    AudioLinkPCMLerpWrap(((angle+UNITY_PI)/(2*UNITY_PI))*nsamples, nsamples),
+                    0);
+                // float pcm_val = AudioLinkPCMLerpWrap(((angle+UNITY_PI)/(2*UNITY_PI))*nsamples, nsamples).b;
+
+                float radius = _InnerRadius + (1.0 - val)/3.0;
+
+                float3 p = samplePoint;
+
+                p -= float3(sin(angle), 0, cos(angle))*radius;
+                p = mul(rotateX(angle*count), p);
+                p = mul(rotateZ(angle*pcm_val), p);
+                return sdHexPrism(p, float2(0.01+count/200, 0.015));
+            }
+
+            float sceneSDF2(float3 samplePoint)
+            {
+                float val = getValue();
+                float count = getHeldCount();
+
+                const int nsamples = 256;
+                float angle = atan2(samplePoint.x, samplePoint.z);
+                float pcm_val = PCMConditional(
+                    AudioLinkPCMLerpWrap(((angle+UNITY_PI)/(2*UNITY_PI))*nsamples, nsamples),
+                    0);
+
+                float radius = _InnerRadius + (1.0 - val)/3.0 + ((count > 0.0) ? pcm_val/100 : 0);
+
+                float3 p = samplePoint;
+
+                p -= float3(sin(angle), 0, cos(angle))*radius;
+                p = mul(rotateY(angle), p);
+                return sdHexPrism(p, float2(0.01, 0.00001));
+            }
+
+            float sceneSDF3(float3 samplePoint)
+            {
+                float val = getValue();
+                float count = getHeldCountMemory();
+
+                const int nsamples = 256;
+                float angle = atan2(samplePoint.x, samplePoint.z);
+                float pcm_val = PCMConditional(
+                    AudioLinkPCMLerpWrap(((angle+UNITY_PI)/(2*UNITY_PI))*nsamples, nsamples),
+                    0);
+
+                float radius = _InnerRadius + (1.0 - val)/3.0;
+
+                float3 p = samplePoint;
+                p = mul(transpose(rotateY(angle)), p - float3(sin(angle), 0.0, cos(angle))*radius);
+                p = mul(rotateY(radians(90)), p);
+                p = mul(rotateZ(angle+count*2+pcm_val), p);
+                return sdHexPrism(p, float2(0.01, 0.01));
+            }
+
+            float sceneSDF4(float3 samplePoint)
+            {
+                float val = getValue();
+                float count = getHeldCount();
+                float count2 = getHeldCountMemory();
+
+                const int nsamples = 256;
+                float angle = atan2(samplePoint.x, samplePoint.z);
+                float index = ((angle+UNITY_PI)/(2*UNITY_PI))*nsamples*2;
+                float pcm_val = AudioLinkPCMLerpMirrorLR(index, nsamples);
+
+                float radius = _InnerRadius + (1.0 - val)/3.0 + ((count > 0.0) ? pcm_val/200 : 0.0);
+
+                float3 p = samplePoint;
+                p = mul(transpose(rotateY(angle)), p - float3(sin(angle), 0.0, cos(angle))*radius);
+                p = mul(rotateY(radians(90)), p);
+                p = mul(rotateZ(angle*count2*2), p);
+                return sdHexPrism(p, float2(0.01, 0.01));
+            }
+
+            float sceneSDF5(float3 samplePoint)
+            {
+                float val = getValue();
+                float count = getHeldCount();
+                float count2 = getHeldCountMemory();
+
+                const int nsamples = 256;
+                float angle = atan2(samplePoint.x, samplePoint.z);
+                float index = ((angle+UNITY_PI)/(2*UNITY_PI))*nsamples*2;
+                float pcm_val = AudioLinkPCMLerpMirrorLR(index, nsamples);
+                float radius = _InnerRadius + (1.0 - val)/3.0 + ((count > 0.0) ? pcm_val/200 : 0.0);
+
+                float3 p = samplePoint;
+                p = mul(transpose(rotateY(angle)), p - float3(sin(angle), 0.0, cos(angle))*radius);
+                p = mul(rotateY(radians(90)), p);
+                p = mul(rotateZ(angle*count2*2), p);
+                return sdBox(p, float3(0.01,0.01,0.01));
+            }
+
+            float sceneSDF6(float3 samplePoint) 
+            {
+                float val = getValue();
+                float count = getHeldCount();
+                float count2 = getHeldCountMemory();
+
+                const int nsamples = 256;
+                float angle = atan2(samplePoint.x, samplePoint.z);
+                float index = ((angle+UNITY_PI)/(2*UNITY_PI))*nsamples*2;
+                float pcm_val = AudioLinkPCMLerpMirrorLR(index, nsamples);
+
+                float radius = _InnerRadius + (1.0 - val)/3.0;
+
+                float3 p = samplePoint;
+                p = mul(transpose(rotateY(angle)), p - float3(sin(angle), 0.0, cos(angle))*radius);
+                p = mul(rotateZ(pcm_val*2), p);
+                return sdBox(p, float3(0.005,0.007,0.005+count2*0.005));
+            }
+
+            float sceneSDF7(float3 samplePoint)
+            {
+                float val = getValue();
+                float count = getHeldCount();
+                float count2 = getHeldCountMemory();
+
+                const int nsamples = 256;
+                float angle = atan2(samplePoint.x, samplePoint.z);
+                float index = ((angle+UNITY_PI)/(2*UNITY_PI))*nsamples*2;
+                float pcm_val = AudioLinkPCMLerpMirrorLR(index, nsamples);
+                float radius = _InnerRadius + (1.0 - val)/3.0;
+
+                float3 p = samplePoint;
+                p = mul(transpose(rotateY(angle)), p - float3(sin(angle), 0.0, cos(angle))*radius);
+                p = mul(rotateY(radians(90)+count2), p);
+                p = mul(rotateZ(angle*3), p);
+
+                return sdBox(p, float3(0.005, 0.007 + ((count > 0.0) ? pcm_val/100 : 0.0), 0.005));
+            }
+
+            // A possible optimization here would be to do the branching around
+            // shortestDistanceToSurface instead so we do not have as much
+            // branching inisde the loops
+            float sceneSDF(float3 samplePoint)
+            {
+                switch (_Scene) {
+                    case 0: return sceneSDF0(samplePoint); break;
+                    case 1: return sceneSDF1(samplePoint); break;
+                    case 2: return sceneSDF2(samplePoint); break;
+                    case 3: return sceneSDF3(samplePoint); break;
+                    case 4: return sceneSDF4(samplePoint); break;
+                    case 5: return sceneSDF5(samplePoint); break;
+                    case 6: return sceneSDF6(samplePoint); break;
+                    case 7: return sceneSDF7(samplePoint); break;
+                }
+
+                return sceneSDF0(samplePoint);
             }
 
             float shortestDistanceToSurface(float3 eye, float3 marchingDirection, float start, float end) {
