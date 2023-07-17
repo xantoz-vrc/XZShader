@@ -6,6 +6,8 @@ Shader "Xantoz/AudioLinkRing/RenderRing"
         // Normal triggers on normal attack, HoldUntilStop is held until "note" stops
         [Enum(Normal,0,HoldUntilStop,1)]_HoldMode ("Hold mode", Int) = 0
 
+        _InnerRadius ("Radius when smallest", Float) = 0.04
+
         _Tint ("Tint Color", Color) = (1, 1, 1, 1)
         [NoScaleOffset]_Tex ("Cubemap (HDR)", Cube) = "Cube" {}
         [Gamma] _Exposure ("Exposure", Range(0, 8)) = 0.5
@@ -36,6 +38,7 @@ Shader "Xantoz/AudioLinkRing/RenderRing"
 
             Texture2D<float4> _RingCRTTex;
             uint _HoldMode;
+            float _InnerRadius;
             samplerCUBE _Tex;
             float4 _Tex_HDR;
             float4 _Tint;
@@ -111,8 +114,6 @@ Shader "Xantoz/AudioLinkRing/RenderRing"
                 float val = getValue();
                 float count = getHeldCount();
 
-                // return sdgTorus(samplePoint, 0.001, 0.001 + (1.0 - val)/2.0);
-                return sdgTorus(samplePoint, 0.04 + (1.0 - val)/3.0, 0.01 + count/100.0);
                 const int nsamples = 256;
                 float angle = atan2(samplePoint.x, samplePoint.z);
                 float pcm_val = PCMConditional(
@@ -120,6 +121,8 @@ Shader "Xantoz/AudioLinkRing/RenderRing"
                     0);
 
                 float3 p = samplePoint + float3(0,pcm_val/100,0);
+
+                return sdgTorus(p, _InnerRadius + (1.0 - val)/3.0, 0.01 + count/100.0);
 
             }
 
