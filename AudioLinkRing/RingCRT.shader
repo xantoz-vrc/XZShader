@@ -13,7 +13,7 @@ Shader "Xantoz/AudioLinkRing/RingCRT"
         _UpperThreshold("Higher threshold", Vector) = (0.5, 0.5, 0.5, 0.5)
         // Think of this one as the time before a ring currently going outwards can be interrupted by a new one (TODO: consider supporting more than one outgoing ring)
         _CooldownBand ("Cooldown before can be retriggered (bass, low mid, high mid, treble)", Vector) = (0.2, 0.2, 0.2, 0.2)
-        // think of this one as speed
+        _Timeout ("Timeout for hold modes 2 to 5", Vector) = (5,5,5,5)
         _TimeBand("Time until released ring reaches largest size (bass, low mid, high mid, treble)", Vector) = (0.5, 0.5, 0.5, 0.5)
     }
 
@@ -41,6 +41,7 @@ Shader "Xantoz/AudioLinkRing/RingCRT"
             float4 _LowerThreshold;
             float4 _UpperThreshold;
             float4 _CooldownBand;
+            float4 _Timeout;
             float4 _TimeBand;
 
             float4 frag(v2f_customrendertexture i) : COLOR
@@ -91,15 +92,16 @@ Shader "Xantoz/AudioLinkRing/RingCRT"
                     }
                     break;
 
-                    #define bandYtoX(yy, xx)                                                           \
-                        do {                                                                           \
-                            if ((tex.r ==_TimeBand[yy] && al_beat[xx] < _UpperThreshold[yy]) ||        \
-                                (tex.r <= cooledDownTime && al_beat[yy] > _UpperThreshold[yy])) {      \
-                                col.r = _TimeBand[yy];                                                 \
-                                col.b = tex.b + unity_DeltaTime.x;                                     \
-                            } else if (tex.r > 0.0) {                                                  \
-                                col.r = tex.r - unity_DeltaTime.x;                                     \
-                            }                                                                          \
+                    // If tex.b goes above the timeout value we fall back to the same behavior as case 1 above
+                    #define bandYtoX(yy, xx)                                                                                                                      \
+                        do {                                                                                                                                      \
+                            if ((tex.r ==_TimeBand[yy] && ((tex.b < _Timeout[yy]) ? al_beat[xx] < _UpperThreshold[yy] : al_beat[yy] > _LowerThreshold[yy])) ||    \
+                                (tex.r <= cooledDownTime && al_beat[yy] > _UpperThreshold[yy])) {                                                                 \
+                                col.r = _TimeBand[yy];                                                                                                            \
+                                col.b = tex.b + unity_DeltaTime.x;                                                                                                \
+                            } else if (tex.r > 0.0) {                                                                                                             \
+                                col.r = tex.r - unity_DeltaTime.x;                                                                                                \
+                            }                                                                                                                                     \
                         } while (0)
 
                     // Appear on band y, release on band 0
