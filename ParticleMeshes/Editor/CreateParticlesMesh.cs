@@ -9,7 +9,7 @@ using UnityEditor;
 public class CreateParticlesMesh : MonoBehaviour
 {
     // Change to what sizes you need
-    private static readonly int[] sizes = { 1, 2, 4, 8, 1024 };
+    private static readonly int[] sizes = { 1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024 };
 
     [MenuItem("GameObject/Create Particles Triangle Mesh")]
     static void CreateTrianglesMesh()
