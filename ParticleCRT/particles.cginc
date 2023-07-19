@@ -2,7 +2,9 @@
 #define _PARTICLES_CGINC
 
 // Workaround for instabilities when _Time gets too large
+// #define TIME _Time
 #define TIME (_Time % (float4(3600/20, 3600, 3600*2, 3600*3)))
+// #define TIME (mod(_Time, float4(3600/20, 3600, 3600*2, 3600*3)))
 
 #define part float
 

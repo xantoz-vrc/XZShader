@@ -9,7 +9,7 @@ Material:
   m_PrefabAsset: {fileID: 0}
   m_Name: RenderParticles 3
   m_Shader: {fileID: 4800000, guid: 163a4dd3cc222a472ba4ed32cfdd3ca1, type: 3}
-  m_ShaderKeywords: 
+  m_ShaderKeywords: _INSTANCES_SIXTEEN
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 0
   m_DoubleSidedGI: 0
@@ -95,9 +95,11 @@ Material:
     - _GlossMapScale: 1
     - _Glossiness: 0.5
     - _GlossyReflections: 1
+    - _Instances: 4
     - _LengthScale: 3
     - _Metallic: 0
     - _Mode: 11
+    - _NumPoints: 256
     - _OcclusionStrength: 1
     - _Parallax: 0.02
     - _ParticleType: 1

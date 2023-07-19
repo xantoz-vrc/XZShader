@@ -22,6 +22,9 @@ Shader "Xantoz/ParticleCRT/RenderParticles"
     {
         [NoScale]_ParticleCRT ("Texture", 2D) = "white" {}
 
+        _NumPoints ("Number of vertices in input mesh", Int) = 256
+        [KeywordEnum(One,Two,Four,Eight,Sixteen,ThirtyTwo)]_Instances ("How many instances (multiple of above particles)", Int) = 2
+
         _PointSize ("Point Size", Float) = 0.1
         _AlphaMultiplier ("Alpha Multiplier (lower makes more transparent)", Range(0.0, 2.0)) = 0.5
         _Bounds ("Bounding Sphere (particles will not be shown but not killed)", Float) = 2.0
@@ -93,9 +96,15 @@ Shader "Xantoz/ParticleCRT/RenderParticles"
             Blend SrcAlpha One
 
             CGPROGRAM
+            #pragma multi_compile_local _INSTANCES_ONE  _INSTANCES_TWO  _INSTANCES_FOUR  _INSTANCES_EIGHT _INSTANCES_SIXTEEN _INSTANCES_THIRTYTWO
+            
+            
             float _PointSize;
             float _AlphaMultiplier;
             float _Bounds;
+
+            uint _Instances;
+            uint _NumPoints;
 
             float4 _ColorAdd;
 
@@ -125,7 +134,6 @@ Shader "Xantoz/ParticleCRT/RenderParticles"
             struct appdata
             {
                 float4 vertex : POSITION;
-	        uint vertexID : SV_VertexID;
 
                 UNITY_VERTEX_INPUT_INSTANCE_ID
             };
@@ -133,7 +141,6 @@ Shader "Xantoz/ParticleCRT/RenderParticles"
 	    struct v2g
 	    {
 		float4 vertex : POSITION0;
-		uint2 batchID : TEXCOORD0;
                 float3 worldScale : COLOR0_nointerpolation;
 
 		UNITY_VERTEX_OUTPUT_STEREO
@@ -158,8 +165,6 @@ Shader "Xantoz/ParticleCRT/RenderParticles"
                 UNITY_INITIALIZE_VERTEX_OUTPUT_STEREO(o);
 
                 o.vertex = v.vertex;
-                o.batchID = v.vertexID / 6; // Assumes we get a quad
-
                 o.worldScale = float3(
                     length(float3(unity_ObjectToWorld[0].x, unity_ObjectToWorld[1].x, unity_ObjectToWorld[2].x)), // scale x axis
                     length(float3(unity_ObjectToWorld[0].y, unity_ObjectToWorld[1].y, unity_ObjectToWorld[2].y)), // scale y axis
@@ -233,17 +238,26 @@ Shader "Xantoz/ParticleCRT/RenderParticles"
                     + float4(xy, 0.0, 0.0) * float4(scale, 1.0, 1.0));
             }
 
-            // 12 input points * 32 instances * 6 samples per instance = up to 2304 particles renderable (i practice limited by CRT size)
-            #define SAMPLECNT 12
-
-	    [instance(32)]
-            [maxvertexcount(SAMPLECNT*6)]
+            // Example:
+            // 1024 input points * 4 instances = 4096 particles
+#if defined(_INSTANCES_ONE)
+#elif defined(_INSTANCES_TWO)
+	    [instance(2)]
+#elif defined(_INSTANCES_FOUR)
+            [instance(4)]
+#elif defined(_INSTANCES_EIGHT)
+            [instance(8)]
+#elif defined(_INSTANCES_SIXTEEN)
+            [instance(16)]
+#else // _INSTANCES_THIRTYTWO
+            [instance(32)]
+#endif
+            [maxvertexcount(6)]
 	    void geom(point v2g IN[1], inout TriangleStream<g2f> stream, uint instanceID : SV_GSInstanceID, uint geoPrimID : SV_PrimitiveID)
             {
                 UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(IN[0]);
 
-		int batchID = IN[0].batchID;
-             	int operationID = geoPrimID * 32 + ( instanceID - batchID );
+             	uint idx = geoPrimID + instanceID * _NumPoints;
 
                 g2f o;
                 UNITY_INITIALIZE_OUTPUT(g2f, o);
@@ -259,89 +273,84 @@ Shader "Xantoz/ParticleCRT/RenderParticles"
 		const float2 uvBL = (BL + float2(1.0, 1.0))/2;
 		const float2 uvBR = (BR + float2(1.0, 1.0))/2;
 
-                for (int i = 0; i < SAMPLECNT; ++i)
-                {
-                    uint idx = i + operationID * SAMPLECNT;
+                int width, height;
+                _ParticleCRT.GetDimensions(width, height);
+                if (idx > uint(width)) {
+                    return;
+                }
 
-                    int width, height;
-                    _ParticleCRT.GetDimensions(width, height);
-                    if (idx > uint(width)) {
-                        break;
-                    }
+                float ttl = particle_getTTL(idx);
+                if (ttl <= 0) {
+                    return;
+                }
 
-                    float ttl = particle_getTTL(idx);
-                    if (ttl <= 0) {
-                        continue;
-                    }
+                part3 pointOut = particle_getPos(idx);
+                if (length(pointOut) > _Bounds) {
+                    return;
+                }
+                pointOut = rotate(pointOut);
+                float4 color = particle_getColor(idx);
+                o.color = color;
 
-                    part3 pointOut = particle_getPos(idx);
-                    if (length(pointOut) > _Bounds) {
-                        continue;
-                    }
-                    pointOut = rotate(pointOut);
-                    float4 color = particle_getColor(idx);
-                    o.color = color;
+                float pointSize = _PointSize;
+                if (_BlinkMode < 4) {
+                    float al_beat = AudioLinkData(uint2(0,_BlinkMode)).r;
+                    pointSize += al_beat*_PointSize*2;
+                } else {
+                    float al_beat[4] = {
+                        AudioLinkData(uint2(0,0)).r,
+                        AudioLinkData(uint2(0,1)).r,
+                        AudioLinkData(uint2(0,2)).r,
+                        AudioLinkData(uint2(0,3)).r
+                    };
 
-                    float pointSize = _PointSize;
-                    if (_BlinkMode < 4) {
-                        float al_beat = AudioLinkData(uint2(0,_BlinkMode)).r;
-                        pointSize += al_beat*_PointSize*2;
-                    } else {
-                        float al_beat[4] = {
-                            AudioLinkData(uint2(0,0)).r,
-                            AudioLinkData(uint2(0,1)).r,
-                            AudioLinkData(uint2(0,2)).r,
-                            AudioLinkData(uint2(0,3)).r
-                        };
-
-                        uint type = particle_getType(idx);
-                        for (uint i = 0; i < 4; ++i) {
-                            if ((type & (1 << i)) != 0) {
-                                pointSize += al_beat[i]*_PointSize*2;
-                            }
+                    uint type = particle_getType(idx);
+                    for (uint i = 0; i < 4; ++i) {
+                        if ((type & (1 << i)) != 0) {
+                            pointSize += al_beat[i]*_PointSize*2;
                         }
                     }
-
-                    float4 pointTL, pointTR, pointBL, pointBR;
-                    if (_ParticleType == 0) {
-                        pointTL = UnityObjectToClipPos(pointOut + billboard(TL*pointSize, IN[0].worldScale.xy));
-		        pointTR = UnityObjectToClipPos(pointOut + billboard(TR*pointSize, IN[0].worldScale.xy));
-		        pointBL = UnityObjectToClipPos(pointOut + billboard(BL*pointSize, IN[0].worldScale.xy));
-		        pointBR = UnityObjectToClipPos(pointOut + billboard(BR*pointSize, IN[0].worldScale.xy));
-                    } else {
-                        float3 speed = rotate(particle_getSpeed(idx))*_LengthScale;
-                        // pointTL = billboard3(pointOut + speed, TL*pointSize, IN[0].worldScale.xy);
-			// pointTR = billboard3(pointOut + speed, TR*pointSize, IN[0].worldScale.xy);
-		        // pointBL = billboard3(pointOut - speed, BL*pointSize, IN[0].worldScale.xy);
-			// pointBR = billboard3(pointOut - speed, BR*pointSize, IN[0].worldScale.xy);
-                        pointTL = billboard3(pointOut + speed, float2(-length(speed), -1)*pointSize, IN[0].worldScale.xy);
-		        pointTR = billboard3(pointOut + speed, float2(-length(speed),  1)*pointSize, IN[0].worldScale.xy);
-		        pointBL = billboard3(pointOut - speed, float2(length(speed),  -1)*pointSize, IN[0].worldScale.xy);
-			pointBR = billboard3(pointOut - speed, float2(length(speed),   1)*pointSize, IN[0].worldScale.xy);
-                    }
-
-                    o.vertex = pointTL; o.uv = uvTL;
-                    UNITY_TRANSFER_FOG(o, o.vertex);
-                    stream.Append(o);
-                    o.vertex = pointTR; o.uv = uvTR;
-                    UNITY_TRANSFER_FOG(o, o.vertex);
-                    stream.Append(o);
-                    o.vertex = pointBL; o.uv = uvBL;
-                    UNITY_TRANSFER_FOG(o, o.vertex);
-                    stream.Append(o);
-
-                    o.vertex = pointBL; o.uv = uvBL;
-                    UNITY_TRANSFER_FOG(o, o.vertex);
-                    stream.Append(o);
-                    o.vertex = pointBR; o.uv = uvBR;
-                    UNITY_TRANSFER_FOG(o, o.vertex);
-                    stream.Append(o);
-                    o.vertex = pointTR; o.uv = uvTR;
-                    UNITY_TRANSFER_FOG(o, o.vertex);
-                    stream.Append(o);
-
-                    stream.RestartStrip();
                 }
+
+                float4 pointTL, pointTR, pointBL, pointBR;
+                if (_ParticleType == 0) {
+                    pointTL = UnityObjectToClipPos(pointOut + billboard(TL*pointSize, IN[0].worldScale.xy));
+		    pointTR = UnityObjectToClipPos(pointOut + billboard(TR*pointSize, IN[0].worldScale.xy));
+		    pointBL = UnityObjectToClipPos(pointOut + billboard(BL*pointSize, IN[0].worldScale.xy));
+		    pointBR = UnityObjectToClipPos(pointOut + billboard(BR*pointSize, IN[0].worldScale.xy));
+                } else {
+                    float3 speed = rotate(particle_getSpeed(idx))*_LengthScale;
+                    // pointTL = billboard3(pointOut + speed, TL*pointSize, IN[0].worldScale.xy);
+		    // pointTR = billboard3(pointOut + speed, TR*pointSize, IN[0].worldScale.xy);
+		    // pointBL = billboard3(pointOut - speed, BL*pointSize, IN[0].worldScale.xy);
+		    // pointBR = billboard3(pointOut - speed, BR*pointSize, IN[0].worldScale.xy);
+                    pointTL = billboard3(pointOut + speed, float2(-length(speed), -1)*pointSize, IN[0].worldScale.xy);
+		    pointTR = billboard3(pointOut + speed, float2(-length(speed),  1)*pointSize, IN[0].worldScale.xy);
+		    pointBL = billboard3(pointOut - speed, float2(length(speed),  -1)*pointSize, IN[0].worldScale.xy);
+		    pointBR = billboard3(pointOut - speed, float2(length(speed),   1)*pointSize, IN[0].worldScale.xy);
+                }
+
+                o.vertex = pointTL; o.uv = uvTL;
+                UNITY_TRANSFER_FOG(o, o.vertex);
+                stream.Append(o);
+                o.vertex = pointTR; o.uv = uvTR;
+                UNITY_TRANSFER_FOG(o, o.vertex);
+                stream.Append(o);
+                o.vertex = pointBL; o.uv = uvBL;
+                UNITY_TRANSFER_FOG(o, o.vertex);
+                stream.Append(o);
+
+                o.vertex = pointBL; o.uv = uvBL;
+                UNITY_TRANSFER_FOG(o, o.vertex);
+                stream.Append(o);
+                o.vertex = pointBR; o.uv = uvBR;
+                UNITY_TRANSFER_FOG(o, o.vertex);
+                stream.Append(o);
+                o.vertex = pointTR; o.uv = uvTR;
+                UNITY_TRANSFER_FOG(o, o.vertex);
+                stream.Append(o);
+
+                stream.RestartStrip();
             }
 
             float linefn(float a)

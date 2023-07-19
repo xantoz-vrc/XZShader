@@ -91,7 +91,7 @@ GameObject:
   - component: {fileID: 3812105855409558688}
   - component: {fileID: 3812105855409558689}
   m_Layer: 0
-  m_Name: RenderParticles Orb
+  m_Name: AudioLink Particle Orb
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -119,7 +119,7 @@ MeshFilter:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 3812105855409558691}
-  m_Mesh: {fileID: 10210, guid: 0000000000000000e000000000000000, type: 0}
+  m_Mesh: {fileID: 4300000, guid: a9972fa42893eed4db3984548dc187c9, type: 2}
 --- !u!23 &3812105855409558689
 MeshRenderer:
   m_ObjectHideFlags: 0

@@ -133,6 +133,11 @@ PrefabInstance:
       propertyPath: m_Name
       value: AudioLink Particle Orb Variant3
       objectReference: {fileID: 0}
+    - target: {fileID: 376634456531390707, guid: c733e97266aa2d731924427be8475a50,
+        type: 3}
+      propertyPath: m_Mesh
+      value: 
+      objectReference: {fileID: 4300000, guid: 4ffd04026add2754880dbbdd3c9316c8, type: 2}
     - target: {fileID: 376634456531390716, guid: c733e97266aa2d731924427be8475a50,
         type: 3}
       propertyPath: m_RootOrder
