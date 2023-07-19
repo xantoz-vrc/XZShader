@@ -129,6 +129,7 @@ Material:
     - _Color: {r: 1, g: 1, b: 1, a: 1}
     - _Color1: {r: 1, g: 1, b: 1, a: 1}
     - _Color2: {r: 1, g: 1, b: 1, a: 1}
+    - _ColorAdd: {r: 0.5, g: 0.5, b: 0.3, a: 0}
     - _Color_Mul_Band0: {r: 0, g: 0, b: 0, a: 0}
     - _Color_Mul_Band1: {r: 0, g: 0, b: 0, a: 0}
     - _Color_Mul_Band2: {r: 0, g: 0, b: 0, a: 0}

@@ -26,6 +26,9 @@ Shader "Xantoz/ParticleCRT/RenderParticles"
         _AlphaMultiplier ("Alpha Multiplier (lower makes more transparent)", Range(0.0, 2.0)) = 0.5
         _Bounds ("Bounding Sphere (particles will not be shown but not killed)", Float) = 2.0
 
+        // Can be of use when the colors from the ParticleCRT are too dark
+        _ColorAdd ("Additive color to all particles", Color) = (0, 0, 0, 0)
+
         [Enum(Quads,0,QuadLines,1)]_ParticleType("Particle type", Int) = 0
         _LengthScale("How much to scale speed by when in QuadLines mode", Range(1,10)) = 5
 
@@ -93,6 +96,8 @@ Shader "Xantoz/ParticleCRT/RenderParticles"
             float _PointSize;
             float _AlphaMultiplier;
             float _Bounds;
+
+            float4 _ColorAdd;
 
             int _ParticleType;
             float _LengthScale;
@@ -350,7 +355,7 @@ Shader "Xantoz/ParticleCRT/RenderParticles"
 
 
                 float val = linefn(length((frac(i.uv.xy) - float2(0.5, 0.5))*2));
-                float4 color_in = i.color + float4(.5, .5, .3, 0);
+                float4 color_in = i.color + _ColorAdd;
                 float4 col = clamp(val*color_in, 0.0, 4.0);
                 col.a *= _AlphaMultiplier;
 
