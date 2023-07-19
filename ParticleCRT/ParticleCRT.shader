@@ -69,26 +69,26 @@ Shader "Xantoz/ParticleCRT/ParticleCRT"
                 bool doEmit = false;
                 if (al_beat[3] > 0.2) {
                     col = float4(.8, 0, .2, 1)*2 + colrandom;
-                    speed = random3(_Time.xyz)*0.01;
+                    speed = random3(TIME.xyz)*0.01;
                     acc = part3(0,1,0)*0.0001;
                     type = PARTICLE_TYPE_4;
                     doEmit = true;
                 } else if (al_beat[1] > 0.2) {
                     col = float4(.3, 3, .2, 1)*2 + colrandom;
-                    speed = random3(_Time.xyz)*0.01;
+                    speed = random3(TIME.xyz)*0.01;
                     acc = part3(0,-1,0)*0.0001;
                     type = PARTICLE_TYPE_2;
                     doEmit = true;
                 } else if (al_beat[0] > 0.4) {
                     col = float4(0, .8, .2, 1) + colrandom;
-                    speed = float3(sin(random(_Time.xy)*2*UNITY_PI), 0, cos(random(_Time.xy)*2*UNITY_PI))*0.01;
+                    speed = float3(sin(random(TIME.xy)*2*UNITY_PI), 0, cos(random(TIME.xy)*2*UNITY_PI))*0.01;
                     acc = -speed*0.05;
                     speed *= 2;
                     type = PARTICLE_TYPE_1;
                     doEmit = true;
                 } else if (al_beat[2] > 0.2) {
                     col = float4(0, .2, .8, 1) + colrandom;
-                    speed = float3(sin(random(_Time.xy)*2*UNITY_PI), -0.2, cos(random(_Time.xy)*2*UNITY_PI))*0.01;
+                    speed = float3(sin(random(TIME.xy)*2*UNITY_PI), -0.2, cos(random(TIME.xy)*2*UNITY_PI))*0.01;
                     acc = float3(0,0,0);
                     type = PARTICLE_TYPE_3;
                     doEmit = true;
@@ -107,7 +107,7 @@ Shader "Xantoz/ParticleCRT/ParticleCRT"
                         // no TTL. This slot is free
                         if (particle_getTTL(i) <= 0)
                         {
-                            particle_setPosTTL(o, stream, i, part3(0,0,0), random(_Time.xy)*4);
+                            particle_setPosTTL(o, stream, i, part3(0,0,0), random(TIME.xy)*4);
                             particle_setSpeedType(o, stream, i, speed, type);
                             particle_setAcc(o, stream, i, acc);
                             particle_setColor(o, stream, i, col);
@@ -175,13 +175,13 @@ Shader "Xantoz/ParticleCRT/ParticleCRT"
 
                     float3 attractorAcc = float3(0,0,0);
                     float3 attractorAcc2 = float3(0,0,0);
-                    float3 attractorPos = float3(_SinTime.x,_CosTime.x,_CosTime.y)*frac(_Time.x)*0.5;
+                    float3 attractorPos = float3(_SinTime.x,_CosTime.x,_CosTime.y)*frac(TIME.x)*0.5;
 
                     float3 attractorDir = attractorPos - particle_getPos(x);
                     float attractorScale = (length(attractorDir) == 0.0f) ? 0.0f : (1/sqrt(length(attractorDir)));
                     attractorAcc = attractorDir*attractorScale*0.003*(1-al_beat[0]*0.3);
                     if (particle_getColor(x).g > .5) {
-                        float3 attractorPos2 = -float3(_SinTime.x,_CosTime.x,_CosTime.y)*frac(_Time.x+0.5)*0.5;;
+                        float3 attractorPos2 = -float3(_SinTime.x,_CosTime.x,_CosTime.y)*frac(TIME.x+0.5)*0.5;;
                         float3 attractorDir2 = attractorPos2 - particle_getPos(x);
                         float attractorScale2 = (length(attractorDir2) == 0.0f) ? 0.0f : (1/sqrt(length(attractorDir2)));
                         attractorAcc = attractorDir2*attractorScale2*0.002*(0.5+al_beat[3]);
@@ -193,7 +193,7 @@ Shader "Xantoz/ParticleCRT/ParticleCRT"
                 case ROW_ACC:
                     // Update Acceleration
                     col.rgb = particle_getAcc(x);
-                    col.rgb += random3(_Time.xyz+x)*0.0001*al_beat[1]*unity_DeltaTime.x*165;
+                    col.rgb += random3(TIME.xyz+x)*0.0001*al_beat[1]*unity_DeltaTime.x*165;
                     break;
                 case ROW_COLOR:
                     // Update color (just keep the same color)

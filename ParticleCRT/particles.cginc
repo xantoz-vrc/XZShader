@@ -1,6 +1,9 @@
 #ifndef _PARTICLES_CGINC
 #define _PARTICLES_CGINC
 
+// Workaround for instabilities when _Time gets too large
+#define TIME (_Time % (float4(3600/20, 3600, 3600*2, 3600*3)))
+
 #define part float
 
 #define append(a,b) a##b
