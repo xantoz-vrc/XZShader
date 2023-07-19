@@ -81,4 +81,4 @@ Material:
     - _Threshold: {r: 0.3, g: 0.3, b: 0.3, a: 0.3}
     - _TimeBand: {r: 0.7, g: 0.7, b: 0.7, a: 0.7}
     - _Timeout: {r: 5, g: 5, b: 5, a: 5}
-    - _UpperThreshold: {r: 0.5, g: 0.5, b: 0.5, a: 0.5}
+    - _UpperThreshold: {r: 0.5, g: 0.5, b: 0.9, a: 0.9}
