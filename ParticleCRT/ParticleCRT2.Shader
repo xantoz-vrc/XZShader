@@ -142,7 +142,7 @@ Shader "Xantoz/ParticleCRT/ParticleCRT2"
                 switch (y) {
                 case ROW_POS_TTL:
                     // Update position & TTL
-                    col.rgb = particle_getPos(x) + particle_getSpeed(x)*(0.3 + al_beat[0]);
+                    col.rgb = particle_getPos(x) + particle_getSpeed(x)*(0.3 + al_beat[0])*unity_DeltaTime.x*165;
                     if (length(col.rgb) < _Bounds) {
                         col.a = (particle_getTTL(x) - unity_DeltaTime.x);
                     } else {
@@ -151,13 +151,13 @@ Shader "Xantoz/ParticleCRT/ParticleCRT2"
                     break;
                 case ROW_SPEED_TYPE:
                     // Update speed & Type
-                    col.rgb = particle_getSpeed(x) + particle_getAcc(x);
+                    col.rgb = particle_getSpeed(x) + particle_getAcc(x)*unity_DeltaTime.x*165;
                     col.w = col.w; // Type is kept unmodified
                     break;
                 case ROW_ACC:
                     // Update Acceleration
                     col.rgb = particle_getAcc(x);
-                    col.rgb += random3(TIME.xyz+x)*0.001*al_beat[1];
+                    col.rgb += random3(TIME.xyz+x)*0.001*al_beat[1]*unity_DeltaTime.x*165;
                     break;
                 case ROW_COLOR:
                     // Update color (just keep the same color)
