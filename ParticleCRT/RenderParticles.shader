@@ -90,8 +90,6 @@ Shader "Xantoz/ParticleCRT/RenderParticles"
             Blend SrcAlpha One
 
             CGPROGRAM
-            #pragma multi_compile_local _OUTMODE_QUAD _OUTMODE_POINT _OUTMODE_LINE
-
             float _PointSize;
             float _AlphaMultiplier;
             float _Bounds;
