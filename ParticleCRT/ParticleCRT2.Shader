@@ -131,6 +131,10 @@ Shader "Xantoz/ParticleCRT/ParticleCRT2"
                 uint x = i.globalTexcoord.x * _CustomRenderTextureWidth;
                 uint y = i.globalTexcoord.y * _CustomRenderTextureHeight;
 
+                if (particle_getTTL(x) <= 0.0)  {
+                    return float4(0,0,0,0);
+                }
+
                 float al_beat[4] = {
                     AudioLinkData(uint2(0,0)).r,
                     AudioLinkData(uint2(0,1)).r,
