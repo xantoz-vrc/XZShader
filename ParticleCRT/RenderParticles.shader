@@ -22,9 +22,8 @@ Shader "Xantoz/ParticleCRT/RenderParticles"
     {
         [NoScale]_ParticleCRT ("Texture", 2D) = "white" {}
 
-        [Header(Total particle count equals _NumPoints times _Instances times 8)]
-        _NumPoints ("Vertices in input mesh (must match)", Int) = 256
-        [KeywordEnum(One,Two,Four,Eight,Sixteen,ThirtyTwo)]_Instances ("How many instances (multiple of above particles)", Int) = 2
+        [Header(Total particle count equals number of input points in mesh times the instances times 8)]
+        [KeywordEnum(One,Two,Four,Eight,Sixteen,ThirtyTwo)]_Instances ("How many instances", Int) = 2
 
         _PointSize ("Point Size", Float) = 0.1
         _AlphaMultiplier ("Alpha Multiplier (lower makes more transparent)", Range(0.0, 2.0)) = 0.5
@@ -241,23 +240,25 @@ Shader "Xantoz/ParticleCRT/RenderParticles"
             // Example:
             // 64 input points * 8 instances * 8 loops = 4096 particles
 #if defined(_INSTANCES_ONE)
+            #define NUMINSTANCES 1
 #elif defined(_INSTANCES_TWO)
-	    [instance(2)]
+            #define NUMINSTANCES 2
 #elif defined(_INSTANCES_FOUR)
-            [instance(4)]
+            #define NUMINSTANCES 4
 #elif defined(_INSTANCES_EIGHT)
-            [instance(8)]
+            #define NUMINSTANCES 8
 #elif defined(_INSTANCES_SIXTEEN)
-            [instance(16)]
+            #define NUMINSTANCES 16
 #else // _INSTANCES_THIRTYTWO
-            [instance(32)]
+            #define NUMINSTANCES 32
 #endif
+            [instance(NUMINSTANCES)]
             [maxvertexcount(6*LOOPS)]
 	    void geom(point v2g IN[1], inout TriangleStream<g2f> stream, uint instanceID : SV_GSInstanceID, uint geoPrimID : SV_PrimitiveID)
             {
                 UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(IN[0]);
 
-             	uint operationID = geoPrimID * LOOPS + instanceID * _NumPoints * LOOPS;
+             	uint operationID = geoPrimID*NUMINSTANCES + instanceID;
 
                 g2f o;
                 UNITY_INITIALIZE_OUTPUT(g2f, o);
@@ -276,8 +277,9 @@ Shader "Xantoz/ParticleCRT/RenderParticles"
                 int width, height;
                 _ParticleCRT.GetDimensions(width, height);
 
+                [unroll]
                 for (int i = 0; i < LOOPS; ++i) {
-                    uint idx = i + operationID;
+                    uint idx = i + operationID * LOOPS;
 
                     if (idx > uint(width)) {
                         break;
