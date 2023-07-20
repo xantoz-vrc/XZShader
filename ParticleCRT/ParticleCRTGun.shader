@@ -46,14 +46,6 @@ Shader "Xantoz/ParticleCRT/ParticleCRTGun"
                 bool outOfSlots;
             };
 
-            struct emit_parameters
-            {
-                part3 pos; part ttl;
-                part3 spd; uint type;
-                part3 acc;
-                part4 col;
-            };
-
             emit_context make_emit_context(uint start, uint end)
             {
                 emit_context ctx = {
@@ -63,6 +55,22 @@ Shader "Xantoz/ParticleCRT/ParticleCRTGun"
                     false,
                 };
                 return ctx;
+            }
+
+            struct emit_parameters
+            {
+                part3 pos; part ttl;
+                part3 spd; uint type;
+                part3 acc;
+                part4 col;
+            };
+
+            emit_parameters make_emit_parameters()
+            {
+                emit_parameters p;
+                p.ttl = 0; p.type = 0;
+                p.pos = 0; p.spd = 0; p.acc = 0; p.col = 0;
+                return p;
             }
 
             void emit_particle(
@@ -123,6 +131,8 @@ Shader "Xantoz/ParticleCRT/ParticleCRTGun"
                     AudioLinkData(uint2(0,3)).r
                 };
 
+                emit_parameters p = make_emit_parameters();
+
                 float3 ran = random3(float3(al_beat[1], al_beat[2], al_beat[3]));
                 float4 colrandom = float4(0.5*ran, 1);
                 if (al_beat[0] > 0.2) {
@@ -132,18 +142,29 @@ Shader "Xantoz/ParticleCRT/ParticleCRTGun"
                     const uint start = geoPrimID*count;
                     const uint end = start + count;
 
-                    emit_parameters p;
                     p.col = float4(0, 0, .8, 1)*2 + colrandom;
                     for (uint i = start; i < end; ++i) {
-                        float angle = i * (2*UNITY_PI/pcount);
+                        float angle = float(i) * (2*UNITY_PI/float(pcount));
 
-                        p.ttl = 4; p.type = PARTICLE_TYPE_1;
-                        p.pos = part3(cos(angle), sin(angle), 0);
-                        p.spd = part3(0, 0, -0.1);
-                        p.acc = part3(0, 0, 0);
+                        p.ttl = 8; p.type = PARTICLE_TYPE_1;
+                        p.pos = part3(cos(angle), sin(angle), 0)*0.05;
+                        p.spd = part3(sin(angle), -cos(angle), 0) + part3(0, 0, 2.0);
+                        p.acc = -part3(sin(angle), -cos(angle), 0);
 
                         emit_particle(o, stream, ctx, p);
                     }
+                }
+
+                if (al_beat[3] > 0.2) {
+                    float angle = random(_Time.xy)*UNITY_PI + UNITY_PI*geoPrimID;
+
+                    p.col = float4(.8, 0, 0, 1)*2 + colrandom;
+                    p.ttl = 4; p.type = PARTICLE_TYPE_4;
+                    p.pos = part3(cos(angle), sin(angle), 0)*0.01;
+                    p.spd = part3(0, 0, 2.0);
+                    p.acc = part3(0, 0, 20.0);
+                    
+                    emit_particle(o, stream, ctx, p);
                 }
 	    }
 
@@ -164,6 +185,10 @@ Shader "Xantoz/ParticleCRT/ParticleCRTGun"
 	    {
                 uint x = i.globalTexcoord.x * _CustomRenderTextureWidth;
                 uint y = i.globalTexcoord.y * _CustomRenderTextureHeight;
+
+                if (particle_getTTL(x) <= 0.0)  {
+                    return float4(0,0,0,0);
+                }
 
                 float3 t = float3(
                     AudioLinkGetChronoTime(1, 0),
@@ -194,33 +219,38 @@ Shader "Xantoz/ParticleCRT/ParticleCRTGun"
                     break;
                 case ROW_SPEED_TYPE:
                     // Update speed & Type
-/*
-                    float3 attractorAcc = float3(0,0,0);
-                    float3 attractorPos = float3(_SinTime.x,_CosTime.x,_CosTime.y)*frac(TIME.x)*0.5;
-                    float3 attractorDir = attractorPos - particle_getPos(x);
-                    float attractorScale = (length(attractorDir) == 0.0f) ? 0.0f : (1/sqrt(length(attractorDir)));
-                    attractorAcc = attractorDir*attractorScale*0.003*(1-al_beat[3]*0.3)*0.5;
 
-                    if (particle_getColor(x).g > .5) {
-                        float attractor2Radius = (.2 + .5*al_beat[0]);
-                        float3 attractor2Pos = -float3(_SinTime.x,_CosTime.x,_CosTime.y)*frac(TIME.x+0.5)*0.5;;
+                    float3 particlePos = particle_getPos(x);
+                    float3 particleSpeed = particle_getSpeed(x);
+                    float4 particleCol = particle_getColor(x);
+                    float3 acc = particle_getAcc(x);
 
-                        float attractor2Dist = length(particle_getPos(x)) - attractor2Radius;
-                        float3 attractor2Dir = normalize(attractor2Pos - particle_getPos(x))*attractor2Dist;
-                        float3 attractor2Length = length(attractor2Dir);
-                        float attractor2Scale = (1/sqrt(attractor2Length));
-                        attractorAcc *= 0.5;
-                        attractorAcc += attractor2Dir*attractor2Scale*0.004*0.5;
+                    // Attract blue particles towards a line in the centre
+                    if (particleCol.b > 1) { 
+                        float3 attractorPos = float3(0, 0, particlePos.z);
+                        float3 attractorDir = attractorPos - particlePos;
+                        float attractorScale = (length(attractorDir) == 0.0f) ? 0.0f : (1/sqrt(length(attractorDir)));
+                        acc += attractorDir*attractorScale*100*al_beat[0];
                     }
-*/
-                    // col.rgb = particle_getSpeed(x) + (particle_getAcc(x) + attractorAcc)*unity_DeltaTime.x;
-                    col.rgb = particle_getSpeed(x) + particle_getAcc(x);
+
+                    // Attract red particles towards a line in the centre
+                    if (particleCol.r > 1) { 
+                        float3 attractorPos = float3(0, 0, particlePos.z);
+                        float3 attractorDir = attractorPos - particlePos;
+                        float attractorScale = (length(attractorDir) == 0.0f) ? 0.0f : (1/sqrt(length(attractorDir)));
+                        acc = attractorDir*attractorScale*30*al_beat[3];
+                    }
+                    
+                    col.rgb = particleSpeed + acc*unity_DeltaTime.x;
                     col.w = col.w; // Type is kept unmodified
                     break;
                 case ROW_ACC:
                     // Update Acceleration
+
                     col.rgb = particle_getAcc(x);
-                    col.rgb += random3(TIME.xyz+x)*0.0001*al_beat[1]*unity_DeltaTime.x;
+                    part3 add = random3(TIME.xyz+x)*al_beat[1]*unity_DeltaTime.x*10;
+                    add.z = 0;
+                    col.rgb += add;
                     break;
                 case ROW_COLOR:
                     // Update color (just keep the same color)
@@ -229,6 +259,7 @@ Shader "Xantoz/ParticleCRT/ParticleCRTGun"
                 default:
                     break;
                 }
+
                 return col;
 	    }
 	    ENDCG

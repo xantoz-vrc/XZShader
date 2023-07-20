@@ -7,9 +7,9 @@ Material:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: RenderParticles 3
+  m_Name: RenderParticles Gun
   m_Shader: {fileID: 4800000, guid: 163a4dd3cc222a472ba4ed32cfdd3ca1, type: 3}
-  m_ShaderKeywords: _INSTANCES_EIGHT
+  m_ShaderKeywords: _INSTANCES_SIXTEEN
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 0
   m_DoubleSidedGI: 0
@@ -56,14 +56,14 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _ParticleCRT:
-        m_Texture: {fileID: 8600000, guid: dff75048ff7de8a46a57a0521fc66083, type: 2}
+        m_Texture: {fileID: 8600000, guid: 59defbeecdbe82abf9e59f2707b0c0ef, type: 2}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     m_Floats:
     - _AlphaMultiplier: 0.5
     - _Amplitude_Scale: 2
     - _BlinkMode: 0
-    - _Bounds: 2
+    - _Bounds: 5
     - _BumpScale: 1
     - _ChronoRot_Band0: 4
     - _ChronoRot_Band1: 3
@@ -95,15 +95,15 @@ Material:
     - _GlossMapScale: 1
     - _Glossiness: 0.5
     - _GlossyReflections: 1
-    - _Instances: 3
-    - _LengthScale: 3
+    - _Instances: 4
+    - _LengthScale: 0.06
     - _Metallic: 0
     - _Mode: 11
     - _NumPoints: 64
     - _OcclusionStrength: 1
     - _Parallax: 0.02
     - _ParticleType: 1
-    - _PointSize: 0.03
+    - _PointSize: 0.005
     - _RotateAxis: 1
     - _Rotation: 0
     - _Rotation_Reversing: 0
