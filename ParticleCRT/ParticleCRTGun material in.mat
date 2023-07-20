@@ -7,7 +7,7 @@ Material:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: ParticleCRTGun
+  m_Name: ParticleCRTGun material in
   m_Shader: {fileID: 4800000, guid: e1eefe63900699e548e689b542136538, type: 3}
   m_ShaderKeywords: 
   m_LightmapFlags: 4
