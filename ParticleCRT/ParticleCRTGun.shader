@@ -78,6 +78,9 @@ Shader "Xantoz/ParticleCRT/ParticleCRTGun"
                         particle_setSpeedType(o, stream, ctx.idx, p.spd, p.type);
                         particle_setAcc(o, stream, ctx.idx, p.acc);
                         particle_setColor(o, stream, ctx.idx, p.col);
+
+                        // Make sure next emit_particle call does not clobber this particle (_SelfTexture2D doesn't change until next buffer swap)
+                        ++ctx.idx;
                         return;
                     }
                     ++ctx.idx;
@@ -95,6 +98,8 @@ Shader "Xantoz/ParticleCRT/ParticleCRTGun"
                     particle_setSpeedType(o, stream, ctx.idx, p.spd, p.type);
                     particle_setAcc(o, stream, ctx.idx, p.acc);
                     particle_setColor(o, stream, ctx.idx, p.col);
+
+                    ++ctx.idx;
                 }
             }
 
