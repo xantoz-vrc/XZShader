@@ -98,28 +98,28 @@ part4 particle_emit_frag(particle_emit_g2f IN) : SV_Target
 
 void particle_setPosTTL(inout particle_emit_g2f o, inout PointStream<particle_emit_g2f> stream, uint idx, part3 pos, part ttl)
 {
-    o.vertex = FlexCRTCoordinateOut(uint2(idx,0));
+    o.vertex = FlexCRTCoordinateOut(uint2(idx,ROW_POS_TTL));
     o.data = part4(pos, ttl);
     stream.Append(o);
 }
 
 void particle_setSpeedType(inout particle_emit_g2f o, inout PointStream<particle_emit_g2f> stream, uint idx, part3 speed, uint type)
 {
-    o.vertex = FlexCRTCoordinateOut(uint2(idx,1));
+    o.vertex = FlexCRTCoordinateOut(uint2(idx,ROW_SPEED_TYPE));
     o.data = part4(speed, type);
     stream.Append(o);
 }
 
 void particle_setAcc(inout particle_emit_g2f o, inout PointStream<particle_emit_g2f> stream, uint idx, part3 acc)
 {
-    o.vertex = FlexCRTCoordinateOut(uint2(idx,2));
+    o.vertex = FlexCRTCoordinateOut(uint2(idx,ROW_ACC));
     o.data = part4(acc, 0);
     stream.Append(o);
 }
 
 void particle_setColor(inout particle_emit_g2f o, inout PointStream<particle_emit_g2f> stream, uint idx, part4 color)
 {
-    o.vertex = FlexCRTCoordinateOut(uint2(idx,3));
+    o.vertex = FlexCRTCoordinateOut(uint2(idx,ROW_COLOR));
     o.data = color;
     stream.Append(o);
 }
