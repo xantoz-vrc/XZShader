@@ -138,6 +138,10 @@ Shader "Xantoz/ParticleCRT/ParticleCRT"
                 uint x = i.globalTexcoord.x * _CustomRenderTextureWidth;
                 uint y = i.globalTexcoord.y * _CustomRenderTextureHeight;
 
+                if (particle_getTTL(x) <= 0.0)  {
+                    return float4(0,0,0,0);
+                }
+
                 float3 t = float3(
                     AudioLinkGetChronoTime(1, 0),
                     AudioLinkGetChronoTime(2, 2),
