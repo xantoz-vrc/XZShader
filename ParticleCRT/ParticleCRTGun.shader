@@ -99,7 +99,8 @@ Shader "Xantoz/ParticleCRT/ParticleCRTGun"
                 if (_AlwaysEmit) {
                     // Sets the outOfSlots flags so that subsequent calls to emit_particle will overwrite an existing particle
                     ctx.outOfSlots = true;
-                    ctx.idx = ctx.start;
+                    // Randomize starting point
+                    ctx.idx = ctx.start + uint(random(float2(_Time.x, unity_DeltaTime.x)) * (ctx.start - ctx.end));
 
                     // Overwrites the first particle directly here
                     particle_setPosTTL(o, stream, ctx.idx, p.pos, p.ttl);
@@ -155,6 +156,27 @@ Shader "Xantoz/ParticleCRT/ParticleCRTGun"
                     }
                 }
 
+                if (al_beat[1] > 0.2) {
+                    const uint pcount = 8;
+                    const uint count = pcount/GEOPRIMID_COUNT;
+                    const uint start = geoPrimID*count;
+                    const uint end = start + count;
+
+                    p.col = float4(0, .8, 0, 1)*2 + colrandom;
+                    for (uint i = start; i < end; ++i) {
+                        float angle = float(i) * (2*UNITY_PI/float(pcount));
+
+                        p.ttl = 4; p.type = PARTICLE_TYPE_1;
+                        p.pos = part3(cos(angle), sin(angle), 0)*0.01;
+                        p.spd = part3(sin(angle), -cos(angle), 0) + part3(0, 0, 2.0);
+                        // p.acc = 0;
+                        // p.acc = -part3(sin(angle), -cos(angle), 0)*10;
+                        p.acc = -part3(sin(angle)*colrandom.r*5, -cos(angle)*colrandom.g*5, 0)*5;
+
+                        emit_particle(o, stream, ctx, p);
+                    }
+                }
+
                 if (al_beat[3] > 0.2) {
                     float angle = random(_Time.xy)*UNITY_PI + UNITY_PI*geoPrimID;
 
@@ -162,8 +184,8 @@ Shader "Xantoz/ParticleCRT/ParticleCRTGun"
                     p.ttl = 4; p.type = PARTICLE_TYPE_4;
                     p.pos = part3(cos(angle), sin(angle), 0)*0.01;
                     p.spd = part3(0, 0, 2.0);
-                    p.acc = part3(0, 0, 20.0);
-                    
+                    p.acc = part3(0, 0, 0);
+
                     emit_particle(o, stream, ctx, p);
                 }
 	    }
@@ -205,58 +227,81 @@ Shader "Xantoz/ParticleCRT/ParticleCRTGun"
 
                 part4 col = part4(0,0,0,1);
                 switch (y) {
-                case ROW_POS_TTL:
-                    // Update position & TTL
-                    float3 speed;
-                    if (particle_getColor(x).g > .5) {
-                        speed = particle_getSpeed(x)*(0.3 + 0.5*al_beat[2]);
-                    } else {
-                        speed = particle_getSpeed(x)*(0.3 + 0.5*al_beat[0]);
+                    case ROW_POS_TTL: {
+                        // Update position & TTL
+                        float3 speed;
+
+                        if (particle_getColor(x).g > .5) {
+                            speed = particle_getSpeed(x)*(0.3 + 0.5*al_beat[2]);
+                        } else {
+                            speed = particle_getSpeed(x)*(0.3 + 0.5*al_beat[0]);
+                        }
+
+                        // speed = particle_getSpeed(x)*0.5;
+
+                        col.rgb = particle_getPos(x) + speed*unity_DeltaTime.x;
+                        col.a = (particle_getTTL(x) - unity_DeltaTime.x);
                     }
-                    col.rgb = particle_getPos(x) + speed*unity_DeltaTime.x;
-                    col.a = (particle_getTTL(x) - unity_DeltaTime.x);
-
                     break;
-                case ROW_SPEED_TYPE:
-                    // Update speed & Type
 
-                    float3 particlePos = particle_getPos(x);
-                    float3 particleSpeed = particle_getSpeed(x);
-                    float4 particleCol = particle_getColor(x);
-                    float3 acc = particle_getAcc(x);
+                    case ROW_SPEED_TYPE: {
+                        // Update speed & Type
 
-                    // Attract blue particles towards a line in the centre
-                    if (particleCol.b > 1) { 
-                        float3 attractorPos = float3(0, 0, particlePos.z);
-                        float3 attractorDir = attractorPos - particlePos;
-                        float attractorScale = (length(attractorDir) == 0.0f) ? 0.0f : (1/sqrt(length(attractorDir)));
-                        acc += attractorDir*attractorScale*100*al_beat[0];
+                        float3 particlePos = particle_getPos(x);
+                        float3 particleSpeed = particle_getSpeed(x);
+                        float4 particleCol = particle_getColor(x);
+                        float3 acc = particle_getAcc(x);
+
+                        // Attract blue particles towards a line in the centre
+                        if (particleCol.b > 1) {
+                            float3 attractorPos = float3(0, 0, particlePos.z);
+                            float3 attractorDir = attractorPos - particlePos;
+                            float attractorScale = (length(attractorDir) == 0.0f) ? 0.0f : (1/sqrt(length(attractorDir)));
+                            acc += attractorDir*attractorScale*100*al_beat[0];
+
+                            // acc += attractorDir*attractorScale*40*(1 - al_beat[3]);
+
+                        }
+
+                        // Attract red particles towards a line in the centre
+                        if (particleCol.r > 1) {
+                            float3 attractorPos = float3(0, 0, particlePos.z);
+                            float3 attractorDir = attractorPos - particlePos;
+                            float attractorScale = (length(attractorDir) == 0.0f) ? 0.0f : (1/sqrt(length(attractorDir)));
+                            // acc = attractorDir*attractorScale*30*al_beat[3];
+                            acc = attractorDir*attractorScale*100*al_beat[0];
+                        }
+
+                        if (particleCol.g > 1) {
+                            float3 attractorPos = float3(0, 0, particlePos.z);
+                            float3 attractorDir = attractorPos - particlePos;
+                            float attractorScale = (length(attractorDir) == 0.0f) ? 0.0f : (1/sqrt(length(attractorDir)));
+                            acc += attractorDir*attractorScale*50*(1 - al_beat[3]);
+                        }
+
+                        col.rgb = particleSpeed + acc*unity_DeltaTime.x;
+                        col.w = col.w; // Type is kept unmodified
                     }
+                    break;
 
-                    // Attract red particles towards a line in the centre
-                    if (particleCol.r > 1) { 
-                        float3 attractorPos = float3(0, 0, particlePos.z);
-                        float3 attractorDir = attractorPos - particlePos;
-                        float attractorScale = (length(attractorDir) == 0.0f) ? 0.0f : (1/sqrt(length(attractorDir)));
-                        acc = attractorDir*attractorScale*30*al_beat[3];
+                    case ROW_ACC: {
+                        // Update Acceleration
+
+                        col.rgb = particle_getAcc(x);
+
+                        part3 add = random3(TIME.xyz+x)*al_beat[1]*unity_DeltaTime.x*10;
+                        add.z = 0;
+                        col.rgb += add;
                     }
-                    
-                    col.rgb = particleSpeed + acc*unity_DeltaTime.x;
-                    col.w = col.w; // Type is kept unmodified
                     break;
-                case ROW_ACC:
-                    // Update Acceleration
 
-                    col.rgb = particle_getAcc(x);
-                    part3 add = random3(TIME.xyz+x)*al_beat[1]*unity_DeltaTime.x*10;
-                    add.z = 0;
-                    col.rgb += add;
+                    case ROW_COLOR: {
+                        // Update color (just keep the same color)
+                        col.rgb = particle_getColor(x);
+                    }
                     break;
-                case ROW_COLOR:
-                    // Update color (just keep the same color)
-                    col.rgb = particle_getColor(x);
-                    break;
-                default:
+
+                    default:
                     break;
                 }
 
