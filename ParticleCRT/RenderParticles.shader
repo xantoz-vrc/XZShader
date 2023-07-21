@@ -33,7 +33,7 @@ Shader "Xantoz/ParticleCRT/RenderParticles"
         _ColorAdd ("Additive color to all particles", Color) = (0, 0, 0, 0)
 
         [Enum(Quads,0,QuadLines,1)]_ParticleType("Particle type", Int) = 0
-        _LengthScale("How much to scale speed by when in QuadLines mode", Range(1,10)) = 5
+        _LengthScale("How much to scale speed by when in QuadLines mode", Range(0,10)) = 5
 
         // Particle Type blinks based on particle type (set by the CRT, but currently it is broken)
         [Enum(Bass,0,LowMid,1,HighMid,2,Treble,3,ParticleType,4)] _BlinkMode ("Blink on which band", Int) = 0
