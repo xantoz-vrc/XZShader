@@ -11,6 +11,8 @@ Shader "Xantoz/XZAudioLinkBlobMarchingCubes"
         _K("k-factor", Float) = 2.5
         _SceneScale("Scene scale", Float) = 0.03
 
+        [ToggleUI]_DisableAudioLink("Disable audio link (force fallback)", Int) = 0
+
         [Space(10)]
         [Header(Audiolink)]
         _Amplitude_Scale ("AudioLink PCM Amplitude Scale", Range(0.0, 2.0)) = 1.0  // Scale amplitude of PCM
@@ -34,6 +36,8 @@ Shader "Xantoz/XZAudioLinkBlobMarchingCubes"
     #define MAX_DIST 100.0
     #define EPSILON 0.001
 
+    #define TIME _Time.y
+
     ENDCG
 
     SubShader
@@ -55,6 +59,7 @@ Shader "Xantoz/XZAudioLinkBlobMarchingCubes"
             float _Exposure;
             float _K;
             float _SceneScale;
+            uint _DisableAudioLink;
 
             float _Amplitude_Scale;
 
@@ -115,11 +120,21 @@ Shader "Xantoz/XZAudioLinkBlobMarchingCubes"
             float sceneSDF(float3 samplePoint) {
                 float ballRadius = 1.0;
                 float balls = MAX_DIST;
-                [loop]
-                for (uint i = 0; i < SAMPLECNT; ++i) {
-                    float4 pcm = AudioLinkPCMData(i*STEP)*0.5*_Amplitude_Scale;
-                    float2 pcm_lr = PCMToLR(pcm);
-                    balls = smin(balls, sphereSDF(samplePoint + float3(pcm_lr.x, pcm_lr.y, pcm.g), ballRadius*_SceneScale), _K*_SceneScale);
+                if (!_DisableAudioLink && AudioLinkIsAvailable()) {
+                    [loop]
+                    for (uint i = 0; i < SAMPLECNT; ++i) {
+                        float4 pcm = AudioLinkPCMData(i*STEP)*0.5*_Amplitude_Scale;
+                        float2 pcm_lr = PCMToLR(pcm);
+                        balls = smin(balls, sphereSDF(samplePoint + float3(pcm_lr.x, pcm_lr.y, pcm.g), ballRadius*_SceneScale), _K*_SceneScale);
+                    }
+                } else {
+                    float t = TIME / 3.0 + 10500.0;
+                    for (float i = 1.0; i < 4.0*2; i += 1.3) {
+                        for (float j = 1.0; j < 4.0*2; j += 1.3) {
+                            float cost = cos(t * j);
+                            balls = smin(balls, sphereSDF(samplePoint + float3(sin(t * i) * j, cost * i, cost * j)*_SceneScale, ballRadius*_SceneScale), _K*_SceneScale);
+                        }
+                    }
                 }
                 return balls;
             }
