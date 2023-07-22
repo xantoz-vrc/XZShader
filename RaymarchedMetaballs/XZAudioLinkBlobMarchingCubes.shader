@@ -73,14 +73,10 @@ Shader "Xantoz/XZAudioLinkBlobMarchingCubes"
                 UNITY_VERTEX_OUTPUT_STEREO
             };
 
-
             struct g2f
             {
                 float4 vertex : SV_POSITION; // Clip space pos
-                // float2 uv : TEXCOORD0;
-                // float3 ray_origin : TEXCOORD1;
                 float3 vert_position : TEXCOORD2; // Object space pos
-                // float3 normal : TEXCOORD3;
 
                 UNITY_FOG_COORDS(6)
                 UNITY_VERTEX_OUTPUT_STEREO
@@ -94,7 +90,6 @@ Shader "Xantoz/XZAudioLinkBlobMarchingCubes"
                 UNITY_INITIALIZE_OUTPUT(v2g, o);
                 UNITY_INITIALIZE_VERTEX_OUTPUT_STEREO(o);
 
-                // o.vertex = UnityObjectToClipPos(v.vertex);
                 o.vertex = 0.0;
 
                 return o;
@@ -129,23 +124,20 @@ Shader "Xantoz/XZAudioLinkBlobMarchingCubes"
                 return balls;
             }
 
-            #define LOOPS 8
+            #define LOOPS 2
             #define NUMINSTANCES 32
 
             #define GRIDSIZE 32
-            #define HGRIDSIZE 16
+            #define HGRIDSIZE (GRIDSIZE/LOOPS)
             #define SCALE (1.0f/GRIDSIZE)
-            // #define SCALE 1.0
 
-            // #define isoLevel 0.5f
             #define isoLevel 0.0f
-            // #define isoLevel 0.1f
 
             float3 Interp(float3 edgeVertex1, float valueAtVertex1, float3 edgeVertex2, float valueAtVertex2) {
                 return (edgeVertex1 + (isoLevel - valueAtVertex1) * (edgeVertex2 - edgeVertex1) / (valueAtVertex2 - valueAtVertex1));
             }
 
-            // For now hard-coded for the case of 128 points in * 32 instances * 8 loops = 32768 cubes = 32x32x32 grid
+            // For now hard-coded for the case of 128 points in * 32 instances * 2x2x2 loops = 32768 cubes = 32x32x32 grid
             //
             // In theory we could do up to 25 loops with maxvertexcount(128), since one cube can have up to 5 vertices
             // out (see the triangle table), but 8 is easier to work with for now, and cleanly breaks up into a 2x2x2
@@ -158,60 +150,32 @@ Shader "Xantoz/XZAudioLinkBlobMarchingCubes"
             //       Say a point mesh with one point for each cube corner, and we could simply use its position.
             //       Then instances and loops could be used simply as a means to densify that lattice
             [instance(NUMINSTANCES)]
-            [maxvertexcount(LOOPS*5*3)]
-            // [maxvertexcount(128)]
+            [maxvertexcount(LOOPS*LOOPS*LOOPS*5*3)]
             void geom(
                 point v2g IN[1], inout TriangleStream<g2f> stream,
                 uint instanceID : SV_GSInstanceID, uint geoPrimID : SV_PrimitiveID)
             {
                 g2f o;
 
-/*
-                uint operationID = (geoPrimID*NUMINSTANCES + instanceID)*LOOPS;
-                // uint operationID = (geoPrimID*NUMINSTANCES + instanceID)*2;
-                // uint operationID = (geoPrimID*NUMINSTANCES + instanceID)*4;
-                uint zoffset = operationID / (GRIDSIZE * GRIDSIZE);
-                uint yoffset = (operationID % (GRIDSIZE * GRIDSIZE)) / GRIDSIZE;
-                uint xoffset = (operationID % (GRIDSIZE * GRIDSIZE)) % GRIDSIZE;
-*/
+                uint operationID = (geoPrimID*NUMINSTANCES + instanceID); // This is the position in a 16x16x16 grid. The 2x2x2 loops densifies it to 32x32x32
+                uint zoffset = LOOPS*(operationID / (HGRIDSIZE * HGRIDSIZE));
+                uint yoffset = LOOPS*((operationID % (HGRIDSIZE * HGRIDSIZE)) / HGRIDSIZE);
+                uint xoffset = LOOPS*((operationID % (HGRIDSIZE * HGRIDSIZE)) % HGRIDSIZE);
 
-                uint operationID = (geoPrimID*NUMINSTANCES + instanceID);
-                uint zoffset = operationID / (HGRIDSIZE * HGRIDSIZE);
-                uint yoffset = (operationID % (HGRIDSIZE * HGRIDSIZE)) / HGRIDSIZE;
-                uint xoffset = (operationID % (HGRIDSIZE * HGRIDSIZE)) % HGRIDSIZE;
-
-                zoffset *= 2;
-                yoffset *= 2;
-                xoffset *= 2;
-
-                // uint zoffset = 0;
-                // uint yoffset = 0;
-                // uint xoffset = 0;
-
-
-                // Now we have to work out which 2x2x2 = 8 cubes to process for this particular invocation
-                // TODO: reuse of neighboring cube vertices to avoid recalculating the SDF
-                [loop]
+                // TODO: Utilize neighboring vertices to avoid recalculating sceneSDF in some cases
                 for (uint z = 0; z < 2 ; ++z) {
                     uint zz = z + zoffset;
-                    // uint zz = z + operationID / (GRIDSIZE * GRIDSIZE);
-                    [loop]
                     for (uint y = 0; y < 2; ++y) {
                         uint yy = y + yoffset;
-                        // uint yy = y + (operationID % (GRIDSIZE * GRIDSIZE)) / GRIDSIZE;
-                        [loop]
                         for (uint x = 0; x < 2; ++x) {
                             uint xx = x + xoffset;
-                            // uint xx = x + (operationID % (GRIDSIZE * GRIDSIZE)) % GRIDSIZE;
 
                             float3 basePos = float3(xx, yy, zz) - GRIDSIZE/2;
-                            // float3 basePos = float3(xx, yy, zz);
-                            float3 basePosScaled = basePos * SCALE;
-                            float3 pos[8];
                             float val[8];
+                            [unroll]
                             for (uint k = 0; k < 8; ++k) {
-                                pos[k] = (basePos + cornerOffsets[k]) * SCALE;
-                                val[k] = sceneSDF(pos[k]);
+                                float3 pos = (basePos + cornerOffsets[k]) * SCALE;
+                                val[k] = sceneSDF(pos);
                             }
 
                             uint cubeIndex = 0;
@@ -227,6 +191,7 @@ Shader "Xantoz/XZAudioLinkBlobMarchingCubes"
                             int edges[] = triTable[cubeIndex];
 
                             // Triangulate
+                            [loop]
                             for (uint i = 0; edges[i] != -1; i += 3) {
                                 int e00 = edgeConnections[edges[i]][0];
                                 int e01 = edgeConnections[edges[i]][1];
@@ -242,16 +207,10 @@ Shader "Xantoz/XZAudioLinkBlobMarchingCubes"
                                 verts[1] = (Interp(cornerOffsets[e10], val[e10], cornerOffsets[e11], val[e11]) + basePos) * SCALE;
                                 verts[2] = (Interp(cornerOffsets[e20], val[e20], cornerOffsets[e21], val[e21]) + basePos) * SCALE;
 
-                                // Just a quick & dirty normal for now (going to look faceted I think?)
-                                // TODO: figure out something smarter to do (might require computing neighboring cubes that we aren't neccesarily outputting in this geom invocation) 
-                                float3 u = verts[1] - verts[0];
-                                float3 v = verts[2] - verts[1];
-                                float3 normal = normalize(cross(u, v));
-
+                                [unroll]
                                 for (uint j = 0; j < 3; ++j) {
                                     o.vertex = UnityObjectToClipPos(verts[j]);
-                                    o.vert_position = verts[j];
-                                    // o.normal = normal;
+                                    o.vert_position = verts[j]; // Object position is used in fragment shader to calculate normal and such
                                     stream.Append(o);
                                 }
                                 stream.RestartStrip();
@@ -260,23 +219,6 @@ Shader "Xantoz/XZAudioLinkBlobMarchingCubes"
                     }
                 }
             }
-
-/*
-            float shortestDistanceToSurface(float3 eye, float3 marchingDirection, float start, float end) {
-                float depth = start;
-                for (int i = 0; i < MAX_MARCHING_STEPS; i++) {
-                    float dist = sceneSDF(eye + depth * marchingDirection);
-                    if (dist < EPSILON) {
-                        return depth;
-                    }
-                    depth += dist;
-                    if (depth >= end) {
-                        return end;
-                    }
-                }
-                return end;
-            }
-*/
 
             float3 estimateNormal(float3 p) {
                 return normalize(float3(
@@ -301,19 +243,9 @@ Shader "Xantoz/XZAudioLinkBlobMarchingCubes"
 
                 UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(i);
 
-                float3 vert_position = i.vert_position;
-                // float3 vert_position = mul(mul(unity_CameraInvProjection, i.vertex), transpose(UNITY_MATRIX_IT_MV));
-
-                // float3 ray_direction = normalize(i.vertex - _WorldSpaceCameraPos);
-                // float3 ray_direction = normalize(i.vertex - mul(unity_WorldToObject, _WorldSpaceCameraPos));
-                // float3 ray_direction = normalize(vert_position - _WorldSpaceCameraPos);
-
-                float3 ray_direction = normalize(vert_position - mul(unity_WorldToObject, _WorldSpaceCameraPos));
-                
-                float3 p = vert_position;
+                float3 p = i.vert_position;
+                float3 ray_direction = normalize(p - mul(unity_WorldToObject, _WorldSpaceCameraPos));
                 float3 normal = estimateNormal(p);
-
-                // float3 normal = i.normal;
 
                 float4 tex = sampleCubeMap(reflect(ray_direction, normal));
 
