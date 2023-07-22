@@ -131,8 +131,8 @@ Shader "Xantoz/XZAudioLinkBlobMarchingCubes"
             #define LOOPS 8
             #define NUMINSTANCES 32
 
-            #define GRIDSIZE 64
             #define SCALE (1.0f/GRIDSIZE)
+            #define GRIDSIZE 32
 
             // #define isoLevel 0.5f
             #define isoLevel 0.0f
@@ -141,7 +141,7 @@ Shader "Xantoz/XZAudioLinkBlobMarchingCubes"
                 return (edgeVertex1 + (isoLevel - valueAtVertex1) * (edgeVertex2 - edgeVertex1) / (valueAtVertex2 - valueAtVertex1));
             }
 
-            // For now hard-coded for the case of 1024 points in * 32 instances * 8 loops = 262144 cubes = 64x64x64 grid
+            // For now hard-coded for the case of 64 points in * 32 instances * 8 loops = 32768 cubes = 32x32x32 grid
             //
             // In theory we could do up to 25 loops with maxvertexcount(128), since one cube can have up to 5 vertices
             // out (see the triangle table), but 8 is easier to work with for now, and cleanly breaks up into a 2x2x2
