@@ -43,8 +43,6 @@ Shader "Xantoz/XZAudioLinkBlob"
     #define MAX_DIST 50.0
     #define EPSILON 0.002
 
-    #define TIME _Time.y
-
     ENDCG
 
     SubShader
@@ -137,7 +135,6 @@ Shader "Xantoz/XZAudioLinkBlob"
             */
             float sceneSDF(float3 samplePoint) {
                 float ballRadius = 1.0;
-                float t = TIME / 3.0 + 10500.0;
                 float balls = MAX_DIST;
                 for (uint i = 0; i < SAMPLECNT; ++i) {
                     float4 pcm = AudioLinkPCMData(i*STEP)*0.5*_Amplitude_Scale;
