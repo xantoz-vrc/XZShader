@@ -63,6 +63,8 @@ Shader "Xantoz/XZAudioLinkBlobMarchingCubes"
 
             float _Amplitude_Scale;
 
+            static float3 ball_pos[SAMPLECNT];
+
             struct appdata
             {
                 float4 vertex : POSITION;
@@ -114,6 +116,17 @@ Shader "Xantoz/XZAudioLinkBlobMarchingCubes"
                 return lerp(b, a, h) - k*h*(1.0-h);
             }
 
+            void set_ball_positions(void)
+            {
+                if (!_DisableAudioLink && AudioLinkIsAvailable()) {
+                    for (uint i = 0; i < SAMPLECNT; ++i) {
+                        float4 pcm = AudioLinkPCMData(i*STEP)*0.5*_Amplitude_Scale;
+                        float2 pcm_lr = PCMToLR(pcm);
+                        ball_pos[i] = float3(pcm_lr.x, pcm_lr.y, pcm.g);
+                    }
+                }
+            }
+
             /**
             * Signed distance function describing the scene.
             */
@@ -123,9 +136,7 @@ Shader "Xantoz/XZAudioLinkBlobMarchingCubes"
                 if (!_DisableAudioLink && AudioLinkIsAvailable()) {
                     [loop]
                     for (uint i = 0; i < SAMPLECNT; ++i) {
-                        float4 pcm = AudioLinkPCMData(i*STEP)*0.5*_Amplitude_Scale;
-                        float2 pcm_lr = PCMToLR(pcm);
-                        balls = smin(balls, sphereSDF(samplePoint + float3(pcm_lr.x, pcm_lr.y, pcm.g), ballRadius*_SceneScale), _K*_SceneScale);
+                        balls = smin(balls, sphereSDF(samplePoint + ball_pos[i], ballRadius*_SceneScale), _K*_SceneScale);
                     }
                 } else {
                     float t = TIME / 3.0 + 10500.0;
@@ -176,6 +187,8 @@ Shader "Xantoz/XZAudioLinkBlobMarchingCubes"
                 uint zoffset = LOOPS*(operationID / (HGRIDSIZE * HGRIDSIZE));
                 uint yoffset = LOOPS*((operationID % (HGRIDSIZE * HGRIDSIZE)) / HGRIDSIZE);
                 uint xoffset = LOOPS*((operationID % (HGRIDSIZE * HGRIDSIZE)) % HGRIDSIZE);
+
+                set_ball_positions();
 
                 // TODO: Utilize neighboring vertices to avoid recalculating sceneSDF in some cases
                 for (uint z = 0; z < LOOPS ; ++z) {
@@ -257,6 +270,8 @@ Shader "Xantoz/XZAudioLinkBlobMarchingCubes"
                 float4 col = 0.0f;
 
                 UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(i);
+
+                set_ball_positions();
 
                 float3 p = i.vert_position;
                 float3 ray_direction = normalize(p - mul(unity_WorldToObject, _WorldSpaceCameraPos));
