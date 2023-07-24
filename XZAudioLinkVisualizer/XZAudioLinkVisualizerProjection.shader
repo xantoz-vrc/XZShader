@@ -104,8 +104,7 @@ Shader "Xantoz/XZAudioLinkVisualizerProjection"
     }
     SubShader
     {
-	Tags { "RenderType" = "Transparent" "Queue"="Overlay+100" }
-	// Tags { "RenderType" = "Transparent" "Queue"="Transparent+100" }
+	Tags { "RenderType" = "Transparent" "Queue"="Overlay+100" "DisableBatching"="True" }
 
 	// Blend One One
 	Blend SrcAlpha One
