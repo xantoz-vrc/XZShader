@@ -71,6 +71,8 @@ Shader "Xantoz/XZAudioLinkBlob"
             int _Discard;
             float _Amplitude_Scale;
 
+            static float3 ball_pos[SAMPLECNT];
+
             struct appdata
             {
                 float4 vertex : POSITION;
@@ -91,7 +93,7 @@ Shader "Xantoz/XZAudioLinkBlob"
                 UNITY_VERTEX_OUTPUT_STEREO
             };
 
-            v2f vert (appdata v)
+            v2f vert(appdata v)
             {
                 v2f o;
 
@@ -115,7 +117,6 @@ Shader "Xantoz/XZAudioLinkBlob"
                 return o;
             }
 
-
             /**
             * Signed distance function for a sphere centered at the origin with radius r.
             */
@@ -137,9 +138,7 @@ Shader "Xantoz/XZAudioLinkBlob"
                 float ballRadius = 1.0;
                 float balls = MAX_DIST;
                 for (uint i = 0; i < SAMPLECNT; ++i) {
-                    float4 pcm = AudioLinkPCMData(i*STEP)*0.5*_Amplitude_Scale;
-                    float2 pcm_lr = PCMToLR(pcm);
-                    balls = smin(balls, sphereSDF(samplePoint + float3(pcm_lr.x, pcm_lr.y, pcm.g), ballRadius*_SceneScale), _K*_SceneScale);
+                    balls = smin(balls, sphereSDF(samplePoint + ball_pos[i], ballRadius*_SceneScale), _K*_SceneScale);
                 }
                 return balls;
             }
@@ -195,17 +194,27 @@ Shader "Xantoz/XZAudioLinkBlob"
                 return float4(c, 1);
             }
 
+            void set_ball_positions(void)
+            {
+                for (uint i = 0; i < SAMPLECNT; ++i) {
+                    float4 pcm = AudioLinkPCMData(i*STEP)*0.5*_Amplitude_Scale;
+                    float2 pcm_lr = PCMToLR(pcm);
+                    ball_pos[i] = float3(pcm_lr.x, pcm_lr.y, pcm.g);
+                }
+            }
+
             float4 frag (v2f i, out float depth : SV_Depth) : SV_Target
             {
                 float4 col = 0.0f;
 
                 UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(i);
 
-                float3 ray_origin = i.ray_origin;
+                set_ball_positions();
+
                 float3 ray_direction = normalize(i.vert_position - i.ray_origin);
 
                 float3x3 R = AngleAxis3x3(radians(_SceneRotationAngle), normalize(_SceneRotationAxis));
-                float3 eye = mul(ray_origin + _SceneOffset, R);
+                float3 eye = mul(i.ray_origin + _SceneOffset, R);
                 float3 worldDir = mul(ray_direction, R);
                 float dist = shortestDistanceToSurface(eye, worldDir, MIN_DIST, MAX_DIST);
 
