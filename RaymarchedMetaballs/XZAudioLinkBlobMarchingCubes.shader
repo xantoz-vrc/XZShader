@@ -178,11 +178,11 @@ Shader "Xantoz/XZAudioLinkBlobMarchingCubes"
                 uint xoffset = LOOPS*((operationID % (HGRIDSIZE * HGRIDSIZE)) % HGRIDSIZE);
 
                 // TODO: Utilize neighboring vertices to avoid recalculating sceneSDF in some cases
-                for (uint z = 0; z < 2 ; ++z) {
+                for (uint z = 0; z < LOOPS ; ++z) {
                     uint zz = z + zoffset;
-                    for (uint y = 0; y < 2; ++y) {
+                    for (uint y = 0; y < LOOPS; ++y) {
                         uint yy = y + yoffset;
-                        for (uint x = 0; x < 2; ++x) {
+                        for (uint x = 0; x < LOOPS; ++x) {
                             uint xx = x + xoffset;
 
                             float3 basePos = float3(xx, yy, zz) - GRIDSIZE/2;
