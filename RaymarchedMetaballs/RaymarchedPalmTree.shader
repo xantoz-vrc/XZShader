@@ -142,7 +142,7 @@ Shader "Xantoz/RaymarchedPalmTree"
 
         interface ISDFObject {
             float SDF(float3 p);
-            float4 GetColor(float3 dir, float3 normal, float2 uv);
+            float4 GetColor(float3 p, float3 dir);
         };
 
         float3 EstimateNormal(ISDFObject sdf, float3 p)
@@ -170,10 +170,11 @@ Shader "Xantoz/RaymarchedPalmTree"
                 return udRoundBox(mul(p - myT, myR), cubeSize.x, cubeSize.y);
             }
 
-            float4 GetColor(float3 dir, float3 normal, float2 uv) {
+            float4 GetColor(float3 p, float3 dir) {
+                float3 normal = EstimateNormal(this, p);
                 float4 texel = stars2(reflect(normal, dir));
                 float4 col = texel + (normal.y / 2.0 - 0.2)/2;
-                return col * float4(1,0,0,1);
+                return col * float4(10,0,0,1);
             }
         };
 
@@ -184,7 +185,8 @@ Shader "Xantoz/RaymarchedPalmTree"
                 return sphereSDF(p - myT, MOONSCALE*_SceneScale);
             }
 
-            float4 GetColor(float3 dir, float3 normal, float2 uv) {
+            float4 GetColor(float3 p, float3 dir) {
+                float3 normal = EstimateNormal(this, p);
                 float4 texel = sampleReflectionProbe(reflect(normal, dir));
                 float4 col = texel + (normal.y / 2.0 - 0.2)/2;
                 return col * float4(0,1,0,1);
@@ -205,11 +207,11 @@ Shader "Xantoz/RaymarchedPalmTree"
                 return dist;
             }
 
-            float4 GetColor(float3 dir, float3 normal, float2 uv) {
+            float4 GetColor(float3 p, float3 dir) {
                 if (dist == dist1) {
-                    return box.GetColor(dir, normal, uv);
+                    return box.GetColor(p, dir);
                 } else {
-                    return sphere.GetColor(dir, normal, uv);
+                    return sphere.GetColor(p, dir);
                 }
             }
         };
@@ -239,8 +241,7 @@ Shader "Xantoz/RaymarchedPalmTree"
 
             if (dist < EPSILON) {
                 float3 p = samplePoint + dist*marchingDirection;
-                float3 normal = EstimateNormal(scene, p);
-                col = scene.GetColor(marchingDirection, normal, float2(0,0));
+                col = scene.GetColor(p, marchingDirection);
             } else {
                 if (i >= MAX_MARCHING_STEPS) {
                     depth = end;
