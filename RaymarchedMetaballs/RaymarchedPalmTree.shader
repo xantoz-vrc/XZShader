@@ -319,6 +319,8 @@ Shader "Xantoz/RaymarchedPalmTree"
         };
 
         class BoxSDF : SDFObjectBase {
+            float4 tint;
+
             float SDF(float3 p) {
 /*
                 float3 myT = -float3(sin(frac(_Time.x)*4*UNITY_PI), 0, cos(frac(_Time.x)*4*UNITY_PI))*10*_SceneScale;
@@ -334,11 +336,18 @@ Shader "Xantoz/RaymarchedPalmTree"
                 float3 normal = EstimateNormal(this, p);
                 float4 texel = stars2(reflect(normal, dir)) + 0.2;
                 float4 col = texel + (normal.y / 2.0 - 0.2)/2;
-                return col * float4(1,.2,.5,1);
+                return col * tint;
             }
 
             static ISDFObject New() {
                 BoxSDF obj;
+                obj.tint = float4(1,.2,.5,1);
+                return obj;
+            }
+
+            static ISDFObject New(float4 mytint) {
+                BoxSDF obj;
+                obj.tint = mytint;
                 return obj;
             }
         };
@@ -538,16 +547,40 @@ Shader "Xantoz/RaymarchedPalmTree"
                 //     )
                 // );
 
+                // ISDFObject sdf = 
+                // MinSDF4::New(
+                //     SphereSDF::New(),
+                //     TranslateSDF::New(
+                //         float3(sin(frac(_Time.x)*4*UNITY_PI), 0, cos(frac(_Time.x)*4*UNITY_PI))*10*_SceneScale,
+                //         BoxSDF::New()
+                //     ),
+                //     RotateSDF::New(
+                //         AngleAxis3x3(radians(AudioLinkGetChronotensity(0, 0)/1000.0 % 360.0), normalize(float3(1.0,_SinTime.y,_CosTime.y))),
+                //         BoxSDF::New()
+                //     ),
+                //     RotateSDF::New(
+                //         AngleAxis3x3(radians(AudioLinkGetChronotensity(0, 0)/1000.0 % 360.0), normalize(float3(1.0,_SinTime.y,_CosTime.y))),
+                //         TranslateSDF::New(
+                //             -float3(sin(frac(_Time.x)*4*UNITY_PI), 0, cos(frac(_Time.x)*4*UNITY_PI))*10*_SceneScale,
+                //             BoxSDF::New(float4(1,1,.2,1))
+                //         )
+                //     )
+                // );
+
+
                 ISDFObject sdf = 
                 MinSDF3::New(
-                    SphereSDF::New(),
                     TranslateSDF::New(
-                        -float3(sin(frac(_Time.x)*4*UNITY_PI), 0, cos(frac(_Time.x)*4*UNITY_PI))*10*_SceneScale,
+                        float3(sin(frac(_Time.x)*4*UNITY_PI), 0, cos(frac(_Time.x)*4*UNITY_PI))*10*_SceneScale,
                         BoxSDF::New()
                     ),
                     RotateSDF::New(
                         AngleAxis3x3(radians(AudioLinkGetChronotensity(0, 0)/1000.0 % 360.0), normalize(float3(1.0,_SinTime.y,_CosTime.y))),
                         BoxSDF::New()
+                    ),
+                    RotateSDF::New(
+                        AngleAxis3x3(radians(AudioLinkGetChronotensity(0, 0)/1000.0 % 360.0), normalize(float3(1.0,_SinTime.y,_CosTime.y))),
+                        SphereSDF::New()
                     )
                 );
 
