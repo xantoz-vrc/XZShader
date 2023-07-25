@@ -326,7 +326,8 @@ Shader "Xantoz/RaymarchedPalmTree"
             float4 GetColor(float3 p, float3 dir) {
                 float3 normal = EstimateNormal(this, p);
                 float2 uv = getUV(p)*8 - 0.5;
-                float4 texel = stars2(reflect(normal, dir)) + 0.2;
+                // float4 texel = stars2(reflect(dir, normal)) + 0.2;
+                float4 texel = sampleReflectionProbe(reflect(dir, normal)) + 0.2;
                 float4 texel2 = _NoiseTex.Sample(sampler_NoiseTex, uv);
                 float4 col = texel + (normal.y / 2.0 - 0.2)/2;
                 return (col + texel2)*tint;
@@ -354,7 +355,7 @@ Shader "Xantoz/RaymarchedPalmTree"
 
             float4 GetColor(float3 p, float3 dir) {
                 float3 normal = EstimateNormal(this, p);
-                float4 texel = sampleReflectionProbe(reflect(normal, dir));
+                float4 texel = sampleReflectionProbe(reflect(dir, normal));
                 float4 col = texel + (normal.y / 2.0 - 0.2)/2;
                 return col * float4(0,1,0,1);
             }
