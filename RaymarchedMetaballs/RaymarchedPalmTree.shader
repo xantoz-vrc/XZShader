@@ -174,12 +174,27 @@ Shader "Xantoz/RaymarchedPalmTree"
         };
 */
 
-        interface ISDF {
-            // float SDF(float3 p, out SDFObject obj);
+        interface ISDFObject {
             float SDF(float3 p);
+            float4 GetColor(float3 dir, float3 normal, float2 uv);
         };
 
-        float3 EstimateNormal(ISDF sdf, float3 p)
+        class SDFObject : ISDFObject {
+            float3x3 R;  // TODO: maybe combine R & T into a float4x4 matrix instead?
+            float3 T;
+
+            // Placeholder implementation
+            float SDF(float3 p) {
+                return sphereSDF(p, 1);
+            }
+
+            // Placeholder implementation
+            float4 GetColor(float3 dir, float3 normal, float2 uv) {
+                return float4(1,1,0,1);
+            }
+        };
+
+        float3 EstimateNormal(ISDFObject sdf, float3 p)
         {
             return normalize(float3(
                     sdf.SDF(float3((p).x + EPSILON, (p).y,           (p).z          )) - sdf.SDF(float3((p).x - EPSILON, (p).y,           (p).z          )),
@@ -188,48 +203,83 @@ Shader "Xantoz/RaymarchedPalmTree"
                 ));
         }
 
-        class BoxSDF : ISDF {
+/*
+        float2 GetUV(SDFObject sdf, float3 p)
+        {
+            float3 newp = mul(transpose(sdf.R), p) + sdf.T;
+            return getUV(newp);
+        }
+*/
+
+        class BoxSDF : SDFObject, ISDFObject {
             float SDF(float3 p) {
-                float3x3 cubeR = AngleAxis3x3(radians(AudioLinkGetChronotensity(0, 0)/1000.0 % 360.0), normalize(float3(1.0,_SinTime.y,_CosTime.y)));
+                T = float3(sin(frac(_Time.y)*2*UNITY_PI), 0, cos(frac(_Time.y)*2*UNITY_PI))*10*_SceneScale;
+                R = AngleAxis3x3(radians(AudioLinkGetChronotensity(0, 0)/1000.0 % 360.0), normalize(float3(1.0,_SinTime.y,_CosTime.y)));
                 float2 cubeSize = float2((1+AudioLinkData(uint2(1,0)).r)*_SceneScale, AudioLinkData(uint2(0,0)).r*_SceneScale);
-                return udRoundBox(mul(p, cubeR), cubeSize.x, cubeSize.y);
+                return udRoundBox(mul(p - T, R), cubeSize.x, cubeSize.y);
+            }
+
+            float4 GetColor(float3 dir, float3 normal, float2 uv) {
+                float4 texel = stars2(reflect(normal, dir));
+                float4 col = texel + (normal.y / 2.0 - 0.2);
+                return col;
             }
         };
 
         #define MOONSCALE 1
-        class SphereSDF : ISDF {
+        class SphereSDF : SDFObject, ISDFObject {
             float SDF(float3 p) {
-                float3 sphereT = float3(sin(frac(_Time.x)*2*UNITY_PI), 0, cos(frac(_Time.x)*2*UNITY_PI))*10*MOONSCALE*_SceneScale;
-                return sphereSDF(p + sphereT, MOONSCALE*_SceneScale);
+                R = float3x3(
+                    1,0,0,
+                    0,1,0,
+                    0,0,1
+                );
+                T = float3(sin(frac(_Time.x)*2*UNITY_PI), 0, cos(frac(_Time.x)*2*UNITY_PI))*10*MOONSCALE*_SceneScale;
+                return sphereSDF(mul(p - T, R), MOONSCALE*_SceneScale);
+            }
+
+            float4 GetColor(float3 dir, float3 normal, float2 uv) {
+                float4 texel = sampleReflectionProbe(reflect(normal, dir));
+                float4 col = texel + (normal.y / 2.0 - 0.2);
+                return col;
             }
         };
 
-        class BothSDF : ISDF {
-            float SDF(float3 p) {
+        interface ISDFScene {
+            float SDF(float3 p, out SDFObject obj);
+        };
+
+        class SceneSDF : ISDFScene {
+            float SDF(float3 p, out SDFObject obj) {
                 BoxSDF box;
                 SphereSDF sphere;
-                return min(box.SDF(p), sphere.SDF(p));
+                float dist1 = box.SDF(p);
+                float dist2 = sphere.SDF(p);
+                float dist = min(dist1, dist2);
+                
+                if (dist1 == dist) {
+                    obj = box;
+                } else {
+                    obj = sphere;
+                }
+                return dist;
             }
         };
 
-        float shortestDistanceToSurfaceWithColor(ISDF sdf, float3 eye, float3 marchingDirection, float start, float end, out float4 col) {
+        float shortestDistanceToSurfaceWithColor(ISDFScene scene, float3 eye, float3 marchingDirection, float start, float end, out float4 col) {
             col = float4(1,1,1,1);
             float depth = start;
 
             [loop]
             for (int i = 0; i < MAX_MARCHING_STEPS; i++) { 
                 float3 samplePoint = eye + depth * marchingDirection;
-                float dist = sdf.SDF(samplePoint);
+                ISDFObject obj;
+                float dist = scene.SDF(samplePoint, obj);
 
                 if (dist < EPSILON) {
                     float3 p = samplePoint + dist*marchingDirection;
-                    float3 normal = EstimateNormal(sdf, p);
-
-                    // float4 texel = sampleReflectionProbe(reflect(marchingDirection, normal));
-                    float4 texel = stars2(reflect(marchingDirection, normal));
-                    col.rgba = texel.rgba;
-                    col.rgba += (normal.y / 2.0 - 0.2);
-
+                    float3 normal = EstimateNormal(obj, p);
+                    col = obj.GetColor(marchingDirection, normal, float2(0,0));
                     return depth;
                 }
 
@@ -314,18 +364,7 @@ Shader "Xantoz/RaymarchedPalmTree"
                 float3 eye = mul(ray_origin + _SceneOffset, R);
                 float3 worldDir = mul(ray_direction, R);
 
-/*
-                // Wasteful -> raymarches twice
-                SphereSDF sdf1;
-                BoxSDF sdf2;
-                float4 col1, col2;
-                float dist1 = shortestDistanceToSurfaceWithColor(sdf1, eye, worldDir, MIN_DIST, MAX_DIST, col1);
-                float dist2 = shortestDistanceToSurfaceWithColor(sdf2, eye, worldDir, MIN_DIST, MAX_DIST, col2);
-                float dist = min(dist1, dist2);
-                col = (dist == dist1) ? col1 : col2;
-*/
-
-                BothSDF sdf;
+                SceneSDF sdf;
                 float dist = shortestDistanceToSurfaceWithColor(sdf, eye, worldDir, MIN_DIST, MAX_DIST, col);
 
                 // TODO: fold depth calculcation into the raymarching loop as well?
