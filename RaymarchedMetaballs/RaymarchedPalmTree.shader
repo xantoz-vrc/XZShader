@@ -69,15 +69,6 @@ Shader "Xantoz/RaymarchedPalmTree"
             return lerp(b, a, h) - k*h*(1.0-h);
         }
 
-/*
-        #define estimateNormal(fn, p) \
-        normalize(float3( \
-                fn(float3((p).x + EPSILON, (p).y,           (p).z          )) - fn(float3((p).x - EPSILON, (p).y,           (p).z          )), \
-                fn(float3((p).x,           (p).y + EPSILON, (p).z          )) - fn(float3((p).x,           (p).y - EPSILON, (p).z          )), \
-                fn(float3((p).x,           (p).y,           (p).z + EPSILON)) - fn(float3((p).x,           (p).y,           (p).z - EPSILON)) \
-            ));
-*/
-
         float sampleCubeMap(float3 texcoord)
         {
             float tex = _Tex.Sample(sampler_Tex, texcoord);
@@ -151,7 +142,7 @@ Shader "Xantoz/RaymarchedPalmTree"
 	    ISDFObject Next7();
 	    ISDFObject Next8();
             float SDF(float3 p);
-            float4 GetColor(float3 p, float3 dir);
+            float4 GetColor(float3 p, float3 dir, float3 normal);
         };
 
         class SDFObjectBase : ISDFObject {
@@ -166,16 +157,19 @@ Shader "Xantoz/RaymarchedPalmTree"
             ISDFObject Next8() { SDFObjectBase base; return base; }
 
             float SDF(float3 p) { return sphereSDF(p,0.1); }
-            float4 GetColor(float3 p, float3 dir) { return float4(1,0,1,1); }
+            float4 GetColor(float3 p, float3 dir, float3 normal) { return float4(1,0,1,1); }
         };
+
+        #define estimateNormal(fn, p) \
+        normalize(float3( \
+                fn(float3((p).x + EPSILON, (p).y,           (p).z          )) - fn(float3((p).x - EPSILON, (p).y,           (p).z          )), \
+                fn(float3((p).x,           (p).y + EPSILON, (p).z          )) - fn(float3((p).x,           (p).y - EPSILON, (p).z          )), \
+                fn(float3((p).x,           (p).y,           (p).z + EPSILON)) - fn(float3((p).x,           (p).y,           (p).z - EPSILON)) \
+            ));
 
         float3 EstimateNormal(ISDFObject sdf, float3 p)
         {
-            return normalize(float3(
-                    sdf.SDF(float3((p).x + EPSILON, (p).y,           (p).z          )) - sdf.SDF(float3((p).x - EPSILON, (p).y,           (p).z          )),
-                    sdf.SDF(float3((p).x,           (p).y + EPSILON, (p).z          )) - sdf.SDF(float3((p).x,           (p).y - EPSILON, (p).z          )),
-                    sdf.SDF(float3((p).x,           (p).y,           (p).z + EPSILON)) - sdf.SDF(float3((p).x,           (p).y,           (p).z - EPSILON))
-                ));
+            return estimateNormal(sdf.SDF, p);
         }
 
         #define MERGE(a,b) a##b
@@ -187,9 +181,9 @@ Shader "Xantoz/RaymarchedPalmTree"
                 return Next().SDF(mul(p, R));
             }
 
-            float4 GetColor(float3 p, float3 dir) {
-                // We unrotate the point, but not the direction
-                return Next().GetColor(mul(transpose(R), p), dir);
+            float4 GetColor(float3 p, float3 dir, float3 normal) {
+                // We unrotate the point only (potentially used for UV)
+                return Next().GetColor(mul(transpose(R), p), dir, normal);
             }
         };
 
@@ -204,9 +198,9 @@ Shader "Xantoz/RaymarchedPalmTree"
                 return Next().SDF(p - T);
             }
 
-            float4 GetColor(float3 p, float3 dir) {
-                // We unrotate the point, but not the direction
-                return Next().GetColor(p - T, dir);
+            float4 GetColor(float3 p, float3 dir, float3 normal) {
+                // We untranslate the point only (potentially used for UV)
+                return Next().GetColor(p - T, dir, normal);
             }
         };
 
@@ -226,11 +220,11 @@ Shader "Xantoz/RaymarchedPalmTree"
                 return dist;
             }
 
-            float4 GetColor(float3 p, float3 dir) {
+            float4 GetColor(float3 p, float3 dir, float3 normal) {
                 if (dist == dist1) {
-                    return Next().GetColor(p, dir);
+                    return Next().GetColor(p, dir, normal);
                 } else {
-                    return Next2().GetColor(p, dir);
+                    return Next2().GetColor(p, dir, normal);
                 }
             }
 
@@ -254,13 +248,13 @@ Shader "Xantoz/RaymarchedPalmTree"
                 return dist;
             }
 
-            float4 GetColor(float3 p, float3 dir) {
+            float4 GetColor(float3 p, float3 dir, float3 normal) {
                 if (dist == dist1) {
-                    return Next().GetColor(p, dir);
+                    return Next().GetColor(p, dir, normal);
                 } else if (dist == dist2) {
-                    return Next2().GetColor(p, dir);
+                    return Next2().GetColor(p, dir, normal);
                 } else {
-                    return Next3().GetColor(p, dir);
+                    return Next3().GetColor(p, dir, normal);
                 }
             }
 
@@ -286,15 +280,15 @@ Shader "Xantoz/RaymarchedPalmTree"
                 return dist;
             }
 
-            float4 GetColor(float3 p, float3 dir) {
+            float4 GetColor(float3 p, float3 dir, float3 normal) {
                 if (dist == dist1) {
-                    return Next().GetColor(p, dir);
+                    return Next().GetColor(p, dir, normal);
                 } else if (dist == dist2) {
-                    return Next2().GetColor(p, dir);
+                    return Next2().GetColor(p, dir, normal);
                 } else if (dist == dist3) {
-                    return Next3().GetColor(p, dir);
+                    return Next3().GetColor(p, dir, normal);
                 } else {
-                    return Next4().GetColor(p, dir);
+                    return Next4().GetColor(p, dir, normal);
                 }
             }
 
@@ -323,11 +317,10 @@ Shader "Xantoz/RaymarchedPalmTree"
                 return udRoundBox(p, cubeSize.x, cubeSize.y);
             }
 
-            float4 GetColor(float3 p, float3 dir) {
-                float3 normal = EstimateNormal(this, p);
+            float4 GetColor(float3 p, float3 dir, float3 normal) {
                 float2 uv = getUV(p)*8 - 0.5;
                 // float4 texel = stars2(reflect(dir, normal)) + 0.2;
-                float4 texel = sampleReflectionProbe(reflect(dir, normal)) + 0.2;
+                float4 texel = sampleReflectionProbe(reflect(dir, normal));
                 float4 texel2 = _NoiseTex.Sample(sampler_NoiseTex, uv);
                 float4 col = texel + (normal.y / 2.0 - 0.2)/2;
                 return (col + texel2)*tint;
@@ -353,8 +346,7 @@ Shader "Xantoz/RaymarchedPalmTree"
                 return sphereSDF(p - myT, MOONSCALE*_SceneScale);
             }
 
-            float4 GetColor(float3 p, float3 dir) {
-                float3 normal = EstimateNormal(this, p);
+            float4 GetColor(float3 p, float3 dir, float3 normal) {
                 float4 texel = sampleReflectionProbe(reflect(dir, normal));
                 float4 col = texel + (normal.y / 2.0 - 0.2)/2;
                 return col * float4(0,1,0,1);
@@ -380,11 +372,11 @@ Shader "Xantoz/RaymarchedPalmTree"
                 return dist;
             }
 
-            float4 GetColor(float3 p, float3 dir) {
+            float4 GetColor(float3 p, float3 dir, float3 normal) {
                 if (dist == dist1) {
-                    return box.GetColor(p, dir);
+                    return box.GetColor(p, dir, normal);
                 } else {
-                    return sphere.GetColor(p, dir);
+                    return sphere.GetColor(p, dir, normal);
                 }
             }
 
@@ -419,7 +411,8 @@ Shader "Xantoz/RaymarchedPalmTree"
 
             if (dist < EPSILON) {
                 float3 p = samplePoint + dist*marchingDirection;
-                col = scene.GetColor(p, marchingDirection);
+                float3 normal = EstimateNormal(scene, p);
+                col = scene.GetColor(p, marchingDirection, normal);
             } else {
                 if (i >= MAX_MARCHING_STEPS) {
                     depth = end;
@@ -505,7 +498,7 @@ Shader "Xantoz/RaymarchedPalmTree"
                 BoxSDF box3 = BoxSDF::New();
 
                 MAKE_TranslateSDF(boxTranslate,
-                    float3(sin(frac(_Time.y)*10*UNITY_PI), 0, cos(frac(_Time.y)*10*UNITY_PI))*10*_SceneScale,
+                    float3(sin(frac(_Time.x)*10*UNITY_PI), 0, cos(frac(_Time.x)*10*UNITY_PI))*10*_SceneScale,
                     box1
                 );
 
