@@ -213,7 +213,7 @@ Shader "Xantoz/RaymarchedPalmTree"
 
             float4 GetColor(float3 p, float3 dir) {
                 // We unrotate the point, but not the direction
-                return Next().GetColor(p + T, dir);
+                return Next().GetColor(p - T, dir);
             }
 
             static ISDFObject New(float3 translation, ISDFObject from) {
