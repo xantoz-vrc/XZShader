@@ -141,8 +141,31 @@ Shader "Xantoz/RaymarchedPalmTree"
         }
 
         interface ISDFObject {
+            ISDFObject Next();
+            ISDFObject Next2();
+            ISDFObject Next3();
+	    ISDFObject Next4();
+	    ISDFObject Next5();
+	    ISDFObject Next6();
+	    ISDFObject Next7();
+	    ISDFObject Next8();
             float SDF(float3 p);
             float4 GetColor(float3 p, float3 dir);
+        };
+
+        class SDFObjectBase : ISDFObject {
+            // The code in all methods will never be used. It is only used to declare this class
+            ISDFObject Next() { SDFObjectBase base; return base; }
+            ISDFObject Next2() { SDFObjectBase base; return base; }
+            ISDFObject Next3() { SDFObjectBase base; return base; }
+            ISDFObject Next4() { SDFObjectBase base; return base; }
+            ISDFObject Next5() { SDFObjectBase base; return base; }
+            ISDFObject Next6() { SDFObjectBase base; return base; }
+            ISDFObject Next7() { SDFObjectBase base; return base; }
+            ISDFObject Next8() { SDFObjectBase base; return base; }
+
+            float SDF(float3 p) { return Next().SDF(p); }
+            float4 GetColor(float3 p, float3 dir) { return Next().GetColor(p, dir); }
         };
 
         float3 EstimateNormal(ISDFObject sdf, float3 p)
@@ -162,24 +185,166 @@ Shader "Xantoz/RaymarchedPalmTree"
         }
 */
 
-        class BoxSDF : ISDFObject {
+        class RotateSDF : SDFObjectBase {
+            float3x3 R;
+
             float SDF(float3 p) {
-                float3 myT = -float3(sin(frac(_Time.x)*2*UNITY_PI), 0, cos(frac(_Time.x)*2*UNITY_PI))*10*_SceneScale;
+                return Next().SDF(mul(p, R));
+            }
+
+            float4 GetColor(float3 p, float3 dir) {
+                // We unrotate the point, but not the direction
+                return Next().GetColor(mul(transpose(R), p), dir);
+            }
+
+            static ISDFObject New(float3x3 rotationMatrix, ISDFObject from) {
+                class LocalSDFObject : RotateSDF { ISDFObject Next() { return from; } } obj;
+                obj.R = rotationMatrix;
+                return obj;
+            }
+        };
+
+        class TranslateSDF : SDFObjectBase {
+            float3 T;
+
+            float SDF(float3 p) {
+                return Next().SDF(p - T);
+            }
+
+            float4 GetColor(float3 p, float3 dir) {
+                // We unrotate the point, but not the direction
+                return Next().GetColor(p + T, dir);
+            }
+
+            static ISDFObject New(float3 translation, ISDFObject from) {
+                class LocalSDFObject : TranslateSDF { ISDFObject Next() { return from; } } obj;
+                obj.T = translation;
+                return obj;
+            }
+        };
+
+        class MinSDF : SDFObjectBase {
+            float dist;
+            float dist1;
+            float dist2;
+
+            float SDF(float3 p) {
+                dist1 = Next().SDF(p);
+                dist2 = Next2().SDF(p);
+                dist = min(dist1, dist2);
+                return dist;
+            }
+
+            float4 GetColor(float3 p, float3 dir) {
+                if (dist == dist1) {
+                    return Next().GetColor(p, dir);
+                } else {
+                    return Next2().GetColor(p, dir);
+                }
+            }
+
+            static ISDFObject New(ISDFObject from1, ISDFObject from2) {
+                class LocalSDFObject : MinSDF {
+                    ISDFObject Next() { return from1; }
+                    ISDFObject Next2() { return from2; }
+                } obj;
+                return obj;
+            }
+        };
+
+        class MinSDF3 : SDFObjectBase {
+            float dist, dist1, dist2, dist3;
+
+            float SDF(float3 p) {
+                dist1 = Next().SDF(p);
+                dist2 = Next2().SDF(p);
+                dist3 = Next3().SDF(p);
+                dist = min(min(dist1, dist2), dist3);
+                return dist;
+            }
+
+            float4 GetColor(float3 p, float3 dir) {
+                if (dist == dist1) {
+                    return Next().GetColor(p, dir);
+                } else if (dist == dist2) {
+                    return Next2().GetColor(p, dir);
+                } else {
+                    return Next3().GetColor(p, dir);
+                }
+            }
+
+            static ISDFObject New(ISDFObject from1, ISDFObject from2, ISDFObject from3) {
+                class LocalSDFObject : MinSDF3 {
+                    ISDFObject Next() { return from1; }
+                    ISDFObject Next2() { return from2; }
+                    ISDFObject Next3() { return from3; }
+                } obj;
+                return obj;
+            }
+        };
+
+        class MinSDF4 : SDFObjectBase {
+            float dist, dist1, dist2, dist3, dist4;
+
+            float SDF(float3 p) {
+                dist1 = Next().SDF(p);
+                dist2 = Next2().SDF(p);
+                dist3 = Next3().SDF(p);
+                dist4 = Next4().SDF(p);
+                dist = min(min(dist1, dist2), min(dist3, dist4));
+                return dist;
+            }
+
+            float4 GetColor(float3 p, float3 dir) {
+                if (dist == dist1) {
+                    return Next().GetColor(p, dir);
+                } else if (dist == dist2) {
+                    return Next2().GetColor(p, dir);
+                } else if (dist == dist3) {
+                    return Next3().GetColor(p, dir);
+                } else {
+                    return Next4().GetColor(p, dir);
+                }
+            }
+
+            static ISDFObject New(ISDFObject from1, ISDFObject from2, ISDFObject from3, ISDFObject from4) {
+                class LocalSDFObject : MinSDF4 {
+                    ISDFObject Next() { return from1; }
+                    ISDFObject Next2() { return from2; }
+                    ISDFObject Next3() { return from3; }
+                    ISDFObject Next4() { return from4; }
+                } obj;
+                return obj;
+            }
+        };
+
+        class BoxSDF : SDFObjectBase {
+            float SDF(float3 p) {
+/*
+                float3 myT = -float3(sin(frac(_Time.x)*4*UNITY_PI), 0, cos(frac(_Time.x)*4*UNITY_PI))*10*_SceneScale;
                 float3x3 myR = AngleAxis3x3(radians(AudioLinkGetChronotensity(0, 0)/1000.0 % 360.0), normalize(float3(1.0,_SinTime.y,_CosTime.y)));
                 float2 cubeSize = float2((1+AudioLinkData(uint2(1,0)).r)*_SceneScale, AudioLinkData(uint2(0,0)).r*_SceneScale);
                 return udRoundBox(mul(p - myT, myR), cubeSize.x, cubeSize.y);
+*/
+                float2 cubeSize = float2((1+AudioLinkData(uint2(1,0)).r)*_SceneScale, AudioLinkData(uint2(0,0)).r*_SceneScale);
+                return udRoundBox(p, cubeSize.x, cubeSize.y);
             }
 
             float4 GetColor(float3 p, float3 dir) {
                 float3 normal = EstimateNormal(this, p);
-                float4 texel = stars2(reflect(normal, dir));
+                float4 texel = stars2(reflect(normal, dir)) + 0.2;
                 float4 col = texel + (normal.y / 2.0 - 0.2)/2;
-                return col * float4(10,0,0,1);
+                return col * float4(1,.2,.5,1);
+            }
+
+            static ISDFObject New() {
+                BoxSDF obj;
+                return obj;
             }
         };
 
         #define MOONSCALE 2
-        class SphereSDF : ISDFObject {
+        class SphereSDF : SDFObjectBase {
             float SDF(float3 p) {
                 float3 myT = float3(sin(frac(_Time.x)*2*UNITY_PI), 0, cos(frac(_Time.x)*2*UNITY_PI))*10*MOONSCALE*_SceneScale;
                 return sphereSDF(p - myT, MOONSCALE*_SceneScale);
@@ -191,9 +356,14 @@ Shader "Xantoz/RaymarchedPalmTree"
                 float4 col = texel + (normal.y / 2.0 - 0.2)/2;
                 return col * float4(0,1,0,1);
             }
+
+            static ISDFObject New() {
+                SphereSDF obj;
+                return obj;
+            }
         };
 
-        class SceneSDF : ISDFObject {
+        class SceneSDF : SDFObjectBase {
             BoxSDF box;
             SphereSDF sphere;
             float dist;
@@ -213,6 +383,11 @@ Shader "Xantoz/RaymarchedPalmTree"
                 } else {
                     return sphere.GetColor(p, dir);
                 }
+            }
+
+            static ISDFObject New() {
+                SceneSDF obj;
+                return obj;
             }
         };
 
@@ -321,7 +496,62 @@ Shader "Xantoz/RaymarchedPalmTree"
                 float3 eye = mul(ray_origin + _SceneOffset, R);
                 float3 worldDir = mul(ray_direction, R);
 
-                SceneSDF sdf;
+                // ISDFObject sdf = SceneSDF::New();
+
+                // isdfobject sdf = RotateSDF::New(
+                //     AngleAxis3x3(radians(AudioLinkGetChronotensity(0, 0)/1000.0 % 360.0), normalize(float3(1.0,_SinTime.y,_CosTime.y))),
+                //     TranslateSDF::New(
+                //         -float3(sin(frac(_Time.x)*4*UNITY_PI), 0, cos(frac(_Time.x)*4*UNITY_PI))*10*_SceneScale,
+                //         BoxSDF::New()
+                //     )
+                // );
+
+                // ISDFObject sdf = RotateSDF::New(
+                //     AngleAxis3x3(radians(AudioLinkGetChronotensity(0, 0)/1000.0 % 360.0), normalize(float3(1.0,_SinTime.y,_CosTime.y))),
+                //     BoxSDF::New()
+                // );
+
+                // ISDFObject sdf = TranslateSDF::New(
+                //     -float3(sin(frac(_Time.x)*4*UNITY_PI), 0, cos(frac(_Time.x)*4*UNITY_PI))*10*_SceneScale,
+                //     RotateSDF::New(
+                //         AngleAxis3x3(radians(AudioLinkGetChronotensity(0, 0)/1000.0 % 360.0), normalize(float3(1.0,_SinTime.y,_CosTime.y))),
+                //         BoxSDF::New()
+                //     )
+                // );
+
+                // ISDFObject sdf = MinSDF::New(
+                //     SphereSDF::New(),
+                //     RotateSDF::New(
+                //         AngleAxis3x3(radians(AudioLinkGetChronotensity(0, 0)/1000.0 % 360.0), normalize(float3(1.0,_SinTime.y,_CosTime.y))),
+                //         BoxSDF::New()
+                //     )
+                // );
+
+                // ISDFObject sdf = MinSDF::New(
+                //     TranslateSDF::New(
+                //         -float3(sin(frac(_Time.x)*4*UNITY_PI), 0, cos(frac(_Time.x)*4*UNITY_PI))*10*_SceneScale,
+                //         BoxSDF::New()
+                //     ),
+                //     RotateSDF::New(
+                //         AngleAxis3x3(radians(AudioLinkGetChronotensity(0, 0)/1000.0 % 360.0), normalize(float3(1.0,_SinTime.y,_CosTime.y))),
+                //         BoxSDF::New()
+                //     )
+                // );
+
+                ISDFObject sdf = 
+                MinSDF3::New(
+                    SphereSDF::New(),
+                    TranslateSDF::New(
+                        -float3(sin(frac(_Time.x)*4*UNITY_PI), 0, cos(frac(_Time.x)*4*UNITY_PI))*10*_SceneScale,
+                        BoxSDF::New()
+                    ),
+                    RotateSDF::New(
+                        AngleAxis3x3(radians(AudioLinkGetChronotensity(0, 0)/1000.0 % 360.0), normalize(float3(1.0,_SinTime.y,_CosTime.y))),
+                        BoxSDF::New()
+                    )
+                );
+
+
                 float dist = shortestDistanceToSurfaceWithColor(sdf, eye, worldDir, MIN_DIST, MAX_DIST, col);
 
                 // TODO: fold depth calculcation into the raymarching loop as well?
