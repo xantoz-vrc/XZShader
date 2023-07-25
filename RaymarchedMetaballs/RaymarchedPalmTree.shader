@@ -582,6 +582,43 @@ Shader "Xantoz/RaymarchedPalmTree"
                 //     )
                 // );
 
+                SphereSDF sphere;
+                BoxSDF box1;
+                box1.tint = float4(1,1,.2,1);
+                BoxSDF box2;
+                box2.tint = float4(0,1,1,1);
+                BoxSDF box3;
+                box3.tint = float4(1,.2,.5,1);
+
+                class BoxTranslate : TranslateSDF {
+                    ISDFObject Next() { return box1; }
+                } boxTranslate;
+                boxTranslate.T = float3(sin(frac(_Time.y)*10*UNITY_PI), 0, cos(frac(_Time.y)*10*UNITY_PI))*10*_SceneScale;
+
+                class BoxRotate : RotateSDF {
+                    ISDFObject Next() { return box2; }
+                } boxRotate;
+                boxRotate.R = AngleAxis3x3(radians(AudioLinkGetChronotensity(0, 0)/1000.0 % 360.0), normalize(float3(1.0,_SinTime.y,_CosTime.y)));
+
+                class BoxTranslate2 : TranslateSDF {
+                    ISDFObject Next() { return box3; }
+                } boxTranslate2;
+                boxTranslate2.T = -float3(sin(frac(_Time.x)*4*UNITY_PI), 0, cos(frac(_Time.x)*4*UNITY_PI))*10*_SceneScale;
+
+                class BoxTranslateRotate : RotateSDF {
+                    ISDFObject Next() { return boxTranslate2; }
+                } boxTranslateRotate;
+                boxTranslateRotate.R = AngleAxis3x3(radians(AudioLinkGetChronotensity(0, 0)/1000.0 % 360.0), normalize(float3(1.0,_SinTime.y,_CosTime.y)));
+
+                ISDFObject sdf = MinSDF4::New(
+                    sphere,
+                    boxTranslate,
+                    boxRotate,
+                    boxTranslateRotate
+                );
+
+/*
+
                 float3x3 R2 = AngleAxis3x3(radians(AudioLinkGetChronotensity(0, 0)/1000.0 % 360.0), normalize(float3(1.0,_SinTime.y,_CosTime.y)));
                 float3x3 R3 = AngleAxis3x3(radians(AudioLinkGetChronotensity(0, 0)/1000.0 % 360.0), normalize(float3(1.0,_SinTime.y,_CosTime.y)));
                 float3 T2 = float3(sin(frac(_Time.y)*10*UNITY_PI), 0, cos(frac(_Time.y)*10*UNITY_PI))*10*_SceneScale;
@@ -607,7 +644,7 @@ Shader "Xantoz/RaymarchedPalmTree"
                     )
                 );
 
-
+*/
                 // ISDFObject sdf = 
                 // MinSDF3::New(
                 //     TranslateSDF::New(
