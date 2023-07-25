@@ -23,7 +23,7 @@ Shader "Xantoz/SimplexNoiseTexture"
 
             float frag(v2f_customrendertexture IN) : COLOR
             {
-                float val = simplex3d_fractal(IN.direction);
+                float val = simplex3d_fractal(IN.direction*2);
                 return val;
             }
             ENDCG
