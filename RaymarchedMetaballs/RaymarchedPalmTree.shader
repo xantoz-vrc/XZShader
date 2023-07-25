@@ -178,6 +178,8 @@ Shader "Xantoz/RaymarchedPalmTree"
                 ));
         }
 
+        #define MERGE(a,b) a##b
+
         class RotateSDF : SDFObjectBase {
             float3x3 R;
 
@@ -191,6 +193,10 @@ Shader "Xantoz/RaymarchedPalmTree"
             }
         };
 
+        #define MAKE_RotateSDF(name, rot, from) \
+        class MERGE(RotateSDF_, __LINE__) : RotateSDF { ISDFObject Next() { return (from); } } name; \
+        name.R = (rot)
+
         class TranslateSDF : SDFObjectBase {
             float3 T;
 
@@ -203,6 +209,10 @@ Shader "Xantoz/RaymarchedPalmTree"
                 return Next().GetColor(p - T, dir);
             }
         };
+
+        #define MAKE_TranslateSDF(name, translate, from) \
+        class MERGE(TranslateSDF_, __LINE__) : TranslateSDF { ISDFObject Next() { return (from); } } name; \
+        name.T = (translate)
 
         class MinSDF : SDFObjectBase {
             float dist;
@@ -535,25 +545,25 @@ Shader "Xantoz/RaymarchedPalmTree"
                 BoxSDF box2 = BoxSDF::New(float4(0,1,1,1));
                 BoxSDF box3 = BoxSDF::New();
 
-                class BoxTranslate : TranslateSDF {
-                    ISDFObject Next() { return box1; }
-                } boxTranslate;
-                boxTranslate.T = float3(sin(frac(_Time.y)*10*UNITY_PI), 0, cos(frac(_Time.y)*10*UNITY_PI))*10*_SceneScale;
+                MAKE_TranslateSDF(boxTranslate,
+                    float3(sin(frac(_Time.y)*10*UNITY_PI), 0, cos(frac(_Time.y)*10*UNITY_PI))*10*_SceneScale,
+                    box1
+                );
 
-                class BoxRotate : RotateSDF {
-                    ISDFObject Next() { return box2; }
-                } boxRotate;
-                boxRotate.R = AngleAxis3x3(radians(AudioLinkGetChronotensity(0, 0)/1000.0 % 360.0), normalize(float3(1.0,_SinTime.y,_CosTime.y)));
+                MAKE_RotateSDF(boxRotate,
+                    AngleAxis3x3(radians(AudioLinkGetChronotensity(0, 0)/1000.0 % 360.0), normalize(float3(1.0,_SinTime.y,_CosTime.y))),
+                    box2
+                );
 
-                class BoxTranslate2 : TranslateSDF {
-                    ISDFObject Next() { return box3; }
-                } boxTranslate2;
-                boxTranslate2.T = -float3(sin(frac(_Time.x)*4*UNITY_PI), 0, cos(frac(_Time.x)*4*UNITY_PI))*10*_SceneScale;
+                MAKE_TranslateSDF(boxTranslate2,
+                    -float3(sin(frac(_Time.x)*4*UNITY_PI), 0, cos(frac(_Time.x)*4*UNITY_PI))*10*_SceneScale,
+                    box3
+                );
 
-                class BoxTranslateRotate : RotateSDF {
-                    ISDFObject Next() { return boxTranslate2; }
-                } boxTranslateRotate;
-                boxTranslateRotate.R = AngleAxis3x3(radians(AudioLinkGetChronotensity(0, 0)/1000.0 % 360.0), normalize(float3(1.0,_SinTime.y,_CosTime.y)));
+                MAKE_RotateSDF(boxTranslateRotate,
+                    AngleAxis3x3(radians(AudioLinkGetChronotensity(0, 0)/1000.0 % 360.0), normalize(float3(1.0,_SinTime.y,_CosTime.y))),
+                    boxTranslate2
+                );
 
                 ISDFObject sdf = MinSDF4::New(
                     sphere,
