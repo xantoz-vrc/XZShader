@@ -37,7 +37,8 @@ Shader "Xantoz/RaymarchedPalmTree"
         float4 _Tex_HDR;
         float4 _TexTint;
         float _Exposure;
-        Texture2D<float> _NoiseTex;
+        Texture2D<float4> _NoiseTex;
+        SamplerState sampler_NoiseTex;
 
         float _SceneScale;
         float _SceneRotationAngle;
@@ -177,14 +178,6 @@ Shader "Xantoz/RaymarchedPalmTree"
                 ));
         }
 
-/*
-        float2 GetUV(SDFObject sdf, float3 p)
-        {
-            float3 newp = mul(transpose(sdf.R), p) + sdf.T;
-            return getUV(newp);
-        }
-*/
-
         class RotateSDF : SDFObjectBase {
             float3x3 R;
 
@@ -196,31 +189,7 @@ Shader "Xantoz/RaymarchedPalmTree"
                 // We unrotate the point, but not the direction
                 return Next().GetColor(mul(transpose(R), p), dir);
             }
-
-            static ISDFObject New(float3x3 rotationMatrix, ISDFObject from) {
-                class LocalSDFObject : RotateSDF { ISDFObject Next() { return from; } } obj;
-                obj.R = rotationMatrix;
-                return obj;
-            }
         };
-
-        ISDFObject NewRotateSDF(float3x3 R, ISDFObject from)
-        {
-            class LocalSDFObject : SDFObjectBase {
-                ISDFObject Next() { return from; }
-
-                float SDF(float3 p) {
-                    return Next().SDF(mul(p, R));
-                }
-
-                float4 GetColor(float3 p, float3 dir) {
-                    // We unrotate the point, but not the direction
-                    return Next().GetColor(mul(transpose(R), p), dir);
-                }
-
-            } obj;
-            return obj;
-        }
 
         class TranslateSDF : SDFObjectBase {
             float3 T;
@@ -233,30 +202,7 @@ Shader "Xantoz/RaymarchedPalmTree"
                 // We unrotate the point, but not the direction
                 return Next().GetColor(p - T, dir);
             }
-
-            static ISDFObject New(float3 translation, ISDFObject from) {
-                class LocalSDFObject : TranslateSDF { ISDFObject Next() { return from; } } obj;
-                obj.T = translation;
-                return obj;
-            }
         };
-
-        ISDFObject NewTranslateSDF(float3 T, ISDFObject from)
-        {
-            class LocalSDFObject : SDFObjectBase {
-                ISDFObject Next() { return from; }
-
-                float SDF(float3 p) {
-                    return Next().SDF(p - T);
-                }
-
-                float4 GetColor(float3 p, float3 dir) {
-                    // We unrotate the point, but not the direction
-                    return Next().GetColor(p - T, dir);
-                }
-            } obj;
-            return obj;
-        }
 
         class MinSDF : SDFObjectBase {
             float dist;
@@ -369,9 +315,11 @@ Shader "Xantoz/RaymarchedPalmTree"
 
             float4 GetColor(float3 p, float3 dir) {
                 float3 normal = EstimateNormal(this, p);
+                float2 uv = getUV(p)*8 - 0.5;
                 float4 texel = stars2(reflect(normal, dir)) + 0.2;
+                float4 texel2 = _NoiseTex.Sample(sampler_NoiseTex, uv);
                 float4 col = texel + (normal.y / 2.0 - 0.2)/2;
-                return col * tint;
+                return (col + texel2)*tint;
             }
 
             static BoxSDF New() {
