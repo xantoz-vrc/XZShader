@@ -374,13 +374,13 @@ Shader "Xantoz/RaymarchedPalmTree"
                 return col * tint;
             }
 
-            static ISDFObject New() {
+            static BoxSDF New() {
                 BoxSDF obj;
                 obj.tint = float4(1,.2,.5,1);
                 return obj;
             }
 
-            static ISDFObject New(float4 mytint) {
+            static BoxSDF New(float4 mytint) {
                 BoxSDF obj;
                 obj.tint = mytint;
                 return obj;
@@ -583,12 +583,15 @@ Shader "Xantoz/RaymarchedPalmTree"
                 // );
 
                 SphereSDF sphere;
-                BoxSDF box1;
-                box1.tint = float4(1,1,.2,1);
-                BoxSDF box2;
-                box2.tint = float4(0,1,1,1);
-                BoxSDF box3;
-                box3.tint = float4(1,.2,.5,1);
+                // BoxSDF box1;
+                // box1.tint = float4(1,1,.2,1);
+                // BoxSDF box2;
+                // box2.tint = float4(0,1,1,1);
+                // BoxSDF box3;
+                // box3.tint = float4(1,.2,.5,1);
+                BoxSDF box1 = BoxSDF::New(float4(1,1,.2,1));
+                BoxSDF box2 = BoxSDF::New(float4(0,1,1,1));
+                BoxSDF box3 = BoxSDF::New();
 
                 class BoxTranslate : TranslateSDF {
                     ISDFObject Next() { return box1; }
