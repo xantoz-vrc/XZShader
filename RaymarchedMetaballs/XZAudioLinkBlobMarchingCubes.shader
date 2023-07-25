@@ -10,6 +10,7 @@ Shader "Xantoz/XZAudioLinkBlobMarchingCubes"
         [Gamma] _Exposure ("Exposure", Range(0, 8)) = 0.5
         _K("k-factor", Float) = 2.5
         _SceneScale("Scene scale", Float) = 0.03
+        [Enum(Smooth,0, Flat,1)]_Shading("Shading", Int) = 0
 
         [ToggleUI]_DisableAudioLink("Disable audio link (force fallback)", Int) = 0
 
@@ -59,6 +60,7 @@ Shader "Xantoz/XZAudioLinkBlobMarchingCubes"
             float _Exposure;
             float _K;
             float _SceneScale;
+            uint _Shading;
             uint _DisableAudioLink;
 
             float _Amplitude_Scale;
@@ -235,10 +237,25 @@ Shader "Xantoz/XZAudioLinkBlobMarchingCubes"
                                 verts[1] = (Interp(cornerOffsets[e10], val[e10], cornerOffsets[e11], val[e11]) + basePos) * SCALE;
                                 verts[2] = (Interp(cornerOffsets[e20], val[e20], cornerOffsets[e21], val[e21]) + basePos) * SCALE;
 
+                                float3 normal;
+                                if (_Shading == 1) {
+
+	                            float3 u = verts[1] - verts[0];
+	                            float3 v = verts[2] - verts[1];
+
+	                            normal.x = (u.y * v.z) - (u.z * v.y);
+	                            normal.y = (u.z * v.x) - (u.x * v.z);
+	                            normal.z = (u.x * v.y) - (u.y * v.x);
+                                }
+
                                 [unroll]
                                 for (uint j = 0; j < 3; ++j) {
                                     o.vertex = UnityObjectToClipPos(verts[j]);
-                                    o.vert_position = verts[j]; // Object position is used in fragment shader to calculate normal and such
+                                    if (_Shading == 1) {
+                                        o.vert_position = normal; // Despite the name is just the normal
+                                    } else {
+                                        o.vert_position = verts[j]; // Object position is used in fragment shader to calculate normal and such
+                                    }
                                     stream.Append(o);
                                 }
                                 stream.RestartStrip();
@@ -265,6 +282,15 @@ Shader "Xantoz/XZAudioLinkBlobMarchingCubes"
                 return float4(c, 1);
             }
 
+            float4 frustumToWorld(float3 viewportPoint) {
+                float4 worldCoord = transpose(mul(UNITY_MATRIX_P, UNITY_MATRIX_V)) * float4(viewportPoint.x, viewportPoint.y, 1.0 - viewportPoint.z, 1.0);
+                worldCoord.x /= worldCoord.w;
+                worldCoord.y /= worldCoord.w;
+                worldCoord.z /= worldCoord.w;
+                
+                return worldCoord;
+            }
+
             float4 frag (g2f i) : SV_Target
             {
                 float4 col = 0.0f;
@@ -273,9 +299,21 @@ Shader "Xantoz/XZAudioLinkBlobMarchingCubes"
 
                 set_ball_positions();
 
-                float3 p = i.vert_position;
-                float3 ray_direction = normalize(p - mul(unity_WorldToObject, _WorldSpaceCameraPos));
-                float3 normal = estimateNormal(p);
+                float3 normal;
+                float3 ray_direction;
+                if (_Shading == 1) {
+                    normal = i.vert_position; // Despite the name contains a normal here
+                    // ray_direction = normalize(mul(unity_CameraToWorld, i.vertex) - _WorldSpaceCameraPos);
+                    // ray_direction = normalize(mul(i.vertex, unity_CameraToWorld) - _WorldSpaceCameraPos);
+                    // ray_direction = normalize(i.vertex - _WorldSpaceCameraPos);
+                    ray_direction = normalize(frustumToWorld(i.vertex) - _WorldSpaceCameraPos);
+
+                    // ray_direction = normalize(mul(i.vertex, unity_CameraInvProjection) - _WorldSpaceCameraPos);
+                } else {
+                    float3 p = i.vert_position;
+                    ray_direction = normalize(p - mul(unity_WorldToObject, _WorldSpaceCameraPos));
+                    normal = estimateNormal(p);
+                }
 
                 float4 tex = sampleCubeMap(reflect(ray_direction, normal));
 
