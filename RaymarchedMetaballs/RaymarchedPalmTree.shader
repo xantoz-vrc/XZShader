@@ -6,6 +6,7 @@ Shader "Xantoz/RaymarchedPalmTree"
         [Gamma] _Exposure ("Exposure", Range(0, 8)) = 0.5
         _TexTint ("Tint Color", Color) = (1, 1, 1, 1)
 
+        [NoScaleOffset]_2DTex ("Texture", 2D) = "white" {}
         [NoScaleOffset]_NoiseTex ("Texture", 2D) = "white" {}
 
         _SceneScale("Scene scale", Range(0,10)) = 0.04
@@ -26,6 +27,7 @@ Shader "Xantoz/RaymarchedPalmTree"
         #define MIN_DIST 0.0
         #define MAX_DIST 100.0
         #define EPSILON 0.001
+        #define INOBJECTSPACE true
 
         #include "UnityCG.cginc"
         #include "../cginc/AudioLinkFuncs.cginc"
@@ -37,15 +39,17 @@ Shader "Xantoz/RaymarchedPalmTree"
         float4 _Tex_HDR;
         float4 _TexTint;
         float _Exposure;
-        Texture2D<float4> _NoiseTex;
+        Texture2D<float4> _2DTex;
+        SamplerState sampler_2DTex;
+        Texture2D<float> _NoiseTex;
         SamplerState sampler_NoiseTex;
+
 
         float _SceneScale;
         float _SceneRotationAngle;
         float3 _SceneRotationAxis;
         float3 _SceneOffset;
 
-        #define INOBJECTSPACE true
         float sphereSDF(float3 p, float r) {
             return length(p) - r;
         }
@@ -156,7 +160,7 @@ Shader "Xantoz/RaymarchedPalmTree"
             ISDFObject Next7() { SDFObjectBase base; return base; }
             ISDFObject Next8() { SDFObjectBase base; return base; }
 
-            float SDF(float3 p) { return sphereSDF(p,0.1); }
+            float SDF(float3 p) { return sphereSDF(p, 0.1); }
             float4 GetColor(float3 p, float3 dir, float3 normal) { return float4(1,0,1,1); }
         };
 
@@ -320,8 +324,9 @@ Shader "Xantoz/RaymarchedPalmTree"
             float4 GetColor(float3 p, float3 dir, float3 normal) {
                 float2 uv = getUV(p)*8 - 0.5;
                 // float4 texel = stars2(reflect(dir, normal)) + 0.2;
+                // float4 texel = stars2(reflect(dir, normal));
                 float4 texel = sampleReflectionProbe(reflect(dir, normal));
-                float4 texel2 = _NoiseTex.Sample(sampler_NoiseTex, uv);
+                float4 texel2 = _2DTex.Sample(sampler_2DTex, uv);
                 float4 col = texel + (normal.y / 2.0 - 0.2)/2;
                 return (col + texel2)*tint;
             }
@@ -341,15 +346,23 @@ Shader "Xantoz/RaymarchedPalmTree"
 
         #define MOONSCALE 2
         class SphereSDF : SDFObjectBase {
+            float3 myT;
+
             float SDF(float3 p) {
-                float3 myT = float3(sin(frac(_Time.x)*2*UNITY_PI), 0, cos(frac(_Time.x)*2*UNITY_PI))*10*MOONSCALE*_SceneScale;
+                myT = float3(sin(frac(_Time.x)*2*UNITY_PI), 0, cos(frac(_Time.x)*2*UNITY_PI))*10*MOONSCALE*_SceneScale;
                 return sphereSDF(p - myT, MOONSCALE*_SceneScale);
             }
 
             float4 GetColor(float3 p, float3 dir, float3 normal) {
-                float4 texel = sampleReflectionProbe(reflect(dir, normal));
-                float4 col = texel + (normal.y / 2.0 - 0.2)/2;
-                return col * float4(0,1,0,1);
+                float4 blue = float4(0,0,1,0);
+                // float2 uv = getUV(p - myT);
+                // float4 texel1 = _NoiseTex.Sample(sampler_NoiseTex, uv) * float4(0,1,0,1);
+
+                float4 texel1 = stars2(reflect(dir, normal)) * float4(0,1,0,1);
+                float texel2 = sampleCubeMap(reflect(dir, normal));
+
+                float4 col = blue + texel1 + texel2 + (normal.y / 2.0 - 0.2)/2;
+                return col;
             }
 
             static SphereSDF New() {
@@ -525,6 +538,8 @@ Shader "Xantoz/RaymarchedPalmTree"
                 );
 
                 float dist = shortestDistanceToSurfaceWithColor(sdf, eye, worldDir, MIN_DIST, MAX_DIST, col);
+                // float dist = shortestDistanceToSurfaceWithColor(sphere, eye, worldDir, MIN_DIST, MAX_DIST, col);
+
 
                 // TODO: fold depth calculcation into the raymarching loop as well?
                 // Output depth
