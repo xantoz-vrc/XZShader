@@ -25,8 +25,8 @@ Shader "Xantoz/RaymarchedPalmTree"
         CGINCLUDE
         #define MAX_MARCHING_STEPS 128
         #define MIN_DIST 0.0
-        #define MAX_DIST 100.0
-        #define EPSILON 0.001
+        #define MAX_DIST (100.0*10)
+        #define EPSILON (0.001*10)
         #define INOBJECTSPACE true
 
         #include "UnityCG.cginc"
@@ -43,7 +43,6 @@ Shader "Xantoz/RaymarchedPalmTree"
         SamplerState sampler_2DTex;
         Texture2D<float> _NoiseTex;
         SamplerState sampler_NoiseTex;
-
 
         float _SceneScale;
         float _SceneRotationAngle;
@@ -312,17 +311,17 @@ Shader "Xantoz/RaymarchedPalmTree"
 
             float SDF(float3 p) {
 /*
-                float3 myT = -float3(sin(frac(_Time.x)*4*UNITY_PI), 0, cos(frac(_Time.x)*4*UNITY_PI))*10*_SceneScale;
+                float3 myT = -float3(sin(frac(_Time.x)*4*UNITY_PI), 0, cos(frac(_Time.x)*4*UNITY_PI))*10;
                 float3x3 myR = AngleAxis3x3(radians(AudioLinkGetChronotensity(0, 0)/1000.0 % 360.0), normalize(float3(1.0,_SinTime.y,_CosTime.y)));
-                float2 cubeSize = float2((1+AudioLinkData(uint2(1,0)).r)*_SceneScale, AudioLinkData(uint2(0,0)).r*_SceneScale);
+                float2 cubeSize = float2((1+AudioLinkData(uint2(1,0)).r), AudioLinkData(uint2(0,0)).r);
                 return udRoundBox(mul(p - myT, myR), cubeSize.x, cubeSize.y);
 */
-                float2 cubeSize = float2((1+AudioLinkData(uint2(1,0)).r)*_SceneScale, AudioLinkData(uint2(0,0)).r*_SceneScale);
+                float2 cubeSize = float2((1+AudioLinkData(uint2(1,0)).r), AudioLinkData(uint2(0,0)).r);
                 return udRoundBox(p, cubeSize.x, cubeSize.y);
             }
 
             float4 GetColor(float3 p, float3 dir, float3 normal) {
-                float2 uv = getUV(p)*8 - 0.5;
+                float2 uv = getUV(p*0.5)/2 + .5;
                 // float4 texel = stars2(reflect(dir, normal)) + 0.2;
                 // float4 texel = stars2(reflect(dir, normal));
                 float4 texel = sampleReflectionProbe(reflect(dir, normal));
@@ -349,14 +348,14 @@ Shader "Xantoz/RaymarchedPalmTree"
             float3 myT;
 
             float SDF(float3 p) {
-                myT = float3(sin(frac(_Time.x)*2*UNITY_PI), 0, cos(frac(_Time.x)*2*UNITY_PI))*10*MOONSCALE*_SceneScale;
-                return sphereSDF(p - myT, MOONSCALE*_SceneScale);
+                myT = float3(sin(frac(_Time.x)*2*UNITY_PI), 0, cos(frac(_Time.x)*2*UNITY_PI))*10*MOONSCALE;
+                return sphereSDF(p - myT, MOONSCALE);
             }
 
             float4 GetColor(float3 p, float3 dir, float3 normal) {
                 float4 blue = float4(0,0,1,0);
-                // float2 uv = getUV(p - myT);
-                // float4 texel1 = _NoiseTex.Sample(sampler_NoiseTex, uv) * float4(0,1,0,1);
+                // float2 uv = getUV(p);
+                // float4 texel1 = _NoiseTex.Sample(sampler_NoiseTex, uv) * float4(0,1,0,1)*5;
 
                 float4 texel1 = stars2(reflect(dir, normal)) * float4(0,1,0,1);
                 float texel2 = sampleCubeMap(reflect(dir, normal));
@@ -502,7 +501,7 @@ Shader "Xantoz/RaymarchedPalmTree"
                 float3 ray_direction = normalize(i.vert_position - i.ray_origin);
 
                 float3x3 R = AngleAxis3x3(radians(_SceneRotationAngle), normalize(_SceneRotationAxis));
-                float3 eye = mul(ray_origin + _SceneOffset, R);
+                float3 eye = mul(ray_origin/_SceneScale + _SceneOffset, R);
                 float3 worldDir = mul(ray_direction, R);
 
                 SphereSDF sphere = SphereSDF::New();
@@ -511,7 +510,7 @@ Shader "Xantoz/RaymarchedPalmTree"
                 BoxSDF box3 = BoxSDF::New();
 
                 MAKE_TranslateSDF(boxTranslate,
-                    float3(sin(frac(_Time.x)*10*UNITY_PI), 0, cos(frac(_Time.x)*10*UNITY_PI))*10*_SceneScale,
+                    float3(sin(frac(_Time.x)*10*UNITY_PI), 0, cos(frac(_Time.x)*10*UNITY_PI))*10,
                     box1
                 );
 
@@ -521,7 +520,7 @@ Shader "Xantoz/RaymarchedPalmTree"
                 );
 
                 MAKE_TranslateSDF(boxTranslate2,
-                    -float3(sin(frac(_Time.x)*4*UNITY_PI), 0, cos(frac(_Time.x)*4*UNITY_PI))*10*_SceneScale,
+                    -float3(sin(frac(_Time.x)*4*UNITY_PI), 0, cos(frac(_Time.x)*4*UNITY_PI))*10,
                     box3
                 );
 
@@ -549,7 +548,7 @@ Shader "Xantoz/RaymarchedPalmTree"
                     depth = maxDepth;
                 } else {
                     float3 p = eye + dist * worldDir;
-                    p = mul(p, transpose(R)) - _SceneOffset; // undo rotation and offset for depth calculation
+                    p = (mul(p, transpose(R)) - _SceneOffset)*_SceneScale; // undo rotation and offset for depth calculation
                     if (INOBJECTSPACE) {
                         clip_pos = UnityObjectToClipPos(p);
                     } else {
