@@ -164,8 +164,8 @@ Shader "Xantoz/RaymarchedPalmTree"
             ISDFObject Next7() { SDFObjectBase base; return base; }
             ISDFObject Next8() { SDFObjectBase base; return base; }
 
-            float SDF(float3 p) { return Next().SDF(p); }
-            float4 GetColor(float3 p, float3 dir) { return Next().GetColor(p, dir); }
+            float SDF(float3 p) { return sphereSDF(p,0.1); }
+            float4 GetColor(float3 p, float3 dir) { return float4(1,0,1,1); }
         };
 
         float3 EstimateNormal(ISDFObject sdf, float3 p)
@@ -401,7 +401,7 @@ Shader "Xantoz/RaymarchedPalmTree"
                 return col * float4(0,1,0,1);
             }
 
-            static ISDFObject New() {
+            static SphereSDF New() {
                 SphereSDF obj;
                 return obj;
             }
@@ -582,13 +582,7 @@ Shader "Xantoz/RaymarchedPalmTree"
                 //     )
                 // );
 
-                SphereSDF sphere;
-                // BoxSDF box1;
-                // box1.tint = float4(1,1,.2,1);
-                // BoxSDF box2;
-                // box2.tint = float4(0,1,1,1);
-                // BoxSDF box3;
-                // box3.tint = float4(1,.2,.5,1);
+                SphereSDF sphere = SphereSDF::New();
                 BoxSDF box1 = BoxSDF::New(float4(1,1,.2,1));
                 BoxSDF box2 = BoxSDF::New(float4(0,1,1,1));
                 BoxSDF box3 = BoxSDF::New();
@@ -621,33 +615,38 @@ Shader "Xantoz/RaymarchedPalmTree"
                 );
 
 /*
-
                 float3x3 R2 = AngleAxis3x3(radians(AudioLinkGetChronotensity(0, 0)/1000.0 % 360.0), normalize(float3(1.0,_SinTime.y,_CosTime.y)));
                 float3x3 R3 = AngleAxis3x3(radians(AudioLinkGetChronotensity(0, 0)/1000.0 % 360.0), normalize(float3(1.0,_SinTime.y,_CosTime.y)));
                 float3 T2 = float3(sin(frac(_Time.y)*10*UNITY_PI), 0, cos(frac(_Time.y)*10*UNITY_PI))*10*_SceneScale;
                 float3 T3 = -float3(sin(frac(_Time.x)*4*UNITY_PI), 0, cos(frac(_Time.x)*4*UNITY_PI))*10*_SceneScale;
 
+                BoxSDF box1 = BoxSDF::New(float4(0,1,1,1));
+                BoxSDF box2 = BoxSDF::New();
+                BoxSDF box3 = BoxSDF::New(float4(1,1,.2,1));
+
+                TranslateSDF boxTranslate = TranslateSDF::New(T2, box1);
+                RotateSDF boxRotate = RotateSDF::New(R2, box2);
+                TranslateSDF boxTranslate2 = TranslateSDF::New(T3, box3);
+
+                // class BoxTranslate : TranslateSDF {
+                //     ISDFObject Next() { return box1; }
+                // } boxTranslate;
+                // boxTranslate.T = T2;
+
+                // TranslateSDF boxTranslate = TranslateSDF::New(T2, box1);
+
                 ISDFObject sdf = 
                 MinSDF4::New(
                     SphereSDF::New(),
-                    NewTranslateSDF(
-                        T2,
-                        BoxSDF::New(float4(0,1,1,1))
-                    ),
+                    boxTranslate,
+                    boxRotate,
                     RotateSDF::New(
                         R2,
-                        BoxSDF::New()
-                    ),
-                    NewRotateSDF(
-                        R2,
-                        NewTranslateSDF(
-                            T3,
-                            BoxSDF::New(float4(1,1,.2,1))
-                        )
+                        boxTranslate2
                     )
                 );
-
 */
+
                 // ISDFObject sdf = 
                 // MinSDF3::New(
                 //     TranslateSDF::New(
