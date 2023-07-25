@@ -204,7 +204,8 @@ Shader "Xantoz/RaymarchedPalmTree"
             }
         };
 
-        ISDFObject NewRotateSDF(float3x3 R, ISDFObject from) {
+        ISDFObject NewRotateSDF(float3x3 R, ISDFObject from)
+        {
             class LocalSDFObject : SDFObjectBase {
                 ISDFObject Next() { return from; }
 
@@ -239,6 +240,23 @@ Shader "Xantoz/RaymarchedPalmTree"
                 return obj;
             }
         };
+
+        ISDFObject NewTranslateSDF(float3 T, ISDFObject from)
+        {
+            class LocalSDFObject : SDFObjectBase {
+                ISDFObject Next() { return from; }
+
+                float SDF(float3 p) {
+                    return Next().SDF(p - T);
+                }
+
+                float4 GetColor(float3 p, float3 dir) {
+                    // We unrotate the point, but not the direction
+                    return Next().GetColor(p - T, dir);
+                }
+            } obj;
+            return obj;
+        }
 
         class MinSDF : SDFObjectBase {
             float dist;
@@ -564,21 +582,26 @@ Shader "Xantoz/RaymarchedPalmTree"
                 //     )
                 // );
 
+                float3x3 R2 = AngleAxis3x3(radians(AudioLinkGetChronotensity(0, 0)/1000.0 % 360.0), normalize(float3(1.0,_SinTime.y,_CosTime.y)));
+                float3x3 R3 = AngleAxis3x3(radians(AudioLinkGetChronotensity(0, 0)/1000.0 % 360.0), normalize(float3(1.0,_SinTime.y,_CosTime.y)));
+                float3 T2 = float3(sin(frac(_Time.y)*10*UNITY_PI), 0, cos(frac(_Time.y)*10*UNITY_PI))*10*_SceneScale;
+                float3 T3 = -float3(sin(frac(_Time.x)*4*UNITY_PI), 0, cos(frac(_Time.x)*4*UNITY_PI))*10*_SceneScale;
+
                 ISDFObject sdf = 
                 MinSDF4::New(
                     SphereSDF::New(),
-                    TranslateSDF::New(
-                        float3(sin(frac(_Time.x)*4*UNITY_PI), 0, cos(frac(_Time.x)*4*UNITY_PI))*10*_SceneScale,
-                        BoxSDF::New()
+                    NewTranslateSDF(
+                        T2,
+                        BoxSDF::New(float4(0,1,1,1))
                     ),
                     RotateSDF::New(
-                        AngleAxis3x3(radians(AudioLinkGetChronotensity(0, 0)/1000.0 % 360.0), normalize(float3(1.0,_SinTime.y,_CosTime.y))),
+                        R2,
                         BoxSDF::New()
                     ),
                     NewRotateSDF(
-                        AngleAxis3x3(radians(AudioLinkGetChronotensity(0, 0)/1000.0 % 360.0), normalize(float3(1.0,_SinTime.y,_CosTime.y))),
-                        TranslateSDF::New(
-                            -float3(sin(frac(_Time.x)*4*UNITY_PI), 0, cos(frac(_Time.x)*4*UNITY_PI))*10*_SceneScale,
+                        R2,
+                        NewTranslateSDF(
+                            T3,
                             BoxSDF::New(float4(1,1,.2,1))
                         )
                     )
