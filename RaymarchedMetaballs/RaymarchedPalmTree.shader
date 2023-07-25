@@ -164,7 +164,7 @@ Shader "Xantoz/RaymarchedPalmTree"
 
         class BoxSDF : ISDFObject {
             float SDF(float3 p) {
-                float3 myT = float3(sin(frac(_Time.y)*2*UNITY_PI), 0, cos(frac(_Time.y)*2*UNITY_PI))*10*_SceneScale;
+                float3 myT = -float3(sin(frac(_Time.x)*2*UNITY_PI), 0, cos(frac(_Time.x)*2*UNITY_PI))*10*_SceneScale;
                 float3x3 myR = AngleAxis3x3(radians(AudioLinkGetChronotensity(0, 0)/1000.0 % 360.0), normalize(float3(1.0,_SinTime.y,_CosTime.y)));
                 float2 cubeSize = float2((1+AudioLinkData(uint2(1,0)).r)*_SceneScale, AudioLinkData(uint2(0,0)).r*_SceneScale);
                 return udRoundBox(mul(p - myT, myR), cubeSize.x, cubeSize.y);
@@ -178,7 +178,7 @@ Shader "Xantoz/RaymarchedPalmTree"
             }
         };
 
-        #define MOONSCALE 1
+        #define MOONSCALE 2
         class SphereSDF : ISDFObject {
             float SDF(float3 p) {
                 float3 myT = float3(sin(frac(_Time.x)*2*UNITY_PI), 0, cos(frac(_Time.x)*2*UNITY_PI))*10*MOONSCALE*_SceneScale;
