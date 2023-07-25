@@ -78,7 +78,7 @@ Material:
     - _DepthWrite: 0
     - _DetailNormalMapScale: 1
     - _DstBlend: 0
-    - _Exposure: 0
+    - _Exposure: 0.5
     - _GlossMapScale: 1
     - _Glossiness: 0.5
     - _GlossyReflections: 1
@@ -100,5 +100,5 @@ Material:
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
     - _SceneOffset: {r: 0.5, g: 0.3, b: 0, a: 1}
     - _SceneRotationAxis: {r: 1, g: 0, b: 0, a: 0}
-    - _TexTint: {r: 1, g: 1, b: 1, a: 1}
+    - _TexTint: {r: 0.9245283, g: 0, b: 0, a: 1}
     - _Tint: {r: 1, g: 1, b: 1, a: 1}
