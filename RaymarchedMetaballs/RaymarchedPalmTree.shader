@@ -140,58 +140,9 @@ Shader "Xantoz/RaymarchedPalmTree"
             return float4(col, 1);
         }
 
-/*
-        struct SDFObject
-        {
-            int type;
-            float3x3 R;
-            float3 T;
-        };
-*/
-
-/*
-        interface ISDFObject {
-            float Compute(float3 p);
-            float4 GetColor();
-        };
-
-        class SDFObject : ISDFObject {
-            float3x3 R;
-            float3 T;
-
-            float3 pos; // Written when intersected
-            float Compute(float3 p) {
-                return sphereSDF(p, 1);
-            };
-
-            float2 GetUV() {
-                return getUV(pos);
-            }
-
-            float3 GetColor() {
-                return float4(1,0,1,1);
-            }
-        };
-*/
-
         interface ISDFObject {
             float SDF(float3 p);
             float4 GetColor(float3 dir, float3 normal, float2 uv);
-        };
-
-        class SDFObject : ISDFObject {
-            // float3x3 R;  // TODO: maybe combine R & T into a float4x4 matrix instead?
-            // float3 T;
-
-            // Placeholder implementation
-            float SDF(float3 p) {
-                return sphereSDF(p, 1);
-            }
-
-            // Placeholder implementation
-            float4 GetColor(float3 dir, float3 normal, float2 uv) {
-                return float4(1,1,0,1);
-            }
         };
 
         float3 EstimateNormal(ISDFObject sdf, float3 p)
@@ -213,12 +164,6 @@ Shader "Xantoz/RaymarchedPalmTree"
 
         class BoxSDF : ISDFObject {
             float SDF(float3 p) {
-/*
-                T = float3(sin(frac(_Time.y)*2*UNITY_PI), 0, cos(frac(_Time.y)*2*UNITY_PI))*10*_SceneScale;
-                R = AngleAxis3x3(radians(AudioLinkGetChronotensity(0, 0)/1000.0 % 360.0), normalize(float3(1.0,_SinTime.y,_CosTime.y)));
-                float2 cubeSize = float2((1+AudioLinkData(uint2(1,0)).r)*_SceneScale, AudioLinkData(uint2(0,0)).r*_SceneScale);
-                return udRoundBox(mul(p - T, R), cubeSize.x, cubeSize.y);
-*/
                 float3 myT = float3(sin(frac(_Time.y)*2*UNITY_PI), 0, cos(frac(_Time.y)*2*UNITY_PI))*10*_SceneScale;
                 float3x3 myR = AngleAxis3x3(radians(AudioLinkGetChronotensity(0, 0)/1000.0 % 360.0), normalize(float3(1.0,_SinTime.y,_CosTime.y)));
                 float2 cubeSize = float2((1+AudioLinkData(uint2(1,0)).r)*_SceneScale, AudioLinkData(uint2(0,0)).r*_SceneScale);
@@ -227,70 +172,60 @@ Shader "Xantoz/RaymarchedPalmTree"
 
             float4 GetColor(float3 dir, float3 normal, float2 uv) {
                 float4 texel = stars2(reflect(normal, dir));
-                float4 col = texel + (normal.y / 2.0 - 0.2);
-                return col;
+                float4 col = texel + (normal.y / 2.0 - 0.2)/2;
+                return col * float4(1,0,0,1);
             }
         };
 
         #define MOONSCALE 1
         class SphereSDF : ISDFObject {
             float SDF(float3 p) {
-/*
-                R = float3x3(
-                    1,0,0,
-                    0,1,0,
-                    0,0,1
-                );
-                T = float3(sin(frac(_Time.x)*2*UNITY_PI), 0, cos(frac(_Time.x)*2*UNITY_PI))*10*MOONSCALE*_SceneScale;
-                return sphereSDF(mul(p - T, R), MOONSCALE*_SceneScale);
-*/
-
                 float3 myT = float3(sin(frac(_Time.x)*2*UNITY_PI), 0, cos(frac(_Time.x)*2*UNITY_PI))*10*MOONSCALE*_SceneScale;
                 return sphereSDF(p - myT, MOONSCALE*_SceneScale);
             }
 
             float4 GetColor(float3 dir, float3 normal, float2 uv) {
                 float4 texel = sampleReflectionProbe(reflect(normal, dir));
-                float4 col = texel + (normal.y / 2.0 - 0.2);
-                return col;
+                float4 col = texel + (normal.y / 2.0 - 0.2)/2;
+                return col * float4(0,1,0,1);
             }
         };
 
-        interface ISDFScene {
-            ISDFObject SDF(float3 p, out float dist);
-        };
+        class SceneSDF : ISDFObject {
+            BoxSDF box;
+            SphereSDF sphere;
+            float dist;
+            float dist1;
+            float dist2;
 
-        class SceneSDF : ISDFScene {
-            ISDFObject SDF(float3 p, out float dist) {
-                BoxSDF box;
-                SphereSDF sphere;
-                float dist1 = box.SDF(p);
-                float dist2 = sphere.SDF(p);
+            float SDF(float3 p) {
+                dist1 = box.SDF(p);
+                dist2 = sphere.SDF(p);
                 dist = min(dist1, dist2);
+                return dist;
+            }
 
-                ISDFObject obj;
-                if (dist1 == dist) {
-                    obj = box;
+            float4 GetColor(float3 dir, float3 normal, float2 uv) {
+                if (dist == dist1) {
+                    return box.GetColor(dir, normal, uv);
                 } else {
-                    obj = sphere;
+                    return sphere.GetColor(dir, normal, uv);
                 }
-                return obj;
             }
         };
 
-        float shortestDistanceToSurfaceWithColor(ISDFScene scene, float3 eye, float3 marchingDirection, float start, float end, out float4 col) {
+        float shortestDistanceToSurfaceWithColor(ISDFObject scene, float3 eye, float3 marchingDirection, float start, float end, out float4 col) {
             col = float4(1,1,1,1);
             float depth = start;
 
-            float3 samplePoint = eye + depth * marchingDirection;
+            float3 samplePoint;
             float dist;
-            ISDFObject obj;
 
             [loop]
             for (int i = 0; i < MAX_MARCHING_STEPS; i++) { 
-                // ISDFObject obj;
-                // float dist = scene.SDF(samplePoint, obj);
-                obj = scene.SDF(samplePoint, dist);
+                samplePoint = eye + depth * marchingDirection;
+
+                dist = scene.SDF(samplePoint);
 
                 if (dist < EPSILON) {
                     break;
@@ -304,8 +239,8 @@ Shader "Xantoz/RaymarchedPalmTree"
 
             if (dist < EPSILON) {
                 float3 p = samplePoint + dist*marchingDirection;
-                float3 normal = EstimateNormal(obj, p);
-                col = obj.GetColor(marchingDirection, normal, float2(0,0));
+                float3 normal = EstimateNormal(scene, p);
+                col = scene.GetColor(marchingDirection, normal, float2(0,0));
             } else {
                 if (i >= MAX_MARCHING_STEPS) {
                     depth = end;
