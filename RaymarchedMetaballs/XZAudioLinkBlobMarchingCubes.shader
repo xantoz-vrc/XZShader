@@ -29,7 +29,7 @@ Shader "Xantoz/XZAudioLinkBlobMarchingCubes"
     #include "MarchingTable.hlsl"
 
     // Number of samples to turn into metaballs
-    #define SAMPLECNT 128
+    #define SAMPLECNT 64
     // Use every n'th sample
     #define STEP 16
 
