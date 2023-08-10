@@ -123,6 +123,6 @@ void particle_setColor(inout particle_emit_g2f o, inout PointStream<particle_emi
     o.data = color;
     stream.Append(o);
 }
-#endif
+#endif // ifndef RENDER_PARTICLES
 
-#endif /* _PARTICLES_CGINC */
+#endif // _PARTICLES_CGINC
