@@ -25,9 +25,11 @@ Shader "Xantoz/ParticleCRT/RenderParticles"
         [Header(Total particle count equals number of input points in mesh times the instances times 8)]
         [KeywordEnum(One,Two,Four,Eight,Sixteen,ThirtyTwo)]_Instances ("How many instances", Int) = 2
 
+        [Enum(ObjectSpace,0,WorldSpace,1)]_Space ("Object space or World space", Int) = 0
+
         _PointSize ("Point Size", Float) = 0.1
         _AlphaMultiplier ("Alpha Multiplier (lower makes more transparent)", Range(0.0, 2.0)) = 0.5
-        _Bounds ("Bounding Sphere (particles will not be shown but not killed)", Float) = 2.0
+        _Bounds ("Bounding Sphere, Object space only, 0 disables (particles will not be shown outside)", Float) = 0.0
 
         // Can be of use when the colors from the ParticleCRT are too dark
         _ColorAdd ("Additive color to all particles", Color) = (0, 0, 0, 0)
@@ -98,7 +100,8 @@ Shader "Xantoz/ParticleCRT/RenderParticles"
             CGPROGRAM
             #pragma multi_compile_local _INSTANCES_ONE  _INSTANCES_TWO  _INSTANCES_FOUR  _INSTANCES_EIGHT _INSTANCES_SIXTEEN _INSTANCES_THIRTYTWO
             
-            
+            int _Space;
+
             float _PointSize;
             float _AlphaMultiplier;
             float _Bounds;
@@ -212,24 +215,16 @@ Shader "Xantoz/ParticleCRT/RenderParticles"
                 return pos;
             }
 
-            float4 billboard(float2 xy, float2 scale)
+            float4 billboard(float3 xyz, float2 xy, float2 scale)
             {
-                return mul(transpose(UNITY_MATRIX_IT_MV),
-		    mul(UNITY_MATRIX_MV, float4(0.0, 0.0, 0.0, 1.0))
-		    + float4(xy, 0.0, 0.0) * float4(scale, 1.0, 1.0)
-                );
-            }
+                if (_Space == 1) { 
+                    // Input is in world space
+                    return mul(UNITY_MATRIX_P,
+                        mul(UNITY_MATRIX_V, float4(xyz, 1.0))
+                        + float4(xy, 0.0, 0.0) * float4(scale, 1.0, 1.0));
+                }
 
-            float4 billboard2(float3 xyz, float2 xy, float2 scale)
-            {
-                return mul(transpose(UNITY_MATRIX_IT_MV),
-		    mul(UNITY_MATRIX_MV, float4(xyz, 1.0))
-		    + float4(xy, 0.0, 0.0) * float4(scale, 1.0, 1.0)
-                );
-            }
-
-            float4 billboard3(float3 xyz, float2 xy, float2 scale)
-            {
+                // Input is in object space
                 return mul(UNITY_MATRIX_P,
                     mul(UNITY_MATRIX_MV, float4(xyz, 1.0))
                     + float4(xy, 0.0, 0.0) * float4(scale, 1.0, 1.0));
@@ -291,7 +286,7 @@ Shader "Xantoz/ParticleCRT/RenderParticles"
                     }
 
                     part3 pointOut = particle_getPos(idx);
-                    if (length(pointOut) > _Bounds) {
+                    if (_Space == 0 && _Bounds > 0.0 && length(pointOut) > _Bounds) {
                         continue;
                     }
                     pointOut = rotate(pointOut);
@@ -320,20 +315,16 @@ Shader "Xantoz/ParticleCRT/RenderParticles"
 
                     float4 pointTL, pointTR, pointBL, pointBR;
                     if (_ParticleType == 0) {
-                        pointTL = UnityObjectToClipPos(pointOut + billboard(TL*pointSize, IN[0].worldScale.xy));
-		        pointTR = UnityObjectToClipPos(pointOut + billboard(TR*pointSize, IN[0].worldScale.xy));
-		        pointBL = UnityObjectToClipPos(pointOut + billboard(BL*pointSize, IN[0].worldScale.xy));
-		        pointBR = UnityObjectToClipPos(pointOut + billboard(BR*pointSize, IN[0].worldScale.xy));
+                        pointTL = billboard(pointOut, TL*pointSize, IN[0].worldScale.xy);
+			pointTR = billboard(pointOut, TR*pointSize, IN[0].worldScale.xy);
+			pointBL = billboard(pointOut, BL*pointSize, IN[0].worldScale.xy);
+			pointBR = billboard(pointOut, BR*pointSize, IN[0].worldScale.xy);
                     } else {
                         float3 speed = rotate(particle_getSpeed(idx))*_LengthScale;
-                        // pointTL = billboard3(pointOut + speed, TL*pointSize, IN[0].worldScale.xy);
-		        // pointTR = billboard3(pointOut + speed, TR*pointSize, IN[0].worldScale.xy);
-		        // pointBL = billboard3(pointOut - speed, BL*pointSize, IN[0].worldScale.xy);
-		        // pointBR = billboard3(pointOut - speed, BR*pointSize, IN[0].worldScale.xy);
-                        pointTL = billboard3(pointOut + speed, float2(-length(speed), -1)*pointSize, IN[0].worldScale.xy);
-		        pointTR = billboard3(pointOut + speed, float2(-length(speed),  1)*pointSize, IN[0].worldScale.xy);
-		        pointBL = billboard3(pointOut - speed, float2(length(speed),  -1)*pointSize, IN[0].worldScale.xy);
-		        pointBR = billboard3(pointOut - speed, float2(length(speed),   1)*pointSize, IN[0].worldScale.xy);
+                        pointTL = billboard(pointOut + speed, float2(-length(speed), -1)*pointSize, IN[0].worldScale.xy);
+		        pointTR = billboard(pointOut + speed, float2(-length(speed),  1)*pointSize, IN[0].worldScale.xy);
+		        pointBL = billboard(pointOut - speed, float2(length(speed),  -1)*pointSize, IN[0].worldScale.xy);
+		        pointBR = billboard(pointOut - speed, float2(length(speed),   1)*pointSize, IN[0].worldScale.xy);
                     }
 
                     o.vertex = pointTL; o.uv = uvTL;
