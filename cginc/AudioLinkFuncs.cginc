@@ -1,4 +1,5 @@
-#pragma once
+#ifndef _AUDIOLINKFUNCS_CGINC
+#define _AUDIOLINKFUNCS_CGINC
 
 #include "common.cginc"
 
@@ -189,3 +190,4 @@ float AudioLinkPCMLerpMirrorLR(float i, float wrap)
         frac(i));
 }
 
+#endif // _AUDIOLINKFUNCS_CGINC

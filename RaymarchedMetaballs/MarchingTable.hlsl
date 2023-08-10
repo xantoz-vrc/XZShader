@@ -1,5 +1,5 @@
-#ifndef MARCHING_TABLE
-#define MARCHING_TABLE
+#ifndef _MARCHING_TABLE
+#define _MARCHING_TABLE
 
 static const int edgeConnections[12][2] = {
 		{0,1}, {1,2}, {2,3}, {3,0},
@@ -277,4 +277,4 @@ static const int triTable[256][16] = {
 		{-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1}
 };
 
-#endif
+#endif // _MARCHING_TABLE

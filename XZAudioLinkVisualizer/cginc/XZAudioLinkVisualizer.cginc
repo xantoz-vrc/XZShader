@@ -1,3 +1,6 @@
+#ifndef _XZAUDIOLINKVISUALIZER_CGINC
+#define _XZAUDIOLINKVISUALIZER_CGINC
+
 #include "../../cginc/AudioLinkFuncs.cginc"
 
 float4 _ST;
@@ -508,3 +511,5 @@ float4 get_frag(float2 xy, float2 vignette_xy)
 {
     return get_frag2(xy, vignette_xy, 0);
 }
+
+#endif // _XZAUDIOLINKVISUALIZER_CGINC

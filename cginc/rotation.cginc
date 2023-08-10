@@ -1,3 +1,6 @@
+#ifndef _ROTATION_CGINC
+#define _ROTATION_CGINC
+
 // from https://gist.github.com/keijiro/ee439d5e7388f3aafc5296005c8c3f33
 // Rotation with angle (in radians) and axis
 float3x3 AngleAxis3x3(float angle, float3 axis)
@@ -52,3 +55,5 @@ float3x3 rotateZ(float theta)
         float3(0, 0, 1)
     );
 }
+
+#endif // _ROTATION_CGINC

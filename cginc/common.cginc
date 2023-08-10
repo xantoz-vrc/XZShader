@@ -1,4 +1,5 @@
-#pragma once
+#ifndef _COMMON_CGINC
+#define _COMMON_CGINC
 
 float mod(float x, float y)
 {
@@ -118,3 +119,5 @@ float simplex3d_fractal(float3 m) {
                +0.1333333*simplex3d(4.0*mul(rot3, m))
                +0.0666667*simplex3d(8.0*m);
 }
+
+#endif /* _COMMON_CGINC */
