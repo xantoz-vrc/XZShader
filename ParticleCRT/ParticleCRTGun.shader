@@ -184,8 +184,6 @@ Shader "Xantoz/ParticleCRT/ParticleCRTGun"
                             float attractorScale = (length(attractorDir) == 0.0f) ? 0.0f : (1/sqrt(length(attractorDir)));
                             acc += attractorDir*attractorScale*100*al_beat[0];
 
-                            // acc += attractorDir*attractorScale*40*(1 - al_beat[3]);
-
                         }
 
                         // Attract red particles towards a line in the centre
@@ -193,8 +191,7 @@ Shader "Xantoz/ParticleCRT/ParticleCRTGun"
                             float3 attractorPos = float3(0, 0, particlePos.z);
                             float3 attractorDir = attractorPos - particlePos;
                             float attractorScale = (length(attractorDir) == 0.0f) ? 0.0f : (1/sqrt(length(attractorDir)));
-                            // acc = attractorDir*attractorScale*30*al_beat[3];
-                            acc = attractorDir*attractorScale*100*al_beat[0];
+                            acc += attractorDir*attractorScale*100*al_beat[0];
                         }
 
                         if (particleCol.g > 1) {
