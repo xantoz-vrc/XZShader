@@ -22,7 +22,7 @@
   #define ParticleTexture2D _ParticleCRT
 #else
   #define CRTTEXTURETYPE TEXTURETYPE
-  #include "flexcrt.cginc"
+  #include "../cginc/flexcrt.cginc"
   #define ParticleTexture2D _SelfTexture2D
 #endif
 
