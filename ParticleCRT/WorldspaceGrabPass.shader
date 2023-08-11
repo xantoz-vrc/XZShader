@@ -1,6 +1,10 @@
 Shader "Xantoz/ParticleCRT/WorldspaceGrabPass"
 {
+    Properties
+    {
+    }
 
+    
     SubShader
     {
 	Tags { "RenderType"="Transparent" "Queue"="Transparent" "DisableBatching"="True" "IgnoreProjector" = "True" }
@@ -43,9 +47,8 @@ Shader "Xantoz/ParticleCRT/WorldspaceGrabPass"
 	    struct g2f
 	    {
 		float4 vertex : SV_POSITION;
-		float3 color : TEXCOORD1;
 		float3 worldPos : TEXCOORD2;
-                float3 normal : TEXCOORD3;
+                float3 direction : TEXCOORD3;
 	    };
 
 	    uint _Width;
@@ -55,10 +58,6 @@ Shader "Xantoz/ParticleCRT/WorldspaceGrabPass"
 		v2g o;
 		o.vertex = v.vertex;
 		o.uv = v.uv;
-		if(o.rh.y > _HeightFactor) {
-		    v.vertex.xyz = mul(unity_WorldToObject, float4(o.rh.x, _HeightFactor , o.rh.z, o.rh.w)).xyz;
-		}
-
 		o.worldPos = mul(unity_ObjectToWorld, v.vertex).xyz;
 		return o;
 	    }
@@ -110,18 +109,12 @@ Shader "Xantoz/ParticleCRT/WorldspaceGrabPass"
 		} else if( id == 2) {
 		    col.rgb = uintToHalf3(asuint(i.worldPos.z));
 		} else if( id == 3) {
-		    col.rgb = uintToHalf3(asuint(i.rh.x));
+		    col.rgb = uintToHalf3(asuint(i.direction.x));
 		} else if( id == 4) {
-		    col.rgb = uintToHalf3(asuint(i.rh.y));
+		    col.rgb = uintToHalf3(asuint(i.direction.y));
 		} else if( id == 5) {
-		    col.rgb = uintToHalf3(asuint(i.rh.z));
-		} else if( id == 6) {
-		    col.rgb = uintToHalf3(asuint(i.rh.w));
-		}
-		else if( id == 7) {
-		    col.rgb = uintToHalf3(asuint(i.up));
-		}
-		else {
+		    col.rgb = uintToHalf3(asuint(i.direction.z));
+                } else {
 		    col.rgb = 0.;
 		}
 		return col;
