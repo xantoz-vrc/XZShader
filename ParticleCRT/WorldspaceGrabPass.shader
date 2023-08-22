@@ -15,11 +15,6 @@ Shader "Xantoz/ParticleCRT/WorldspaceGrabPass"
 	#include "UnityCG.cginc"
 	#include "Common.cginc"
 
-        #define PIXELTYPES 8
-        #define PIXELSIZE 1
-        #define PIXELWIDTH (PIXELTYPES*PIXELSIZE)
-        #define TEXSIZE 16
-        #define PIXELHEIGHT PIXELSIZE
 
         //Merlin. For details see https://github.com/pema99/shader-knowledge/blob/main/tips-and-tricks.md#encoding-and-decoding-data-in-a-grabpass
         float uint14ToFloat(uint input)
@@ -53,7 +48,6 @@ Shader "Xantoz/ParticleCRT/WorldspaceGrabPass"
 	    #pragma require geometry
 	    #pragma vertex vert
 	    #pragma fragment frag
-	    #pragma geometry geom
 
 	    struct vi
             {
@@ -78,42 +72,6 @@ Shader "Xantoz/ParticleCRT/WorldspaceGrabPass"
 		o.uv = v.uv;
 		o.worldPos = mul(unity_ObjectToWorld, v.vertex).xyz;
 		return o;
-	    }
-
-	    [maxvertexcount(12)]
-	    void geom(triangle v2g input[3], uint pid: SV_PrimitiveID, inout TriangleStream<g2f> triStream)
-            {
-		g2f o;
-		uint width = uint2(TEXSIZE / PIXELWIDTH, 0.);
-
-		for (int i = 0; i < 3; i++) {
-		    uint id = pid * 3 + i;
-
-		    o.uv = input[i].uv;
-		    o.worldPos = input[i].worldPos;
-                    o.normal = input[i].normal;
-
-		    float4 sscale = float4( 2. / _ScreenParams.xy, 1,1);
-		    float4 soffset = float4( -_ScreenParams.xy/2,0,0);
-		    soffset += float4(  id % width * PIXELWIDTH, id / width * PIXELHEIGHT, 0, 0 );
-
-		    o.vertex = ( float4(PIXELWIDTH,PIXELHEIGHT,1,1) + soffset ) * sscale;
-		    o.uv = float2(PIXELTYPES,0);
-		    triStream.Append(o);
-
-		    o.vertex = ( float4(0,PIXELHEIGHT,1,1) + soffset ) * sscale;
-		    o.uv = float2(0,0);
-		    triStream.Append(o);
-
-		    o.vertex = ( float4(PIXELWIDTH,0,1,1) + soffset ) * sscale;
-		    o.uv = float2(PIXELTYPES,0);
-		    triStream.Append(o);
-
-		    o.vertex = ( float4(0,0,1,1) + soffset ) * sscale;
-		    o.uv = float2(0,0);
-		    triStream.Append(o);
-		    triStream.RestartStrip();
-		}
 	    }
 
 	    float4 frag (g2f i) : SV_Target 
@@ -145,6 +103,12 @@ Shader "Xantoz/ParticleCRT/WorldspaceGrabPass"
 	Pass {
 	    CGPROGRAM
 
+            #define PIXELTYPES 8
+            #define PIXELSIZE 1
+            #define PIXELWIDTH (PIXELTYPES*PIXELSIZE)
+            #define TEXSIZE 16
+            #define PIXELHEIGHT PIXELSIZE
+            
 	    #pragma require geometry
 	    #pragma vertex vert
 	    #pragma fragment frag
