@@ -53,6 +53,7 @@ Shader "Xantoz/ParticleCRT/WorldspaceGrabPass"
             {
 		float4 vertex : POSITION;
                 float3 normal : NORMAL;
+                float2 uv : TEXCOORD0;
 	    };
 
 	    struct v2f
@@ -61,6 +62,7 @@ Shader "Xantoz/ParticleCRT/WorldspaceGrabPass"
 		float4 vertex : SV_POSITION;
 		float3 worldPos : TEXCOORD2;
                 float3 normal : TEXCOORD3;
+                float3 grabPos : TEXCOORD4;
 	    };
 
 	    uint _Width;
@@ -68,16 +70,19 @@ Shader "Xantoz/ParticleCRT/WorldspaceGrabPass"
 	    v2g vert(vi v)
 	    {
 		v2g o;
-		o.vertex = v.vertex;
+		// o.vertex = v.vertex;
+                o.vertex = float4(float2(1,-1)*(uv*2-1),0,1);
 		o.uv = v.uv;
-		o.worldPos = mul(unity_ObjectToWorld, v.vertex).xyz;
+                o.normal = normal;
+		o.worldPos = mul(unity_ObjectToWorld, v.vertex).xyz; // TODO: This will vary slightly over frag, we should probably be using a  geometry shader with a single-point mesh or so
+                o.grabPos = ComputeGrabScreenPos(o.vertex);
 		return o;
 	    }
 
 	    float4 frag (g2f i) : SV_Target 
             {
 		float4 col;
-		int id = floor(i.uv.x);
+		int id = floor(i.grabPos.x);
 		if( id == 0 ) {
 		    col.rgb = uintToHalf3(asuint(i.worldPos.x));
 		} else if( id == 1) {
@@ -91,7 +96,7 @@ Shader "Xantoz/ParticleCRT/WorldspaceGrabPass"
 		} else if( id == 5) {
 		    col.rgb = uintToHalf3(asuint(i.direction.z));
                 } else {
-		    col.rgb = 0.;
+                    discard;
 		}
 		return col;
 
