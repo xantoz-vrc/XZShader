@@ -7,39 +7,28 @@ Shader "Xantoz/ParticleCRT/WorldspaceGrabPass"
     
     SubShader
     {
-	Tags { "RenderType"="Transparent" "Queue"="Transparent" "DisableBatching"="True" "IgnoreProjector" = "True" }
+	// Tags { "RenderType"="Transparent" "Queue"="Transparent" "DisableBatching"="True" "IgnoreProjector" = "True" }
+
+        // Settings to be on top of everything
+        // TODO: Eventually we will want to try to be below everything instead
+	Tags {
+            "RenderType"="Transparent"
+            "Queue"="Overlay+100" 
+            "DisableBatching"="True"
+            "IgnoreProjector" = "True"
+        }
+        LOD 100
+        Cull Off
+        ZTest Always
+        ZWrite Off
 
 	CGINCLUDE
 	#pragma target 5.0
 
 	#include "UnityCG.cginc"
-	#include "Common.cginc"
+        #include "uintToHalf3.cginc"
 
-
-        //Merlin. For details see https://github.com/pema99/shader-knowledge/blob/main/tips-and-tricks.md#encoding-and-decoding-data-in-a-grabpass
-        float uint14ToFloat(uint input)
-        {
-	    precise float output = (f16tof32((input & 0x00003fff)));
-	    return output;
-        }
-
-        uint floatToUint14(precise float input)
-        {
-	    uint output = (f32tof16(input)) & 0x00003fff;
-	    return output;
-        }
-
-        // Encodes a 32 bit uint into 3 half precision floats
-        float3 uintToHalf3(uint input)
-        {
-	    precise float3 output = float3(uint14ToFloat(input), uint14ToFloat(input >> 14), uint14ToFloat((input >> 28) & 0x0000000f));
-	    return output;
-        }
-
-        uint half3ToUint(precise float3 input)
-        {
-	    return floatToUint14(input.x) | (floatToUint14(input.y) << 14) | ((floatToUint14(input.z) & 0x0000000f) << 28);
-        }
+        float4 _XZWorldspaceGrabPass_TexelSize;
 	ENDCG
 
 	Pass {
@@ -62,44 +51,60 @@ Shader "Xantoz/ParticleCRT/WorldspaceGrabPass"
 		float4 vertex : SV_POSITION;
 		float3 worldPos : TEXCOORD2;
                 float3 normal : TEXCOORD3;
-                float3 grabPos : TEXCOORD4;
+                float4 grabPos : TEXCOORD4;
 	    };
 
 	    uint _Width;
 
-	    v2g vert(vi v)
+	    v2f vert(vi v)
 	    {
-		v2g o;
+		v2f o;
 		// o.vertex = v.vertex;
-                o.vertex = float4(float2(1,-1)*(uv*2-1),0,1);
+                o.vertex = float4(float2(1,-1)*(v.uv*2-1),0,1);
 		o.uv = v.uv;
-                o.normal = normal;
-		o.worldPos = mul(unity_ObjectToWorld, v.vertex).xyz; // TODO: This will vary slightly over frag, we should probably be using a  geometry shader with a single-point mesh or so
+                o.normal = v.normal;
+		// o.worldPos = mul(unity_ObjectToWorld, v.vertex).xyz; // TODO: This will vary slightly over frag, we should probably be using a  geometry shader with a single-point mesh or so
+                // o.worldPos = mul(unity_ObjectToWorld, float4(0, 0, 0, 1));
+                o.worldPos = mul(UNITY_MATRIX_M, float4(0, 0, 0, 1));
+                // o.grabPos = ComputeScreenPos(o.vertex);
                 o.grabPos = ComputeGrabScreenPos(o.vertex);
+                // o.grabPos = ComputeGrabScreenPos(UnityObjectToClipPos(v.vertex));
 		return o;
 	    }
 
-	    float4 frag (g2f i) : SV_Target 
+	    float4 frag (v2f i) : SV_Target 
             {
 		float4 col;
-		int id = floor(i.grabPos.x);
-		if( id == 0 ) {
-		    col.rgb = uintToHalf3(asuint(i.worldPos.x));
-		} else if( id == 1) {
-		    col.rgb = uintToHalf3(asuint(i.worldPos.y));
-		} else if( id == 2) {
-		    col.rgb = uintToHalf3(asuint(i.worldPos.z));
-		} else if( id == 3) {
-		    col.rgb = uintToHalf3(asuint(i.direction.x));
-		} else if( id == 4) {
-		    col.rgb = uintToHalf3(asuint(i.direction.y));
-		} else if( id == 5) {
-		    col.rgb = uintToHalf3(asuint(i.direction.z));
+                col.a = 1.0;
+
+                // int2 xy = floor((i.grabPos.xy/i.grabPos.w)*_XZWorldspaceGrabPass_TexelSize.xy);
+                // int2 xy = floor((i.grabPos.xy/i.grabPos.w)*_XZWorldspaceGrabPass_TexelSize.zw);
+                int2 xy = floor((i.grabPos.xy/i.grabPos.w)*_ScreenParams.xy);
+#if UNITY_UV_STARTS_AT_TOP
+                xy.y = _ScreenParams.y - xy.y - 1;
+#endif
+
+                if (true) {
+                // if (xy.y <= 200) { 
+		    if (xy.x == 0) {
+		        col.rgb = uintToHalf3(asuint(i.worldPos.x));
+		    } else if (xy.x == 1) {
+		        col.rgb = uintToHalf3(asuint(i.worldPos.y));
+		    } else if (xy.x == 2) {
+		        col.rgb = uintToHalf3(asuint(i.worldPos.z));
+		    } else if (xy.x == 3) {
+		        col.rgb = uintToHalf3(asuint(i.normal.x));
+		    } else if (xy.x == 4) {
+		        col.rgb = uintToHalf3(asuint(i.normal.y));
+		    } else if (xy.x == 5) {
+		        col.rgb = uintToHalf3(asuint(i.normal.z));
+                    } else {
+                        discard;
+		    }
                 } else {
                     discard;
-		}
+                }
 		return col;
-
 	    }
 
 	    ENDCG

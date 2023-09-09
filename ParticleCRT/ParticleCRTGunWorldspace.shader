@@ -9,10 +9,12 @@ Shader "Xantoz/ParticleCRT/ParticleCRTGunWorldspace"
     #include "particleEmit.cginc"
     #include "../cginc/AudioLinkFuncs.cginc"
     #include "../cginc/rotation.cginc"
+    #include "uintToHalf3.cginc"
 
     Texture2D<float4> _XZWorldspaceGrabPass;
     float4 _XZWorldspaceGrabPass_TexelSize;
     #define GRABSIZE _XZWorldspaceGrabPass_TexelSize.w
+
 
     float4 GetFromTexture(uint2 coord)
     {
@@ -21,6 +23,15 @@ Shader "Xantoz/ParticleCRT/ParticleCRTGunWorldspace"
 	#else
 	return _XZWorldspaceGrabPass[coord];
 	#endif
+    }
+    
+    float3 GetWorldSpacePos()
+    {
+        return float3(
+            asfloat(half3ToUint(GetFromTexture(uint2(0,0)))),
+            asfloat(half3ToUint(GetFromTexture(uint2(1,0)))),
+            asfloat(half3ToUint(GetFromTexture(uint2(2,0))))
+        );
     }
     ENDCG
 
@@ -71,6 +82,7 @@ Shader "Xantoz/ParticleCRT/ParticleCRTGunWorldspace"
                 };
 
                 emit_parameters p = make_emit_parameters();
+                const float3 worldPos = GetWorldSpacePos();
 
                 float3 ran = random3(float3(al_beat[1], al_beat[2], al_beat[3]));
                 float4 colrandom = float4(0.5*ran, 1);
@@ -86,7 +98,7 @@ Shader "Xantoz/ParticleCRT/ParticleCRTGunWorldspace"
                         float angle = float(i) * (2*UNITY_PI/float(pcount));
 
                         p.ttl = 8; p.type = PARTICLE_TYPE_1;
-                        p.pos = part3(cos(angle), sin(angle), 0)*0.05;
+                        p.pos = worldPos + part3(cos(angle), sin(angle), 0)*0.05;
                         p.spd = part3(sin(angle), -cos(angle), 0) + part3(0, 0, 2.0);
                         p.acc = -part3(sin(angle), -cos(angle), 0);
 
@@ -105,7 +117,7 @@ Shader "Xantoz/ParticleCRT/ParticleCRTGunWorldspace"
                         float angle = float(i) * (2*UNITY_PI/float(pcount));
 
                         p.ttl = 4; p.type = PARTICLE_TYPE_1;
-                        p.pos = part3(cos(angle), sin(angle), 0)*0.01;
+                        p.pos = worldPos + part3(cos(angle), sin(angle), 0)*0.01;
                         p.spd = part3(sin(angle), -cos(angle), 0) + part3(0, 0, 2.0);
                         // p.acc = 0;
                         // p.acc = -part3(sin(angle), -cos(angle), 0)*10;
@@ -120,7 +132,7 @@ Shader "Xantoz/ParticleCRT/ParticleCRTGunWorldspace"
 
                     p.col = float4(.8, 0, 0, 1)*2 + colrandom;
                     p.ttl = 4; p.type = PARTICLE_TYPE_4;
-                    p.pos = part3(cos(angle), sin(angle), 0)*0.01;
+                    p.pos = worldPos + part3(cos(angle), sin(angle), 0)*0.01;
                     p.spd = part3(0, 0, 2.0);
                     p.acc = part3(0, 0, 0);
 
