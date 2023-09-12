@@ -79,10 +79,16 @@ Shader "Xantoz/ParticleCRT/WorldspaceGrabPass"
 
                 // int2 xy = floor((i.grabPos.xy/i.grabPos.w)*_XZWorldspaceGrabPass_TexelSize.xy);
                 // int2 xy = floor((i.grabPos.xy/i.grabPos.w)*_XZWorldspaceGrabPass_TexelSize.zw);
-                int2 xy = floor((i.grabPos.xy/i.grabPos.w)*_ScreenParams.xy);
+
+                int2 xy = floor((i.grabPos.xy/i.grabPos.w)*_XZWorldspaceGrabPass_TexelSize.zw);
 #if UNITY_UV_STARTS_AT_TOP
-                xy.y = _ScreenParams.y - xy.y - 1;
+                xy.y = _XZWorldspaceGrabPass_TexelSize.w - xy.y - 1;
 #endif
+
+//                 int2 xy = floor((i.grabPos.xy/i.grabPos.w)*_ScreenParams.xy);
+// #if UNITY_UV_STARTS_AT_TOP
+//                 xy.y = _ScreenParams.y - xy.y - 1;
+// #endif
 
                 if (true) {
                 // if (xy.y <= 200) { 

@@ -29,7 +29,7 @@ Shader "Xantoz/ParticleCRT/RenderParticles"
 
         _PointSize ("Point Size", Float) = 0.1
         _AlphaMultiplier ("Alpha Multiplier (lower makes more transparent)", Range(0.0, 2.0)) = 0.5
-        _Bounds ("Bounding Sphere (particles will not be shown but not killed)", Float) = 2.0
+        _Bounds ("Bounding Sphere, Object space only, 0 disables (particles will not be shown outside)", Float) = 0.0
 
         // Can be of use when the colors from the ParticleCRT are too dark
         _ColorAdd ("Additive color to all particles", Color) = (0, 0, 0, 0)
@@ -286,7 +286,7 @@ Shader "Xantoz/ParticleCRT/RenderParticles"
                     }
 
                     part3 pointOut = particle_getPos(idx);
-                    if (length(pointOut) > _Bounds) {
+                    if (_Space == 0 && _Bounds > 0.0 && length(pointOut) > _Bounds) {
                         continue;
                     }
                     pointOut = rotate(pointOut);
