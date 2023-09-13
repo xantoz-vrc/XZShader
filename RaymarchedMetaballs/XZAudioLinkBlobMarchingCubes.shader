@@ -89,7 +89,7 @@ Shader "Xantoz/XZAudioLinkBlobMarchingCubes"
                 UNITY_VERTEX_OUTPUT_STEREO
             };
 
-            v2g vert(appdata IN)
+            v2g vert(appdata v)
             {
                 v2g o;
 
