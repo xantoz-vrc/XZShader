@@ -3,7 +3,6 @@ Shader "Xantoz/ParticleCRT/WorldspaceGrabPass"
     Properties
     {
     }
-
     
     SubShader
     {
@@ -31,7 +30,8 @@ Shader "Xantoz/ParticleCRT/WorldspaceGrabPass"
         float4 _XZWorldspaceGrabPass_TexelSize;
 	ENDCG
 
-	Pass {
+	Pass
+        {
 	    CGPROGRAM
 
 	    #pragma require geometry
@@ -41,16 +41,12 @@ Shader "Xantoz/ParticleCRT/WorldspaceGrabPass"
 	    struct vi
             {
 		float4 vertex : POSITION;
-                float3 normal : NORMAL;
                 float2 uv : TEXCOORD0;
 	    };
 
 	    struct v2f
 	    {
-		float2 uv : TEXCOORD0;
 		float4 vertex : SV_POSITION;
-		float3 worldPos : TEXCOORD2;
-                float3 normal : TEXCOORD3;
                 float4 grabPos : TEXCOORD4;
 	    };
 
@@ -59,51 +55,61 @@ Shader "Xantoz/ParticleCRT/WorldspaceGrabPass"
 	    v2f vert(vi v)
 	    {
 		v2f o;
-		// o.vertex = v.vertex;
                 o.vertex = float4(float2(1,-1)*(v.uv*2-1),0,1);
-		o.uv = v.uv;
-                o.normal = v.normal;
-		// o.worldPos = mul(unity_ObjectToWorld, v.vertex).xyz; // TODO: This will vary slightly over frag, we should probably be using a  geometry shader with a single-point mesh or so
-                // o.worldPos = mul(unity_ObjectToWorld, float4(0, 0, 0, 1));
-                o.worldPos = mul(UNITY_MATRIX_M, float4(0, 0, 0, 1));
-                // o.grabPos = ComputeScreenPos(o.vertex);
                 o.grabPos = ComputeGrabScreenPos(o.vertex);
-                // o.grabPos = ComputeGrabScreenPos(UnityObjectToClipPos(v.vertex));
 		return o;
 	    }
 
-	    float4 frag (v2f i) : SV_Target 
+	    float4 frag (v2f i) : SV_Target
             {
 		float4 col;
                 col.a = 1.0;
-
-                // int2 xy = floor((i.grabPos.xy/i.grabPos.w)*_XZWorldspaceGrabPass_TexelSize.xy);
-                // int2 xy = floor((i.grabPos.xy/i.grabPos.w)*_XZWorldspaceGrabPass_TexelSize.zw);
 
                 int2 xy = floor((i.grabPos.xy/i.grabPos.w)*_XZWorldspaceGrabPass_TexelSize.zw);
 #if UNITY_UV_STARTS_AT_TOP
                 xy.y = _XZWorldspaceGrabPass_TexelSize.w - xy.y - 1;
 #endif
 
-//                 int2 xy = floor((i.grabPos.xy/i.grabPos.w)*_ScreenParams.xy);
-// #if UNITY_UV_STARTS_AT_TOP
-//                 xy.y = _ScreenParams.y - xy.y - 1;
-// #endif
+                const float4x4 m = UNITY_MATRIX_M;
 
                 if (true) {
-                // if (xy.y <= 200) { 
+                // if (xy.y <= 1) {
 		    if (xy.x == 0) {
-		        col.rgb = uintToHalf3(asuint(i.worldPos.x));
+		        col.rgb = uintToHalf3(asuint(m._m00));
 		    } else if (xy.x == 1) {
-		        col.rgb = uintToHalf3(asuint(i.worldPos.y));
+		        col.rgb = uintToHalf3(asuint(m._m01));
 		    } else if (xy.x == 2) {
-		        col.rgb = uintToHalf3(asuint(i.worldPos.z));
+		        col.rgb = uintToHalf3(asuint(m._m02));
 		    } else if (xy.x == 3) {
-		        col.rgb = uintToHalf3(asuint(i.normal.x));
+		        col.rgb = uintToHalf3(asuint(m._m03));
+
 		    } else if (xy.x == 4) {
-		        col.rgb = uintToHalf3(asuint(i.normal.y));
+		        col.rgb = uintToHalf3(asuint(m._m10));
 		    } else if (xy.x == 5) {
-		        col.rgb = uintToHalf3(asuint(i.normal.z));
+		        col.rgb = uintToHalf3(asuint(m._m11));
+                    } else if (xy.x == 6) {
+		        col.rgb = uintToHalf3(asuint(m._m12));
+                    } else if (xy.x == 7) {
+		        col.rgb = uintToHalf3(asuint(m._m13));
+
+		    } else if (xy.x == 8) {
+		        col.rgb = uintToHalf3(asuint(m._m20));
+		    } else if (xy.x == 9) {
+		        col.rgb = uintToHalf3(asuint(m._m21));
+                    } else if (xy.x == 10) {
+		        col.rgb = uintToHalf3(asuint(m._m22));
+                    } else if (xy.x == 11) {
+		        col.rgb = uintToHalf3(asuint(m._m23));
+
+		    } else if (xy.x == 12) {
+		        col.rgb = uintToHalf3(asuint(m._m30));
+		    } else if (xy.x == 13) {
+		        col.rgb = uintToHalf3(asuint(m._m31));
+                    } else if (xy.x == 14) {
+		        col.rgb = uintToHalf3(asuint(m._m32));
+                    } else if (xy.x == 15) {
+		        col.rgb = uintToHalf3(asuint(m._m33));
+
                     } else {
                         discard;
 		    }
@@ -115,115 +121,7 @@ Shader "Xantoz/ParticleCRT/WorldspaceGrabPass"
 
 	    ENDCG
 	}
-/*
-	Pass {
-	    CGPROGRAM
 
-            #define PIXELTYPES 8
-            #define PIXELSIZE 1
-            #define PIXELWIDTH (PIXELTYPES*PIXELSIZE)
-            #define TEXSIZE 16
-            #define PIXELHEIGHT PIXELSIZE
-            
-	    #pragma require geometry
-	    #pragma vertex vert
-	    #pragma fragment frag
-	    #pragma geometry geom
-
-	    struct vi
-            {
-		float4 vertex : POSITION;
-                float3 normal : NORMAL;
-	    };
-
-	    struct v2g
-	    {
-		float2 uv : TEXCOORD0;
-		float4 vertex : SV_POSITION;
-		float3 worldPos : TEXCOORD2;
-                float3 normal : TEXCOORD3;
-	    };
-
-	    struct g2f
-	    {
-		float4 vertex : SV_POSITION;
-		float3 worldPos : TEXCOORD2;
-                float3 direction : TEXCOORD3;
-	    };
-
-	    uint _Width;
-
-	    v2g vert(vi v)
-	    {
-		v2g o;
-		o.vertex = v.vertex;
-		o.uv = v.uv;
-		o.worldPos = mul(unity_ObjectToWorld, v.vertex).xyz;
-		return o;
-	    }
-
-	    [maxvertexcount(12)]
-	    void geom(triangle v2g input[3], uint pid: SV_PrimitiveID, inout TriangleStream<g2f> triStream)
-            {
-		g2f o;
-		uint width = uint2(TEXSIZE / PIXELWIDTH, 0.);
-
-		for (int i = 0; i < 3; i++) {
-		    uint id = pid * 3 + i;
-
-		    o.uv = input[i].uv;
-		    o.worldPos = input[i].worldPos;
-                    o.normal = input[i].normal;
-
-		    float4 sscale = float4( 2. / _ScreenParams.xy, 1,1);
-		    float4 soffset = float4( -_ScreenParams.xy/2,0,0);
-		    soffset += float4(  id % width * PIXELWIDTH, id / width * PIXELHEIGHT, 0, 0 );
-
-		    o.vertex = ( float4(PIXELWIDTH,PIXELHEIGHT,1,1) + soffset ) * sscale;
-		    o.uv = float2(PIXELTYPES,0);
-		    triStream.Append(o);
-
-		    o.vertex = ( float4(0,PIXELHEIGHT,1,1) + soffset ) * sscale;
-		    o.uv = float2(0,0);
-		    triStream.Append(o);
-
-		    o.vertex = ( float4(PIXELWIDTH,0,1,1) + soffset ) * sscale;
-		    o.uv = float2(PIXELTYPES,0);
-		    triStream.Append(o);
-
-		    o.vertex = ( float4(0,0,1,1) + soffset ) * sscale;
-		    o.uv = float2(0,0);
-		    triStream.Append(o);
-		    triStream.RestartStrip();
-		}
-	    }
-
-	    float4 frag (g2f i) : SV_Target 
-            {
-		float4 col;
-		int id = floor(i.uv.x);
-		if( id == 0 ) {
-		    col.rgb = uintToHalf3(asuint(i.worldPos.x));
-		} else if( id == 1) {
-		    col.rgb = uintToHalf3(asuint(i.worldPos.y));
-		} else if( id == 2) {
-		    col.rgb = uintToHalf3(asuint(i.worldPos.z));
-		} else if( id == 3) {
-		    col.rgb = uintToHalf3(asuint(i.direction.x));
-		} else if( id == 4) {
-		    col.rgb = uintToHalf3(asuint(i.direction.y));
-		} else if( id == 5) {
-		    col.rgb = uintToHalf3(asuint(i.direction.z));
-                } else {
-		    col.rgb = 0.;
-		}
-		return col;
-
-	    }
-
-	    ENDCG
-	}
-*/
 	GrabPass { "_XZWorldspaceGrabPass" }
     }
 }

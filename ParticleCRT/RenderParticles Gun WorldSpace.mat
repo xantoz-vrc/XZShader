@@ -63,7 +63,7 @@ Material:
     - _AlphaMultiplier: 0.25
     - _Amplitude_Scale: 2
     - _BlinkMode: 0
-    - _Bounds: 10
+    - _Bounds: 0
     - _BumpScale: 1
     - _ChronoRot_Band0: 4
     - _ChronoRot_Band1: 3

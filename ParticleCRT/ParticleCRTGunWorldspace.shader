@@ -15,7 +15,6 @@ Shader "Xantoz/ParticleCRT/ParticleCRTGunWorldspace"
     float4 _XZWorldspaceGrabPass_TexelSize;
     #define GRABSIZE _XZWorldspaceGrabPass_TexelSize.w
 
-
     float4 GetFromTexture(uint2 coord)
     {
 	#if UNITY_UV_STARTS_AT_TOP
@@ -24,14 +23,32 @@ Shader "Xantoz/ParticleCRT/ParticleCRTGunWorldspace"
 	return _XZWorldspaceGrabPass[coord];
 	#endif
     }
-    
-    float3 GetWorldSpacePos()
+
+    float4x4 GetM()
     {
-        return float3(
-            asfloat(half3ToUint(GetFromTexture(uint2(0,0)))),
-            asfloat(half3ToUint(GetFromTexture(uint2(1,0)))),
-            asfloat(half3ToUint(GetFromTexture(uint2(2,0))))
-        );
+        float4x4 m;
+
+        m._m00 = asfloat(half3ToUint(GetFromTexture(uint2(0,0))));
+        m._m01 = asfloat(half3ToUint(GetFromTexture(uint2(1,0))));
+        m._m02 = asfloat(half3ToUint(GetFromTexture(uint2(2,0))));
+        m._m03 = asfloat(half3ToUint(GetFromTexture(uint2(3,0))));
+
+        m._m10 = asfloat(half3ToUint(GetFromTexture(uint2(4,0))));
+        m._m11 = asfloat(half3ToUint(GetFromTexture(uint2(5,0))));
+        m._m12 = asfloat(half3ToUint(GetFromTexture(uint2(6,0))));
+        m._m13 = asfloat(half3ToUint(GetFromTexture(uint2(7,0))));
+
+        m._m20 = asfloat(half3ToUint(GetFromTexture(uint2(8,0))));
+        m._m21 = asfloat(half3ToUint(GetFromTexture(uint2(9,0))));
+        m._m22 = asfloat(half3ToUint(GetFromTexture(uint2(10,0))));
+        m._m23 = asfloat(half3ToUint(GetFromTexture(uint2(11,0))));
+
+        m._m30 = asfloat(half3ToUint(GetFromTexture(uint2(12,0))));
+        m._m31 = asfloat(half3ToUint(GetFromTexture(uint2(13,0))));
+        m._m32 = asfloat(half3ToUint(GetFromTexture(uint2(14,0))));
+        m._m33 = asfloat(half3ToUint(GetFromTexture(uint2(15,0))));
+
+        return m;
     }
     ENDCG
 
@@ -82,7 +99,12 @@ Shader "Xantoz/ParticleCRT/ParticleCRTGunWorldspace"
                 };
 
                 emit_parameters p = make_emit_parameters();
-                const float3 worldPos = GetWorldSpacePos();
+                float4x4 m = GetM();
+                // Remove scaling
+                m._m00_m01_m02 = normalize(m._m00_m01_m02);
+		m._m10_m11_m12 = normalize(m._m10_m11_m12);
+		m._m20_m21_m22 = normalize(m._m20_m21_m22);
+                float3x3 r = m; // This effectively removes the translation as well
 
                 float3 ran = random3(float3(al_beat[1], al_beat[2], al_beat[3]));
                 float4 colrandom = float4(0.5*ran, 1);
@@ -98,9 +120,10 @@ Shader "Xantoz/ParticleCRT/ParticleCRTGunWorldspace"
                         float angle = float(i) * (2*UNITY_PI/float(pcount));
 
                         p.ttl = 8; p.type = PARTICLE_TYPE_1;
-                        p.pos = worldPos + part3(cos(angle), sin(angle), 0)*0.05;
-                        p.spd = part3(sin(angle), -cos(angle), 0) + part3(0, 0, 2.0);
-                        p.acc = -part3(sin(angle), -cos(angle), 0);
+                        part3 pos = part3(cos(angle), sin(angle), 0)*0.05;
+                        p.pos = mul(m, part4(pos, 1));
+                        p.spd = mul(r, part3(sin(angle), -cos(angle), 0) + part3(0, 0, 2.0));
+                        p.acc = mul(r, -part3(sin(angle), -cos(angle), 0));
 
                         emit_particle(o, stream, ctx, p);
                     }
@@ -117,11 +140,10 @@ Shader "Xantoz/ParticleCRT/ParticleCRTGunWorldspace"
                         float angle = float(i) * (2*UNITY_PI/float(pcount));
 
                         p.ttl = 4; p.type = PARTICLE_TYPE_1;
-                        p.pos = worldPos + part3(cos(angle), sin(angle), 0)*0.01;
-                        p.spd = part3(sin(angle), -cos(angle), 0) + part3(0, 0, 2.0);
-                        // p.acc = 0;
-                        // p.acc = -part3(sin(angle), -cos(angle), 0)*10;
-                        p.acc = -part3(sin(angle)*colrandom.r*5, -cos(angle)*colrandom.g*5, 0)*5;
+                        part3 pos = part3(cos(angle), sin(angle), 0)*0.01;
+                        p.pos = mul(m, part4(pos, 1));
+                        p.spd = mul(r, part3(sin(angle), -cos(angle), 0) + part3(0, 0, 2.0));
+                        p.acc = mul(r, -part3(sin(angle)*colrandom.r*5, -cos(angle)*colrandom.g*5, 0)*5);
 
                         emit_particle(o, stream, ctx, p);
                     }
@@ -132,9 +154,10 @@ Shader "Xantoz/ParticleCRT/ParticleCRTGunWorldspace"
 
                     p.col = float4(.8, 0, 0, 1)*2 + colrandom;
                     p.ttl = 4; p.type = PARTICLE_TYPE_4;
-                    p.pos = worldPos + part3(cos(angle), sin(angle), 0)*0.01;
-                    p.spd = part3(0, 0, 2.0);
-                    p.acc = part3(0, 0, 0);
+                    part3 pos = part3(cos(angle), sin(angle), 0)*0.01;
+                    p.pos = mul(m, part4(pos, 1));
+                    p.spd = mul(r, part3(0, 0, 2.0));
+                    p.acc = mul(r, part3(0, 0, 0));
 
                     emit_particle(o, stream, ctx, p);
                 }
