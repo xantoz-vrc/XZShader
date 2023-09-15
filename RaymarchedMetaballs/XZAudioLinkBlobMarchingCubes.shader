@@ -182,6 +182,9 @@ Shader "Xantoz/XZAudioLinkBlobMarchingCubes"
                 uint instanceID : SV_GSInstanceID, uint geoPrimID : SV_PrimitiveID)
             {
                 g2f o;
+                UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(IN[0]);
+                UNITY_INITIALIZE_OUTPUT(g2f, o);
+                UNITY_TRANSFER_VERTEX_OUTPUT_STEREO(IN[0], o);
 
                 uint operationID = (geoPrimID*NUMINSTANCES + instanceID); // This is the position in a 16x16x16 grid. The 2x2x2 loops densifies it to 32x32x32
                 uint zoffset = LOOPS*(operationID / (HGRIDSIZE * HGRIDSIZE));
@@ -239,6 +242,7 @@ Shader "Xantoz/XZAudioLinkBlobMarchingCubes"
                                 for (uint j = 0; j < 3; ++j) {
                                     o.vertex = UnityObjectToClipPos(verts[j]);
                                     o.vert_position = verts[j]; // Object position is used in fragment shader to calculate normal and such
+                                    UNITY_TRANSFER_FOG(o, o.vertex);
                                     stream.Append(o);
                                 }
                                 stream.RestartStrip();
