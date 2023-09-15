@@ -2,6 +2,7 @@ Shader "Xantoz/ParticleCRT/ParticleCRTGunWorldspace"
 {
     Properties
     {
+        [ToggleUI]_AttractToLine("Particle attraction to center line", Int) = 1
     }
 
     CGINCLUDE
@@ -48,6 +49,16 @@ Shader "Xantoz/ParticleCRT/ParticleCRTGunWorldspace"
         m._m32 = asfloat(half3ToUint(GetFromTexture(uint2(14,0))));
         m._m33 = asfloat(half3ToUint(GetFromTexture(uint2(15,0))));
 
+        return m;
+    }
+
+    float4x4 GetMNoScaling()
+    {
+        float4x4 m = GetM();
+        // Remove scaling
+        m._m00_m01_m02 = normalize(m._m00_m01_m02);
+	m._m10_m11_m12 = normalize(m._m10_m11_m12);
+	m._m20_m21_m22 = normalize(m._m20_m21_m22);
         return m;
     }
     ENDCG
@@ -99,11 +110,7 @@ Shader "Xantoz/ParticleCRT/ParticleCRTGunWorldspace"
                 };
 
                 emit_parameters p = make_emit_parameters();
-                float4x4 m = GetM();
-                // Remove scaling
-                m._m00_m01_m02 = normalize(m._m00_m01_m02);
-		m._m10_m11_m12 = normalize(m._m10_m11_m12);
-		m._m20_m21_m22 = normalize(m._m20_m21_m22);
+                float4x4 m = GetMNoScaling();
                 float3x3 r = m; // This effectively removes the translation as well
 
                 float3 ran = random3(float3(al_beat[1], al_beat[2], al_beat[3]));
@@ -176,6 +183,8 @@ Shader "Xantoz/ParticleCRT/ParticleCRTGunWorldspace"
             #pragma multi_compile_fog
             #pragma target 5.0
 
+            int _AttractToLine;
+
 	    part4 frag(v2f_customrendertexture i) : SV_Target
 	    {
                 uint x = i.globalTexcoord.x * _CustomRenderTextureWidth;
@@ -225,31 +234,38 @@ Shader "Xantoz/ParticleCRT/ParticleCRTGunWorldspace"
                         float4 particleCol = particle_getColor(x);
                         float3 acc = particle_getAcc(x);
 
-// TODO: Solve a line equation to make the attractors work again
-/*
-                        // Attract blue particles towards a line in the centre
-                        if (particleCol.b > 1) {
-                            float3 attractorPos = float3(0, 0, particlePos.z);
-                            float3 attractorDir = attractorPos - particlePos;
-                            float attractorScale = (length(attractorDir) == 0.0f) ? 0.0f : (1/sqrt(length(attractorDir)));
-                            acc += attractorDir*attractorScale*100*al_beat[0];
-                        }
+                        if (_AttractToLine > 0) {
+                            // Solve a line equation for the attractors
 
-                        // Attract red particles towards a line in the centre
-                        if (particleCol.r > 1) {
-                            float3 attractorPos = float3(0, 0, particlePos.z);
-                            float3 attractorDir = attractorPos - particlePos;
-                            float attractorScale = (length(attractorDir) == 0.0f) ? 0.0f : (1/sqrt(length(attractorDir)));
-                            acc += attractorDir*attractorScale*100*al_beat[0];
-                        }
+                            float4x4 m = GetMNoScaling();
 
-                        if (particleCol.g > 1) {
-                            float3 attractorPos = float3(0, 0, particlePos.z);
+                            // Describe a line as two points
+                            float3 lineA = mul(m, float4(0,0,0,1));
+                            float3 lineB = mul(m, float4(0,0,1,1));
+                            float3 rNorm = lineB - lineA; // Already a unit vector by definition (no scaling, remember)
+
+                            float rDist = dot(particlePos - lineA, rNorm);
+                            float3 attractorPos = lineA + rNorm*rDist;
+
                             float3 attractorDir = attractorPos - particlePos;
                             float attractorScale = (length(attractorDir) == 0.0f) ? 0.0f : (1/sqrt(length(attractorDir)));
-                            acc += attractorDir*attractorScale*50*(1 - al_beat[3]);
+                            attractorScale *= 0.2; // Overall scale down of gravity
+
+                            // Attract blue particles towards a line in the centre
+                            if (particleCol.b > 1) {
+                                acc += attractorDir*attractorScale*100*al_beat[0];
+                            }
+
+                            // Attract red particles towards a line in the centre
+                            if (particleCol.r > 1) {
+                                acc += attractorDir*attractorScale*100*al_beat[0];
+                            }
+
+                            // Green particles are inverted. The force gets weaker on the beat
+                            if (particleCol.g > 1) {
+                                acc += attractorDir*attractorScale*50*(1 - al_beat[3]);
+                            }
                         }
-*/
 
                         col.rgb = particleSpeed + acc*unity_DeltaTime.x;
                         col.w = col.w; // Type is kept unmodified
