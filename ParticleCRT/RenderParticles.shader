@@ -360,7 +360,6 @@ Shader "Xantoz/ParticleCRT/RenderParticles"
             {
                 UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(i);
 
-
                 float val = linefn(length((frac(i.uv.xy) - float2(0.5, 0.5))*2));
                 float4 color_in = i.color + _ColorAdd;
                 float4 col = clamp(val*color_in, 0.0, 4.0);
@@ -373,4 +372,3 @@ Shader "Xantoz/ParticleCRT/RenderParticles"
         }
     }
 }
-
