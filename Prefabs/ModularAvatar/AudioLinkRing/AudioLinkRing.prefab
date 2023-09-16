@@ -1114,6 +1114,11 @@ PrefabInstance:
       propertyPath: m_Name
       value: AudioLinkRing
       objectReference: {fileID: 0}
+    - target: {fileID: 1744255281469127590, guid: 096910ea6126cdc4594fb770e74c061a,
+        type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 096910ea6126cdc4594fb770e74c061a, type: 3}
 --- !u!4 &4278610252059334485 stripped
