@@ -377,7 +377,7 @@ sample                // apply fog
                 for (int i = 0; i < MAX_MARCHING_STEPS; i++) {
                     float3 samplePoint = eye + depth * marchingDirection;
 
-                    float metaballs = balls(samplePoint+metaballsT);
+                    float metaballs = balls(mod(samplePoint+metaballsT, 10));
 
                     float sphere = sphereSDF(samplePoint + sphereT, 1*_SceneScale);
 
