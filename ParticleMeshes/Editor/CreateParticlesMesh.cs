@@ -1,5 +1,4 @@
 // idea by Nave, original: https://pastebin.com/Q43UPHf4
-#if UNITY_EDITOR
 
 using System.Collections;
 using System.Collections.Generic;
@@ -66,5 +65,3 @@ public class CreateParticlesMesh : MonoBehaviour
         }
     }
 }
-
-#endif
