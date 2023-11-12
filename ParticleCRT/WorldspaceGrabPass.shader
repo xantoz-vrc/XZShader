@@ -12,7 +12,7 @@ Shader "Xantoz/ParticleCRT/WorldspaceGrabPass"
         // TODO: Eventually we will want to try to be below everything instead
 	Tags {
             "RenderType"="Transparent"
-            "Queue"="Overlay+100" 
+            "Queue"="Background-1"
             "DisableBatching"="True"
             "IgnoreProjector" = "True"
         }
