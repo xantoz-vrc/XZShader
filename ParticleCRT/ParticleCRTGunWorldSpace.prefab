@@ -9,8 +9,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 4970241106948980745}
-  - component: {fileID: 5706421193810361056}
-  - component: {fileID: 657414606226026363}
+  - component: {fileID: 4395897415552728526}
   m_Layer: 0
   m_Name: WorldSpaceGrabPass
   m_TagString: Untagged
@@ -32,16 +31,8 @@ Transform:
   m_Father: {fileID: 3658459208018632756}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!33 &5706421193810361056
-MeshFilter:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 682777098086941195}
-  m_Mesh: {fileID: 10210, guid: 0000000000000000e000000000000000, type: 0}
---- !u!23 &657414606226026363
-MeshRenderer:
+--- !u!137 &4395897415552728526
+SkinnedMeshRenderer:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -54,7 +45,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
-  m_RayTracingMode: 2
+  m_RayTracingMode: 0
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -79,6 +70,18 @@ MeshRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
+  serializedVersion: 2
+  m_Quality: 0
+  m_UpdateWhenOffscreen: 0
+  m_SkinnedMotionVectors: 1
+  m_Mesh: {fileID: 10210, guid: 0000000000000000e000000000000000, type: 0}
+  m_Bones: []
+  m_BlendShapeWeights: []
+  m_RootBone: {fileID: 0}
+  m_AABB:
+    m_Center: {x: 0, y: 0, z: 0}
+    m_Extent: {x: 5, y: 5, z: -13.5}
+  m_DirtyAABB: 0
 --- !u!1 &3658459208018632759
 GameObject:
   m_ObjectHideFlags: 0
