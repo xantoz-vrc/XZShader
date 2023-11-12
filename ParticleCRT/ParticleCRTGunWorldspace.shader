@@ -25,6 +25,13 @@ Shader "Xantoz/ParticleCRT/ParticleCRTGunWorldspace"
 	#endif
     }
 
+    bool GrabPassIsAvailable()
+    {
+        int width, height;
+        _XZWorldspaceGrabPass.GetDimensions(width, height);
+        return width > 16;
+    }
+
     float4x4 GetM()
     {
         float4x4 m;
@@ -94,6 +101,10 @@ Shader "Xantoz/ParticleCRT/ParticleCRTGunWorldspace"
 	    void geo(triangle particle_emit_v2g input[3], inout PointStream<particle_emit_g2f> stream, uint geoPrimID : SV_PrimitiveID)
 	    {
 		particle_emit_g2f o;
+
+                if (!GrabPassIsAvailable()) {
+                    return;
+                }
 
                 // Split the array in the middle for emission for each thread
                 const uint count = _CustomRenderTextureWidth/GEOPRIMID_COUNT;
@@ -234,7 +245,7 @@ Shader "Xantoz/ParticleCRT/ParticleCRTGunWorldspace"
                         float4 particleCol = particle_getColor(x);
                         float3 acc = particle_getAcc(x);
 
-                        if (_AttractToLine > 0) {
+                        if (GrabPassIsAvailable() && _AttractToLine > 0) {
                             // Solve a line equation for the attractors
 
                             float4x4 m = GetMNoScaling();
