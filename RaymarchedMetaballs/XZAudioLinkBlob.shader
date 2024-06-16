@@ -185,10 +185,33 @@ Shader "Xantoz/XZAudioLinkBlob"
                     ));
             }
 
+            float4 sc(UNITY_ARGS_TEXCUBE(tex), float3 uvw)
+            {
+                return UNITY_SAMPLE_TEXCUBE(tex, uvw);
+            }
+
             float4 sampleCubeMap(float3 texcoord)
             {
-                float4 tex = texCUBE(_Tex, texcoord);
-                float3 c = DecodeHDR(tex, _Tex_HDR);
+                // float4 tex = texCUBE(_Tex, texcoord);
+                // float3 c = DecodeHDR(tex, _Tex_HDR);
+                #ifdef UNITY_SPECCUBE_BLENDING
+                float blend = unity_SpecCube0_BoxMin.w;
+
+                // float4 tex0 = UNITY_SAMPLE_TEXCUBE(unity_SpecCube0, texcoord);
+                float4 tex0 = sc(UNITY_PASS_TEXCUBE(unity_SpecCube0), texcoord);
+                float3 c0 = DecodeHDR(tex0, unity_SpecCube0_HDR);
+
+                // float4 tex1 = UNITY_SAMPLE_TEXCUBE(unity_SpecCube1, texcoord);
+                float4 tex1 = sc(UNITY_PASS_TEXCUBE_SAMPLER(unity_SpecCube1, unity_SpecCube0), texcoord);
+                float3 c1 = DecodeHDR(tex1, unity_SpecCube1_HDR);
+
+                float3 c = lerp(c0, c1, blend);
+
+                #else
+                float4 tex = UNITY_SAMPLE_TEXCUBE(unity_SpecCube0, texcoord);
+                float3 c = DecodeHDR(tex, unity_SpecCube0_HDR);
+                #endif
+
                 c = c * _Tint.rgb * unity_ColorSpaceDouble.rgb;
                 c *= _Exposure;
                 return float4(c, 1);
