@@ -12,6 +12,7 @@ Shader "Xantoz/PixelSendCRT"
     #include "../cginc/flexcrt.cginc"
     
     #define POS_PIXEL uint2(0,0)
+    #define WR_PIXEL uint2(1,0)
 
     #define WIDTH _CustomRenderTextureWidth
     #define HEIGHT (_CustomRenderTextureHeight - 1)
@@ -69,18 +70,9 @@ Shader "Xantoz/PixelSendCRT"
                 return IN.data;
             }
 
-            uint2 get_pos()
+            float4 get_pixel(uint2 pos)
             {
-                float4 pos_raw = _SelfTexture2D[POS_PIXEL];
-                uint2 pos = uint2(pos_raw.xy * float2(WIDTH, HEIGHT));
-                return pos;
-            }
-
-            uint2 get_pos_noscale()
-            {
-                float4 pos_raw = _SelfTexture2D[POS_PIXEL];
-                uint2 pos = uint2(pos_raw.xy);
-                return pos;
+                return _SelfTexture2D[pos];
             }
 
             #define set_pixel(pos, value) \
@@ -91,9 +83,21 @@ Shader "Xantoz/PixelSendCRT"
                 stream.Append(o); \
             } while (0)
 
-            #define set_pos(value) set_pixel(POS_PIXEL, float4(float((value).x)/WIDTH, float((value).y)/HEIGHT, 0.0, 0.0))
+            uint2 get_pos_noscale()
+            {
+                float4 pos_raw = get_pixel(POS_PIXEL);
+                uint2 pos = uint2(pos_raw.xy);
+                return pos;
+            }
 
             #define set_pos_noscale(value) set_pixel(POS_PIXEL, float4((value).x, (value).y, 0.0, 0.0))
+
+            int get_prev_WR()
+            {
+                return int(get_pixel(WR_PIXEL).x);
+            }
+
+            #define set_wr(value) set_pixel(WR_PIXEL, float4((value), (value), (value), (value)))
 
             [maxvertexcount(128)]
 	    void geom(triangle v2g input[3], inout PointStream<g2f> stream, uint geoPrimID : SV_PrimitiveID)
@@ -105,10 +109,12 @@ Shader "Xantoz/PixelSendCRT"
 
                 g2f o;
 
+                int prevWR = get_prev_WR();
+
                 if (_Reset != 0) {
                     uint2 pos = uint2(0,0);
                     set_pos_noscale(pos);
-                } else if (_WR != 0)  {
+                } else if (prevWR != _WR)  {
                     uint2 pos = get_pos_noscale();
                     float4 value = float4(_V,_V,_V,_V);
                     uint2 paint_pos = pos + uint2(0,1);
@@ -126,7 +132,7 @@ Shader "Xantoz/PixelSendCRT"
                     set_pos_noscale(pos);
                 }
 
-                set_pixel(uint2(1,0), float4(_WR, _WR, _WR, _WR));
+                set_wr(_WR);
 	    }
 	    ENDCG
 	}
