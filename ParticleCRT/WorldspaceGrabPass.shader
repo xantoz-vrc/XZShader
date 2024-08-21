@@ -25,7 +25,7 @@ Shader "Xantoz/ParticleCRT/WorldspaceGrabPass"
 	#pragma target 5.0
 
 	#include "UnityCG.cginc"
-        #include "uintToHalf3.cginc"
+        #include "../cginc/uintToHalf3.cginc"
 
         float4 _XZWorldspaceGrabPass_TexelSize;
 	ENDCG

@@ -10,7 +10,7 @@ Shader "Xantoz/ParticleCRT/ParticleCRTGunWorldspace"
     #include "particleEmit.cginc"
     #include "../cginc/AudioLinkFuncs.cginc"
     #include "../cginc/rotation.cginc"
-    #include "uintToHalf3.cginc"
+    #include "../cginc/uintToHalf3.cginc"
 
     Texture2D<float4> _XZWorldspaceGrabPass;
     float4 _XZWorldspaceGrabPass_TexelSize;
