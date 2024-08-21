@@ -50,8 +50,6 @@ Shader "Xantoz/ParticleCRT/WorldspaceGrabPass"
                 float4 grabPos : TEXCOORD4;
 	    };
 
-	    uint _Width;
-
 	    v2f vert(vi v)
 	    {
 		v2f o;
