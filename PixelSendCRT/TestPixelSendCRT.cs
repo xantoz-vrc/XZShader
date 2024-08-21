@@ -20,7 +20,7 @@ public class TestPixelSendCRT : MonoBehaviour
     {
         Debug.Log("WritePixel");
         mat.SetFloat("_V", Random.value);
-        int WR = (mat.GetInteger("_WR") != 0) ? 0 : 1;
-        mat.SetInteger("_WR", WR);
+        int WR = (mat.GetInteger("_CLK") != 0) ? 0 : 1;
+        mat.SetInteger("_CLK", WR);
     }
 }

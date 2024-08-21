@@ -3,7 +3,7 @@ Shader "Xantoz/PixelSendCRT"
     Properties
     {
         _V ("Gray scale value", Float) = 0.0
-        [ToggleUI]_WR("Write", Integer) = 0
+        [ToggleUI]_CLK("Clock Signal (DDR)", Integer) = 0
         [ToggleUI]_Reset("Reset", Integer) = 0
     }
 
@@ -12,7 +12,7 @@ Shader "Xantoz/PixelSendCRT"
     #include "../cginc/flexcrt.cginc"
     
     #define POS_PIXEL uint2(0,0)
-    #define WR_PIXEL uint2(1,0)
+    #define CLK_PIXEL uint2(1,0)
 
     #define WIDTH _CustomRenderTextureWidth
     #define HEIGHT (_CustomRenderTextureHeight - 1)
@@ -39,7 +39,7 @@ Shader "Xantoz/PixelSendCRT"
             #pragma target 5.0
 
             float _V;
-            int _WR;
+            int _CLK;
             int _Reset;
  
             struct v2g
@@ -92,12 +92,12 @@ Shader "Xantoz/PixelSendCRT"
 
             #define set_pos_noscale(value) set_pixel(POS_PIXEL, float4((value).x, (value).y, 0.0, 0.0))
 
-            int get_prev_WR()
+            int get_prev_CLK()
             {
-                return int(get_pixel(WR_PIXEL).x);
+                return int(get_pixel(CLK_PIXEL).x);
             }
 
-            #define set_wr(value) set_pixel(WR_PIXEL, float4((value), (value), (value), (value)))
+            #define set_CLK(value) set_pixel(CLK_PIXEL, float4((value), (value), (value), (value)))
 
             [maxvertexcount(128)]
 	    void geom(triangle v2g input[3], inout PointStream<g2f> stream, uint geoPrimID : SV_PrimitiveID)
@@ -109,12 +109,12 @@ Shader "Xantoz/PixelSendCRT"
 
                 g2f o;
 
-                int prevWR = get_prev_WR();
+                int prevCLK = get_prev_CLK();
 
                 if (_Reset != 0) {
                     uint2 pos = uint2(0,0);
                     set_pos_noscale(pos);
-                } else if (prevWR != _WR)  {
+                } else if (prevCLK != _CLK)  {
                     uint2 pos = get_pos_noscale();
                     float4 value = float4(_V,_V,_V,_V);
                     uint2 paint_pos = pos + uint2(0,1);
@@ -132,7 +132,7 @@ Shader "Xantoz/PixelSendCRT"
                     set_pos_noscale(pos);
                 }
 
-                set_wr(_WR);
+                set_CLK(_CLK);
 	    }
 	    ENDCG
 	}
