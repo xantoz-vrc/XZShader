@@ -39,8 +39,8 @@ Shader "Xantoz/PixelSendCRT"
             #pragma target 5.0
 
             float _V;
-            int _CLK;
-            int _Reset;
+            uint _CLK;
+            uint _Reset;
  
             struct v2g
             {
@@ -92,9 +92,9 @@ Shader "Xantoz/PixelSendCRT"
 
             #define set_pos_noscale(value) set_pixel(POS_PIXEL, float4((value).x, (value).y, 0.0, 0.0))
 
-            int get_prev_CLK()
+            uint get_prev_CLK()
             {
-                return int(get_pixel(CLK_PIXEL).x);
+                return uint(get_pixel(CLK_PIXEL).x);
             }
 
             #define set_CLK(value) set_pixel(CLK_PIXEL, float4((value), (value), (value), (value)))
@@ -109,7 +109,7 @@ Shader "Xantoz/PixelSendCRT"
 
                 g2f o;
 
-                int prevCLK = get_prev_CLK();
+                uint prevCLK = get_prev_CLK();
 
                 if (_Reset != 0) {
                     uint2 pos = uint2(0,0);
