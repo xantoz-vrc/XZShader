@@ -2,6 +2,8 @@ Shader "Xantoz/PixelSendCRT"
 {
     Properties
     {
+        [KeywordEnum(Params,GrabPass)]_Input ("Input mode", Integer) = 0
+
         _V0 ("V0", Float) = 0.0
         _V1 ("V1", Float) = 0.0
         _V2 ("V2", Float) = 0.0
@@ -25,6 +27,8 @@ Shader "Xantoz/PixelSendCRT"
     }
 
     CGINCLUDE
+    #pragma multi_compile_local _INPUT_PARAMS _INPUT_GRABPASS
+
     #define CRTTEXTURETYPE float4
     #include "../cginc/flexcrt.cginc"
     
@@ -35,6 +39,94 @@ Shader "Xantoz/PixelSendCRT"
     #define HEIGHT (_CustomRenderTextureHeight - 1)
     // #define WIDTH 64
     // #define HEIGHT 64
+
+#if defined(_INPUT_PARAMS)
+    float _V0;
+    float _V1;
+    float _V2;
+    float _V3;
+    float _V4;
+    float _V5;
+    float _V6;
+    float _V7;
+
+    float _V8;
+    float _V9;
+    float _VA;
+    float _VB;
+    float _VC;
+    float _VD;
+    float _VE;
+    float _VF;
+
+    uint _CLK;
+    uint _Reset;
+
+    void GetValues(inout float values[16])
+    {
+       values[0]  = _V0;
+       values[1]  = _V1;
+       values[2]  = _V2;
+       values[3]  = _V3;
+       values[4]  = _V4;
+       values[5]  = _V5;
+       values[6]  = _V6;
+       values[7]  = _V7;
+       values[8]  = _V8;
+       values[9]  = _V9;
+       values[10] = _VA;
+       values[11] = _VB;
+       values[12] = _VC;
+       values[13] = _VD;
+       values[14] = _VE;
+       values[15] = _VF;
+    }
+
+    uint GetCLK()
+    {
+        return _CLK;
+    }
+
+    uint GetReset()
+    {
+        return _Reset;
+    }
+#endif
+
+#if defined(_INPUT_GRABPASS)
+    #include "../cginc/uintToHalf3.cginc"
+
+    Texture2D<float4> _PixelSendCRTGrabPass;
+    float4 _PixelSendCRTGrabPass_TexelSize;
+    #define GRABSIZE _PixelSendCRTGrabPass_TexelSize.w
+
+    float4 GetFromGrabPass(uint2 coord)
+    {
+	#if UNITY_UV_STARTS_AT_TOP
+	return _PixelSendCRTGrabPass[uint2(coord.x,GRABSIZE-1-coord.y)];
+	#else
+	return _PixelSendCRTGrabPass[coord];
+	#endif
+    }
+
+    bool GrabPassIsAvailable()
+    {
+        int width, height;
+        _PixelSendCRTGrabPass.GetDimensions(width, height);
+        return width > 16;
+    }
+
+    void GetValues(inout float values[16])
+    {
+        for (uint i = 0; i < 16; ++i) {
+            values[i] = asfloat(half3ToUint(GetFromGrabPass(uint2(i, 0))));
+        }
+    }
+
+    uint GetCLK()   { return half3ToUint(GetFromGrabPass(uint2(0,1))); }
+    uint GetReset() { return half3ToUint(GetFromGrabPass(uint2(1,1))); }
+
+#endif
     ENDCG
 
     SubShader
@@ -54,27 +146,6 @@ Shader "Xantoz/PixelSendCRT"
             #pragma geometry geom
             #pragma multi_compile_fog
             #pragma target 5.0
-
-            float _V0;
-            float _V1;
-            float _V2;
-            float _V3;
-            float _V4;
-            float _V5;
-            float _V6;
-            float _V7;
-
-            float _V8;
-            float _V9;
-            float _VA;
-            float _VB;
-            float _VC;
-            float _VD;
-            float _VE;
-            float _VF;
-
-            uint _CLK;
-            uint _Reset;
  
             struct v2g
             {
@@ -157,15 +228,14 @@ Shader "Xantoz/PixelSendCRT"
 
                 uint prevCLK = get_prev_CLK();
 
-                if (_Reset != 0) {
+                if (GetReset() != 0) {
                     uint2 pos = uint2(0,0);
                     set_pos_noscale(pos);
-                } else if (prevCLK != _CLK)  {
+                } else if (prevCLK != GetCLK()) {
                     uint2 pos = get_pos_noscale();
-                    float raw_value[16] = {
-                        _V0, _V1, _V2, _V3, _V4, _V5, _V6, _V7,
-                        _V8, _V9, _VA, _VB, _VC, _VD, _VE, _VF,
-                    };
+
+                    float raw_value[16];
+                    GetValues(raw_value);
 
                     for (uint i = 0; i < 16; ++i) {
                         float4 value = float4(raw_value[i], raw_value[i], raw_value[i], raw_value[i]);
@@ -177,7 +247,7 @@ Shader "Xantoz/PixelSendCRT"
                     set_pos_noscale(pos);
                 }
 
-                set_CLK(_CLK);
+                set_CLK(GetCLK());
 	    }
 	    ENDCG
 	}
