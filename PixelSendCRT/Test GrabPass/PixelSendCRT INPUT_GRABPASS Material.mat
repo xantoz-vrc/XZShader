@@ -64,7 +64,6 @@ Material:
     - _CLK: 0
     - _Input: 1
     - _Reset: 0
-    - _WR: 1
     m_Floats:
     - _BumpScale: 1
     - _Cutoff: 0.5
@@ -81,7 +80,6 @@ Material:
     - _SpecularHighlights: 1
     - _SrcBlend: 1
     - _UVSec: 0
-    - _V: 0.26605192
     - _V0: 0
     - _V1: 0
     - _V2: 0
