@@ -45,6 +45,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   mat: {fileID: 2100000, guid: 34ed46d15d3cb444d9e94b829dbc958c, type: 2}
+  tickWait: 0.1
 --- !u!1 &1612884954539596526
 GameObject:
   m_ObjectHideFlags: 0
@@ -58,7 +59,7 @@ GameObject:
   - component: {fileID: 5326355292174741632}
   - component: {fileID: 9182326458483997798}
   m_Layer: 0
-  m_Name: TestPixelSendCRT
+  m_Name: TestPixelSendCRT INPUT_PARAMS
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
