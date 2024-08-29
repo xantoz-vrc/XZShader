@@ -1,0 +1,6 @@
+TODO:
+  * Potential speedups: 4 bit bit depth? Would be twice the speed. 16 grayscale. If we ever do paletted color would be 16 bit color, which was enough for a lot of PC-98 games
+  * paletted color?
+  * Other direction: Compression (might only make sense in the 8 bit depth world?)
+     - This other direction could be another shader that simply reuses the same grabpass for transferring data
+
