@@ -37,6 +37,6 @@ public class TestPixelSendCRTAnimator : MonoBehaviour
         animator.SetInteger("PixelSendCRT/VF", (int)(Random.value*255));
 
         bool CLK = !animator.GetBool("PixelSendCRT/CLK");
-        animator.SetBool("CLK", CLK);
+        animator.SetBool("PixelSendCRT/CLK", CLK);
     }
 }
