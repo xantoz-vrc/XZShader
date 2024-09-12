@@ -206,8 +206,8 @@ Shader "Xantoz/PixelSendCRT"
 
             void incrementPos(inout uint2 pos)
             {
-                if (pos.x >= uint(WIDTH)) {
-                    if (pos.y < uint(HEIGHT)) {
+                if (pos.x >= uint(WIDTH)-1) {
+                    if (pos.y < uint(HEIGHT)-1) {
                         pos.y += 1;
                         pos.x = 0;
                     }
