@@ -135,7 +135,9 @@ public class CreatePixelSendCRTAnimator : MonoBehaviour
         {
             controller.AddParameter(parameterPrefix + "CLK", AnimatorControllerParameterType.Bool);
             controller.AddLayer(parameterPrefix + "CLK");
-            var rootStateMachine = controller.layers[controller.layers.Length-1].stateMachine;
+            var layer = controller.layers[controller.layers.Length-1];
+            layer.defaultWeight = 1.0f;
+            var rootStateMachine = layer.stateMachine;
 
             var clkOnClip  = createBoolAnimationClip("CLK", true);
             var clkOffClip = createBoolAnimationClip("CLK", false);
@@ -160,7 +162,9 @@ public class CreatePixelSendCRTAnimator : MonoBehaviour
         {
             controller.AddParameter(parameterPrefix + "Reset", AnimatorControllerParameterType.Bool);
             controller.AddLayer(parameterPrefix + "Reset");
-            var rootStateMachine = controller.layers[controller.layers.Length-1].stateMachine;
+            var layer = controller.layers[controller.layers.Length-1];
+            layer.defaultWeight = 1.0f;
+            var rootStateMachine = layer.stateMachine;
 
             var resetOnClip = createBoolAnimationClip("Reset", true);
             var resetOffClip = createBoolAnimationClip("Reset", false);
