@@ -109,7 +109,7 @@ public class CreatePixelSendCRTAnimator : MonoBehaviour
             var clipname = $"anim{V}";
             var clip = getAnimationClip(basePath + clipname + ".anim");
             clip.name = clipname;
-            clip.wrapMode = WrapMode.Loop;
+            clip.wrapMode = WrapMode.ClampForever;
             var curve = AnimationCurve.Linear(0.0f, 0.0f, 1.0f, 1.0f);
             clip.SetCurve("Quad GrabPass", typeof(Renderer), $"material._{V}", curve);
             AnimationClipSettings settings = AnimationUtility.GetAnimationClipSettings(clip);
