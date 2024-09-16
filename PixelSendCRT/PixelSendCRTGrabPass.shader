@@ -32,8 +32,8 @@ Shader "Xantoz/PixelSendCRTGrabPass"
         // Settings to be on top of everything
         // TODO: Eventually we will want to try to be below everything instead
 	Tags {
-            // "RenderType"="Transparent"
-            // "Queue"="Background-1"
+            "RenderType"="Transparent"
+            "Queue"="Background-1"
             "DisableBatching"="True"
             "IgnoreProjector" = "True"
         }
