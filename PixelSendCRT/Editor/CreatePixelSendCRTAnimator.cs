@@ -3,6 +3,7 @@
 
 using UnityEngine;
 using UnityEditor;
+using UnityEngine.Assertions;
 using UnityEditor.Animations;
 using System.Collections;
 
@@ -11,14 +12,78 @@ public class CreatePixelSendCRTAnimator : MonoBehaviour
     private static string basePath = "Assets/XZShader/PixelSendCRT/Avatar/Anim/";
     private static string parameterPrefix = "PixelSendCRT/";
 
+    // Wipe the AnimatorController clean: remove all parameters, layers, and states
+    private static void wipeAnimatorController(AnimatorController animatorController)
+    {
+        if (animatorController == null) return;
+
+        animatorController.parameters = new AnimatorControllerParameter[0];
+        animatorController.layers = new AnimatorControllerLayer[0];
+
+        // Optionally, add a new default layer if needed
+        AnimatorControllerLayer baseLayer = new AnimatorControllerLayer {
+            name = "Base Layer",
+            stateMachine = new AnimatorStateMachine()
+        };
+        animatorController.AddLayer(baseLayer);
+
+        Debug.Log("AnimatorController wiped clean.");
+    }
+
+    private static AnimatorController getAnimatorController(string path)
+    {
+        AnimatorController animatorController = AssetDatabase.LoadAssetAtPath<AnimatorController>(path);
+
+        if (animatorController == null) {
+            animatorController = AnimatorController.CreateAnimatorControllerAtPath(path);
+            Debug.Log("AnimatorController created at: " + path);
+        } else {
+            Debug.Log("AnimatorController loaded from: " + path);
+            wipeAnimatorController(animatorController);
+        }
+
+        EditorUtility.SetDirty(animatorController);
+
+        return animatorController;
+    }
+
+    private static AnimationClip getAnimationClip(string path)
+    {
+        AnimationClip clip = AssetDatabase.LoadAssetAtPath<AnimationClip>(path);
+
+        if (clip == null) {
+            clip = new AnimationClip();
+            AssetDatabase.CreateAsset(clip, path);
+            Debug.Log("AnimationClip created at: " + path);
+        } else {
+            Debug.Log("AnimationClip loaded from: " + path);
+            if (clip.empty) {
+                Debug.LogWarning("Expected that pre-existing AnimationClip would contain something, but it was already empty");
+            }
+
+            clip.ClearCurves();
+            clip.events = new AnimationEvent[0];
+        }
+
+        Assert.IsTrue(clip.empty);
+
+        clip.frameRate = 512; // Double what we actually need, I think?
+
+        EditorUtility.SetDirty(clip);
+        return clip;
+    }
+
     private static AnimationClip createBoolAnimationClip(string name, bool val)
     {
-        var clip = new AnimationClip();
         string onoff = val ? "ON" : "OFF";
-        clip.name = $"anim{name}{onoff}";
+
+        var clipname = $"anim{name}{onoff}";
+        var path = basePath + clipname + ".anim";
+
+        var clip = getAnimationClip(path);
+        clip.name = clipname;
         var curve = AnimationCurve.Linear(0.0f, val ? 1.0f : 0.0f, 0.0f, val ? 1.0f : 0.0f);
         clip.SetCurve("Quad GrabPass", typeof(Renderer), $"material._{name}", curve);
-        AssetDatabase.CreateAsset(clip, basePath + clip.name + ".anim");
         return clip;
     }
 
@@ -27,7 +92,7 @@ public class CreatePixelSendCRTAnimator : MonoBehaviour
     static void CreateController()
     {
         // Creates the controller
-        var controller = UnityEditor.Animations.AnimatorController.CreateAnimatorControllerAtPath(basePath + "PixelSendCRT Animator.controller");
+        var controller = getAnimatorController(basePath + "PixelSendCRT Animator.controller");
 
         // Add parameters
         for (int i = 0; i < 16; ++i) {
@@ -41,16 +106,15 @@ public class CreatePixelSendCRTAnimator : MonoBehaviour
             var layer = controller.layers[i+1];
             layer.defaultWeight = 1.0f;
 
-            var clip = new AnimationClip();
-            clip.name = $"anim{V}";
+            var clipname = $"anim{V}";
+            var clip = getAnimationClip(basePath + clipname + ".anim");
+            clip.name = clipname;
             clip.wrapMode = WrapMode.Loop;
             var curve = AnimationCurve.Linear(0.0f, 0.0f, 1.0f, 1.0f);
             clip.SetCurve("Quad GrabPass", typeof(Renderer), $"material._{V}", curve);
             AnimationClipSettings settings = AnimationUtility.GetAnimationClipSettings(clip);
             settings.loopTime = true;  // Set loop time to true
             AnimationUtility.SetAnimationClipSettings(clip, settings);
-
-            AssetDatabase.CreateAsset(clip, basePath + clip.name + ".anim");
 
             for (int j = 0; j < 256; ++j) {
                 var rootStateMachine = layer.stateMachine;
@@ -118,6 +182,8 @@ public class CreatePixelSendCRTAnimator : MonoBehaviour
             transitionOff.canTransitionToSelf = false;
         }
 
+
+        EditorUtility.SetDirty(controller);
         AssetDatabase.SaveAssets();
     }
 }
