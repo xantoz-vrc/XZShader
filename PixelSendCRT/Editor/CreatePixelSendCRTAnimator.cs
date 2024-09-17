@@ -62,7 +62,7 @@ public class CreatePixelSendCRTAnimator : MonoBehaviour
             }
 
             clip.ClearCurves();
-            clip.events = new AnimationEvent[0];
+#            clip.events = new AnimationEvent[0];
         }
 
         Assert.IsTrue(clip.empty);
