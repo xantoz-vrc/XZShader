@@ -87,24 +87,41 @@ public class CreatePixelSendCRTAnimator : MonoBehaviour
         return clip;
     }
 
+    private static AnimatorStateMachine createNewLayer(AnimatorController controller, string controllerPath, string name)
+    {
+        AnimatorStateMachine stateMachine = new AnimatorStateMachine
+        {
+            name = controller.MakeUniqueLayerName(name),
+            hideFlags = HideFlags.HideInHierarchy,
+        };
+
+        controller.AddLayer(new AnimatorControllerLayer
+        {
+            stateMachine = stateMachine,
+            name = stateMachine.name,
+            defaultWeight = 1.0f,
+        });
+
+        AssetDatabase.AddObjectToAsset(stateMachine, controllerPath);
+
+        return stateMachine;
+    }
+
     // [MenuItem("GameObject/Generate Animator Controller for PixelSendCRT")]
     [MenuItem("XZMenu/CreatePixelSendCRTAnimator")]
     static void CreateController()
     {
         // Creates the controller
-        var controller = getAnimatorController(basePath + "PixelSendCRT Animator.controller");
+        var controllerPath = basePath + "PixelSendCRT Animator.controller";
+        var controller = getAnimatorController(controllerPath);
 
         // Add parameters
         for (int i = 0; i < 16; ++i) {
             string hex = i.ToString("X");
             string V = $"V{hex}";
             controller.AddParameter(parameterPrefix + V, AnimatorControllerParameterType.Int);
-            controller.AddLayer(parameterPrefix + V);
-            // controller.layers[i+1].defaultWeight = 1.0f;
-            // var layer = controller.layers[i+1]; layer.defaultWeight = 1.0f; controller.layers[i+1] = layer;
-
-            var layer = controller.layers[i+1];
-            layer.defaultWeight = 1.0f;
+            string layerName = parameterPrefix + V;
+            var rootStateMachine = createNewLayer(controller, controllerPath, layerName);
 
             var clipname = $"anim{V}";
             var clip = getAnimationClip(basePath + clipname + ".anim");
@@ -117,14 +134,11 @@ public class CreatePixelSendCRTAnimator : MonoBehaviour
             AnimationUtility.SetAnimationClipSettings(clip, settings);
 
             for (int j = 0; j < 256; ++j) {
-                var rootStateMachine = layer.stateMachine;
-
                 var state = rootStateMachine.AddState($"{V}={j}", new Vector3(400.0f, j*50.0f, 0.0f));
                 state.motion = clip;
                 state.cycleOffset = (j == 255) ? 1.0f - Mathf.Epsilon : ((float)(j))/255.0f;
                 state.speed = 0.0f;
 
-                // if (j == 0) { rootStateMachine.AddEntryTransition(state); }
                 var transition = rootStateMachine.AddAnyStateTransition(state);
                 transition.AddCondition(UnityEditor.Animations.AnimatorConditionMode.Equals, j, parameterPrefix + V);
                 transition.duration = 0;
@@ -134,10 +148,8 @@ public class CreatePixelSendCRTAnimator : MonoBehaviour
 
         {
             controller.AddParameter(parameterPrefix + "CLK", AnimatorControllerParameterType.Bool);
-            controller.AddLayer(parameterPrefix + "CLK");
-            var layer = controller.layers[controller.layers.Length-1];
-            layer.defaultWeight = 1.0f;
-            var rootStateMachine = layer.stateMachine;
+            string layerName = parameterPrefix + "CLK";
+            var rootStateMachine = createNewLayer(controller, controllerPath, layerName);
 
             var clkOnClip  = createBoolAnimationClip("CLK", true);
             var clkOffClip = createBoolAnimationClip("CLK", false);
@@ -161,10 +173,8 @@ public class CreatePixelSendCRTAnimator : MonoBehaviour
 
         {
             controller.AddParameter(parameterPrefix + "Reset", AnimatorControllerParameterType.Bool);
-            controller.AddLayer(parameterPrefix + "Reset");
-            var layer = controller.layers[controller.layers.Length-1];
-            layer.defaultWeight = 1.0f;
-            var rootStateMachine = layer.stateMachine;
+            string layerName = parameterPrefix + "Reset";
+            var rootStateMachine = createNewLayer(controller, controllerPath, layerName);
 
             var resetOnClip = createBoolAnimationClip("Reset", true);
             var resetOffClip = createBoolAnimationClip("Reset", false);
