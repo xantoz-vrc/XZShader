@@ -121,7 +121,7 @@ public class CreatePixelSendCRTAnimator : MonoBehaviour
 
                 var state = rootStateMachine.AddState($"{V}={j}", new Vector3(400.0f, j*50.0f, 0.0f));
                 state.motion = clip;
-                state.cycleOffset = ((float)(j))/255.0f;
+                state.cycleOffset = (j == 255) ? 1.0f - Mathf.Epsilon : ((float)(j))/255.0f;
                 state.speed = 0.0f;
 
                 // if (j == 0) { rootStateMachine.AddEntryTransition(state); }
