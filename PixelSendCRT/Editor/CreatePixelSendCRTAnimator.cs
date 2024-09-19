@@ -62,7 +62,7 @@ public class CreatePixelSendCRTAnimator : MonoBehaviour
             }
 
             clip.ClearCurves();
-#            clip.events = new AnimationEvent[0];
+            // clip.events = new AnimationEvent[0];
         }
 
         Assert.IsTrue(clip.empty);
@@ -154,7 +154,7 @@ public class CreatePixelSendCRTAnimator : MonoBehaviour
             transitionOff.AddCondition(UnityEditor.Animations.AnimatorConditionMode.IfNot, 0, parameterPrefix + "CLK");
 
             transitionOn.duration = 0;
-            transitionOn.canTransitionToSelf = false;;
+            transitionOn.canTransitionToSelf = false;
             transitionOff.duration = 0;
             transitionOff.canTransitionToSelf = false;
         }
@@ -185,7 +185,6 @@ public class CreatePixelSendCRTAnimator : MonoBehaviour
             transitionOff.duration = 0;
             transitionOff.canTransitionToSelf = false;
         }
-
 
         EditorUtility.SetDirty(controller);
         AssetDatabase.SaveAssets();
