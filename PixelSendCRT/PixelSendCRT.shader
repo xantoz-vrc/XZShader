@@ -320,6 +320,40 @@ Shader "Xantoz/PixelSendCRT"
                                 incrementPos(pos);
                             }
                         } else if (bpp == 1) {
+                            for (uint i = 0; i < 16; ++i) {
+                                float v1 = float((V[i] >> 7) & 0x1);
+                                float v2 = float((V[i] >> 6) & 0x1);
+                                float v3 = float((V[i] >> 5) & 0x1);
+                                float v4 = float((V[i] >> 4) & 0x1);
+                                float v5 = float((V[i] >> 3) & 0x1);
+                                float v6 = float((V[i] >> 2) & 0x1);
+                                float v7 = float((V[i] >> 1) & 0x1);
+                                float v8 = float((V[i] >> 0) & 0x1);
+                                float4 val1 = float4(v1, v1, v1, v1);
+                                float4 val2 = float4(v2, v2, v2, v2);
+                                float4 val3 = float4(v3, v3, v3, v3);
+                                float4 val4 = float4(v4, v4, v4, v4);
+                                float4 val5 = float4(v5, v5, v5, v5);
+                                float4 val6 = float4(v6, v6, v6, v6);
+                                float4 val7 = float4(v7, v7, v7, v7);
+                                float4 val8 = float4(v8, v8, v8, v8);
+                                set_pixel(pos + uint2(0,NUM_DATALINES), val1);
+                                incrementPos(pos);
+                                set_pixel(pos + uint2(0,NUM_DATALINES), val2);
+                                incrementPos(pos);
+                                set_pixel(pos + uint2(0,NUM_DATALINES), val3);
+                                incrementPos(pos);
+                                set_pixel(pos + uint2(0,NUM_DATALINES), val4);
+                                incrementPos(pos);
+                                set_pixel(pos + uint2(0,NUM_DATALINES), val5);
+                                incrementPos(pos);
+                                set_pixel(pos + uint2(0,NUM_DATALINES), val6);
+                                incrementPos(pos);
+                                set_pixel(pos + uint2(0,NUM_DATALINES), val7);
+                                incrementPos(pos);
+                                set_pixel(pos + uint2(0,NUM_DATALINES), val8);
+                                incrementPos(pos);
+                            }
                         }
 
                         set_pos_noscale(pos);
