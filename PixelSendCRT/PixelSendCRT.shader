@@ -137,7 +137,9 @@ Shader "Xantoz/PixelSendCRT"
     void ValuesToUint(in float values[16], out uint uvalues[16])
     {
         for (uint i = 0; i < 16; ++i) {
-            uvalues[i] = values[i]*255.0;
+            // We use round here since the animator portion might struggle to get the float quite on-mark for whatever
+            // reason (this happens for 255 currently due to the hack we had to avoid cycleOffset looping 255 back to 0)
+            uvalues[i] = round(values[i]*255.0);
         }
     }
     ENDCG
