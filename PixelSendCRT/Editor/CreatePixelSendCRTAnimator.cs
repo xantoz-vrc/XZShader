@@ -136,6 +136,8 @@ public class CreatePixelSendCRTAnimator : MonoBehaviour
             for (int j = 0; j < 256; ++j) {
                 var state = rootStateMachine.AddState($"{V}={j}", new Vector3(400.0f, j*50.0f, 0.0f));
                 state.motion = clip;
+                // Workaround for cycleOffset 1.0f looping back to the start by setting something close to 1.0f, but not quite there
+                // NOTE: Requires that the shader then round its float input when converting to 0-255 range uints to be able to properly represent 255
                 state.cycleOffset = (j == 255) ? 0.999999f : ((float)(j))/255.0f;
                 state.speed = 0.0f;
 
