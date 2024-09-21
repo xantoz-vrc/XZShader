@@ -171,7 +171,7 @@ Shader "Xantoz/PixelSendCRT"
             struct g2f
             {
                 float4 vertex : SV_POSITION;
-                float4 data : COLOR0;
+                float3 data : COLOR0;
             };
 
             // The vertex shader doesn't really perform much anything.
@@ -187,7 +187,7 @@ Shader "Xantoz/PixelSendCRT"
 
             float4 frag(g2f IN) : SV_Target
             {
-                return IN.data;
+                return float4(IN.data.r, IN.data.g, IN.data.b, 1.0);
             }
 
             float4 get_pixel(uint2 pos)
@@ -246,7 +246,7 @@ Shader "Xantoz/PixelSendCRT"
                 }
             }
 
-            [maxvertexcount(128)]
+            [maxvertexcount(146)]
 	    void geom(triangle v2g input[3], inout PointStream<g2f> stream, uint geoPrimID : SV_PrimitiveID)
 	    {
                 // We only run once as it stands now, we only run once
@@ -268,9 +268,9 @@ Shader "Xantoz/PixelSendCRT"
 
                         if (V[0] & 0x80) {
                             uint x = V[1]; uint y = V[2];
-                            uint r = V[3]; uint g = V[4]; uint b = V[5]; uint a = V[6];
+                            uint r = V[3]; uint g = V[4]; uint b = V[5];// uint a = V[6];
                             uint2 paint_pos = uint2(x, y);
-                            float4 value = float4(r,g,b,a)/255.0;
+                            float3 value = float3(r,g,b)/255.0;
                             set_pixel(paint_pos, value);
                         } else {
                             uint2 pos = uint2(0,0);
@@ -282,17 +282,16 @@ Shader "Xantoz/PixelSendCRT"
 
                         if (bpp == 8) {
                             for (uint i = 0; i < 16; ++i) {
-                                float4 value = float4(raw_value[i], raw_value[i], raw_value[i], raw_value[i]);
-                                uint2 paint_pos = pos + uint2(0,NUM_DATALINES);
-                                set_pixel(paint_pos, value);
+                                float3 value = float3(raw_value[i], raw_value[i], raw_value[i]);
+                                set_pixel(pos + uint2(0,NUM_DATALINES), value);
                                 incrementPos(pos);
                             }
                         } else if (bpp == 4) {
                             for (uint i = 0; i < 16; ++i) {
                                 float v1 = float((V[i] & 0xf0) >> 4)/16.0;
                                 float v2 = float((V[i] & 0x0f) >> 0)/16.0;
-                                float4 val1 = float4(v1, v1, v1, v1);
-                                float4 val2 = float4(v2, v2, v2, v2);
+                                float3 val1 = float3(v1, v1, v1);
+                                float3 val2 = float3(v2, v2, v2);
 
                                 set_pixel(pos + uint2(0,NUM_DATALINES), val1);
                                 incrementPos(pos);
@@ -305,10 +304,10 @@ Shader "Xantoz/PixelSendCRT"
                                 float v2 = float((V[i] & 0x30) >> 4)/4.0;
                                 float v3 = float((V[i] & 0x0c) >> 2)/4.0;
                                 float v4 = float((V[i] & 0x03) >> 0)/4.0;
-                                float4 val1 = float4(v1, v1, v1, v1);
-                                float4 val2 = float4(v2, v2, v2, v2);
-                                float4 val3 = float4(v3, v3, v3, v3);
-                                float4 val4 = float4(v4, v4, v4, v4);
+                                float3 val1 = float3(v1, v1, v1);
+                                float3 val2 = float3(v2, v2, v2);
+                                float3 val3 = float3(v3, v3, v3);
+                                float3 val4 = float3(v4, v4, v4);
 
                                 set_pixel(pos + uint2(0,NUM_DATALINES), val1);
                                 incrementPos(pos);
@@ -329,14 +328,14 @@ Shader "Xantoz/PixelSendCRT"
                                 float v6 = float((V[i] >> 2) & 0x1);
                                 float v7 = float((V[i] >> 1) & 0x1);
                                 float v8 = float((V[i] >> 0) & 0x1);
-                                float4 val1 = float4(v1, v1, v1, v1);
-                                float4 val2 = float4(v2, v2, v2, v2);
-                                float4 val3 = float4(v3, v3, v3, v3);
-                                float4 val4 = float4(v4, v4, v4, v4);
-                                float4 val5 = float4(v5, v5, v5, v5);
-                                float4 val6 = float4(v6, v6, v6, v6);
-                                float4 val7 = float4(v7, v7, v7, v7);
-                                float4 val8 = float4(v8, v8, v8, v8);
+                                float3 val1 = float3(v1, v1, v1);
+                                float3 val2 = float3(v2, v2, v2);
+                                float3 val3 = float3(v3, v3, v3);
+                                float3 val4 = float3(v4, v4, v4);
+                                float3 val5 = float3(v5, v5, v5);
+                                float3 val6 = float3(v6, v6, v6);
+                                float3 val7 = float3(v7, v7, v7);
+                                float3 val8 = float3(v8, v8, v8);
                                 set_pixel(pos + uint2(0,NUM_DATALINES), val1);
                                 incrementPos(pos);
                                 set_pixel(pos + uint2(0,NUM_DATALINES), val2);
