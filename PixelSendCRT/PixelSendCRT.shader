@@ -294,12 +294,9 @@ Shader "Xantoz/PixelSendCRT"
                                 float4 val1 = float4(v1, v1, v1, v1);
                                 float4 val2 = float4(v2, v2, v2, v2);
 
-                                uint2 paint_pos = pos + uint2(0,NUM_DATALINES);
-                                set_pixel(paint_pos, val1);
+                                set_pixel(pos + uint2(0,NUM_DATALINES), val1);
                                 incrementPos(pos);
-
-                                paint_pos = pos + uint2(0,NUM_DATALINES);
-                                set_pixel(paint_pos, val2);
+                                set_pixel(pos + uint2(0,NUM_DATALINES), val2);
                                 incrementPos(pos);
                             }
                         } else if (bpp == 2) {
@@ -313,20 +310,13 @@ Shader "Xantoz/PixelSendCRT"
                                 float4 val3 = float4(v3, v3, v3, v3);
                                 float4 val4 = float4(v4, v4, v4, v4);
 
-                                uint2 paint_pos = pos + uint2(0,NUM_DATALINES);
-                                set_pixel(paint_pos, val1);
+                                set_pixel(pos + uint2(0,NUM_DATALINES), val1);
                                 incrementPos(pos);
-
-                                paint_pos = pos + uint2(0,NUM_DATALINES);
-                                set_pixel(paint_pos, val2);
+                                set_pixel(pos + uint2(0,NUM_DATALINES), val2);
                                 incrementPos(pos);
-
-                                paint_pos = pos + uint2(0,NUM_DATALINES);
-                                set_pixel(paint_pos, val3);
+                                set_pixel(pos + uint2(0,NUM_DATALINES), val3);
                                 incrementPos(pos);
-
-                                paint_pos = pos + uint2(0,NUM_DATALINES);
-                                set_pixel(paint_pos, val4);
+                                set_pixel(pos + uint2(0,NUM_DATALINES), val4);
                                 incrementPos(pos);
                             }
                         } else if (bpp == 1) {
