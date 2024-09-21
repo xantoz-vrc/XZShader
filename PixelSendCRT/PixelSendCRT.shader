@@ -34,11 +34,20 @@ Shader "Xantoz/PixelSendCRT"
     
     #define POS_PIXEL uint2(0,0)
     #define CLK_PIXEL uint2(1,0)
+    #define BITDEPTH_PIXEL uint2(2,0)
+
+    // Number of lines used for control data storage, and not the actual image
+    #define NUM_DATALINES 2
 
     #define WIDTH _CustomRenderTextureWidth
-    #define HEIGHT (_CustomRenderTextureHeight - 1)
+    #define HEIGHT (_CustomRenderTextureHeight - NUM_DATALINES)
     // #define WIDTH 64
     // #define HEIGHT 64
+
+    // Format for command to set data pixel
+    //   Reset: True, V0: 1xxxxxxx XXXXXXXX YYYYYYYY RRRRRRRR GGGGGGGG BBBBBBBB AAAAAAAA
+    // Format for reset command
+    //   Reset True, V0: 00000000
 
 #if defined(_INPUT_PARAMS)
     float _V0;
@@ -91,9 +100,7 @@ Shader "Xantoz/PixelSendCRT"
     {
         return _Reset;
     }
-#endif
-
-#if defined(_INPUT_GRABPASS)
+#elif defined(_INPUT_GRABPASS)
     #include "../cginc/uintToHalf3.cginc"
 
     Texture2D<float4> _PixelSendCRTGrabPass;
@@ -125,8 +132,14 @@ Shader "Xantoz/PixelSendCRT"
 
     uint GetCLK()   { return half3ToUint(GetFromGrabPass(uint2(0,1))); }
     uint GetReset() { return half3ToUint(GetFromGrabPass(uint2(1,1))); }
-
 #endif
+
+    void ValuesToUint(in float values[16], out uint uvalues[16])
+    {
+        for (uint i = 0; i < 16; ++i) {
+            uvalues[i] = values[i]*255.0;
+        }
+    }
     ENDCG
 
     SubShader
@@ -204,6 +217,21 @@ Shader "Xantoz/PixelSendCRT"
 
             #define set_CLK(value) set_pixel(CLK_PIXEL, float4((value), (value), (value), (value)))
 
+            uint get_bpp()
+            {
+                float4 px = get_pixel(BITDEPTH_PIXEL);
+                uint r = px.r*255.0;
+                if (r >= 0 && r < 64) {
+                    return 8;
+                } else if (r >= 64 && r < 128) {
+                    return 4;
+                } else if (r >= 128 && r < 192) {
+                    return 2;
+                } else {
+                    return 1;
+                }
+            }
+
             void incrementPos(inout uint2 pos)
             {
                 if (pos.x >= uint(WIDTH)-1) {
@@ -228,22 +256,78 @@ Shader "Xantoz/PixelSendCRT"
 
                 uint prevCLK = get_prev_CLK();
 
-
                 if (prevCLK != GetCLK()) {
+                    float raw_value[16];
+                    GetValues(raw_value);
+                    uint V[16];
+                    ValuesToUint(raw_value, V);
+
                     if (GetReset() != 0) {
-                        uint2 pos = uint2(0,0);
-                        set_pos_noscale(pos);
-                    } else if (prevCLK != GetCLK()) {
-                        uint2 pos = get_pos_noscale();
 
-                        float raw_value[16];
-                        GetValues(raw_value);
-
-                        for (uint i = 0; i < 16; ++i) {
-                            float4 value = float4(raw_value[i], raw_value[i], raw_value[i], raw_value[i]);
-                            uint2 paint_pos = pos + uint2(0,1);
+                        if (V[0] & 0x80) {
+                            uint x = V[1]; uint y = V[2];
+                            uint r = V[3]; uint g = V[4]; uint b = V[5]; uint a = V[6];
+                            uint2 paint_pos = uint2(x, y);
+                            float4 value = float4(r,g,b,a)/255.0;
                             set_pixel(paint_pos, value);
-                            incrementPos(pos);
+                        } else {
+                            uint2 pos = uint2(0,0);
+                            set_pos_noscale(pos);
+                        }
+                    } else {
+                        uint2 pos = get_pos_noscale();
+                        uint bpp = get_bpp();
+
+                        if (bpp == 8) {
+                            for (uint i = 0; i < 16; ++i) {
+                                float4 value = float4(raw_value[i], raw_value[i], raw_value[i], raw_value[i]);
+                                uint2 paint_pos = pos + uint2(0,NUM_DATALINES);
+                                set_pixel(paint_pos, value);
+                                incrementPos(pos);
+                            }
+                        } else if (bpp == 4) {
+                            for (uint i = 0; i < 16; ++i) {
+                                float v1 = float((V[i] & 0xf0) >> 4)/16.0;
+                                float v2 = float((V[i] & 0x0f) >> 0)/16.0;
+                                float4 val1 = float4(v1, v1, v1, v1);
+                                float4 val2 = float4(v2, v2, v2, v2);
+
+                                uint2 paint_pos = pos + uint2(0,NUM_DATALINES);
+                                set_pixel(paint_pos, val1);
+                                incrementPos(pos);
+
+                                paint_pos = pos + uint2(0,NUM_DATALINES);
+                                set_pixel(paint_pos, val2);
+                                incrementPos(pos);
+                            }
+                        } else if (bpp == 2) {
+                            for (uint i = 0; i < 16; ++i) {
+                                float v1 = float((V[i] & 0xc0) >> 6)/4.0;
+                                float v2 = float((V[i] & 0x30) >> 4)/4.0;
+                                float v3 = float((V[i] & 0x0c) >> 2)/4.0;
+                                float v4 = float((V[i] & 0x03) >> 0)/4.0;
+                                float4 val1 = float4(v1, v1, v1, v1);
+                                float4 val2 = float4(v2, v2, v2, v2);
+                                float4 val3 = float4(v3, v3, v3, v3);
+                                float4 val4 = float4(v4, v4, v4, v4);
+
+                                uint2 paint_pos = pos + uint2(0,NUM_DATALINES);
+                                set_pixel(paint_pos, val1);
+                                incrementPos(pos);
+
+                                paint_pos = pos + uint2(0,NUM_DATALINES);
+                                set_pixel(paint_pos, val2);
+                                incrementPos(pos);
+
+                                paint_pos = pos + uint2(0,NUM_DATALINES);
+                                set_pixel(paint_pos, val3);
+                                incrementPos(pos);
+
+                                paint_pos = pos + uint2(0,NUM_DATALINES);
+                                set_pixel(paint_pos, val4);
+                                incrementPos(pos);
+                            }
+                        } else if (bpp == 1) {
                         }
 
                         set_pos_noscale(pos);
