@@ -228,23 +228,26 @@ Shader "Xantoz/PixelSendCRT"
 
                 uint prevCLK = get_prev_CLK();
 
-                if (GetReset() != 0) {
-                    uint2 pos = uint2(0,0);
-                    set_pos_noscale(pos);
-                } else if (prevCLK != GetCLK()) {
-                    uint2 pos = get_pos_noscale();
 
-                    float raw_value[16];
-                    GetValues(raw_value);
+                if (prevCLK != GetCLK()) {
+                    if (GetReset() != 0) {
+                        uint2 pos = uint2(0,0);
+                        set_pos_noscale(pos);
+                    } else if (prevCLK != GetCLK()) {
+                        uint2 pos = get_pos_noscale();
 
-                    for (uint i = 0; i < 16; ++i) {
-                        float4 value = float4(raw_value[i], raw_value[i], raw_value[i], raw_value[i]);
-                        uint2 paint_pos = pos + uint2(0,1);
-                        set_pixel(paint_pos, value);
-                        incrementPos(pos);
+                        float raw_value[16];
+                        GetValues(raw_value);
+
+                        for (uint i = 0; i < 16; ++i) {
+                            float4 value = float4(raw_value[i], raw_value[i], raw_value[i], raw_value[i]);
+                            uint2 paint_pos = pos + uint2(0,1);
+                            set_pixel(paint_pos, value);
+                            incrementPos(pos);
+                        }
+
+                        set_pos_noscale(pos);
                     }
-
-                    set_pos_noscale(pos);
                 }
 
                 set_CLK(GetCLK());
