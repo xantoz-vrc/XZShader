@@ -244,18 +244,18 @@ Shader "Xantoz/PixelSendCRT"
             bool get_palettectrl_writingmode()   { return get_palettectrl().g > 0.0; }
             bool get_palettectrl_paletteactive() { return get_palettectrl().r > 0.0; }
 
-            #define set_palette_wridx(value) set_pixel(PALLETTEWRIDX_PIXEL, float4((value), 0, 0, 0))
+            #define set_palette_wridx(value) set_pixel(PALETTEWRIDX_PIXEL, float4((value), 0, 0, 0))
 
             uint get_palette_wridx()
             {
-                float4 px = get_pixel(PALLETTEWRIDX_PIXEL);
+                float4 px = get_pixel(PALETTEWRIDX_PIXEL);
                 return uint(px.r);
             }
 
             float4 get_palette_color(uint idx)
             {
                 // palette values are on the sexond line
-                get_pixel(uint(idx, 1)):
+                return get_pixel(uint2(idx, 1));
             }
 
             void incrementPos(inout uint2 pos)
@@ -306,7 +306,7 @@ Shader "Xantoz/PixelSendCRT"
                             // Last/16th byte does not fit nicely when sending RGB
                             for (uint i = 0; i < 15; i += 3) {
                                 float3 rgb = float3(V[i], V[i+1], V[i+2])/255;  // Or do we use the raw values directly? (going to be slightly off I think due to not rounding up for 255 due to the hack that deals with the animtor issues)
-                                set_pixel(uint(idx, 1), rgb);
+                                set_pixel(uint2(idx, 1), rgb);
                                 ++idx;
                             }
                             set_palette_wridx(idx);
