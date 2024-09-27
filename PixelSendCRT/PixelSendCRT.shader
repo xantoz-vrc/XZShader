@@ -306,6 +306,7 @@ Shader "Xantoz/PixelSendCRT"
                             // Last/16th byte does not fit nicely when sending RGB
                             for (uint i = 0; i < 15; i += 3) {
                                 float3 rgb = float3(V[i], V[i+1], V[i+2])/255;  // Or do we use the raw values directly? (going to be slightly off I think due to not rounding up for 255 due to the hack that deals with the animtor issues)
+                                rgb = pow(rgb, 2.2f); // Gamma correction
                                 set_pixel(uint2(idx, 1), rgb);
                                 ++idx;
                             }
