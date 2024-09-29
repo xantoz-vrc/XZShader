@@ -37,10 +37,14 @@ Shader "Xantoz/PixelSendCRT"
     #define BITDEPTH_PIXEL uint2(2,0)
 
     // R channel: Palette mode active (not grayscale)
-    // G channel on: In palette writing mode
-    // B channel: Reset palette (move palette index to 0)
+    // G channel on: Unused (used to be: in palette writing mode)
+    // B channel: Unused (reserved for maybe some sort of palette wridx reset or so)
     #define PALETTECTRL_PIXEL uint2(3,0)
+    // R channel: Which palette index are we writing to next
     #define PALETTEWRIDX_PIXEL uint2(4,0)
+
+    #define SETPIXEL_COMMAND 0x80
+    #define PALETTEWRITE_COMMAND 0xc0
 
     // Number of lines used for control data storage, and not the actual image
     #define NUM_DATALINES 2
@@ -290,21 +294,16 @@ Shader "Xantoz/PixelSendCRT"
 
                     if (GetReset() != 0) {
 
-                        if (V[0] & 0x80) {
+                        if (V[0] == SETPIXEL_COMMAND) {
                             uint x = V[1]; uint y = V[2];
                             uint r = V[3]; uint g = V[4]; uint b = V[5];// uint a = V[6];
                             uint2 paint_pos = uint2(x, y);
                             float3 value = float3(r,g,b)/255.0;
                             set_pixel(paint_pos, value);
-                        } else {
-                            uint2 pos = uint2(0,0);
-                            set_pos_noscale(pos);
-                        }
-                    } else {
-                        if (get_palettectrl_writingmode()) {
+                        } else if (V[0] == PALETTEWRITE_COMMAND) {
                             uint idx = get_palette_wridx();
-                            // Last/16th byte does not fit nicely when sending RGB
-                            for (uint i = 0; i < 15; i += 3) {
+                            // We have 15 bytes over which luckily manages to divide by 3 so we get 5 RGB colors at a time
+                            for (uint i = 1; i < 16; i += 3) {
                                 float3 rgb = float3(V[i], V[i+1], V[i+2])/255;  // Or do we use the raw values directly? (going to be slightly off I think due to not rounding up for 255 due to the hack that deals with the animtor issues)
                                 rgb = pow(rgb, 2.2f); // Gamma correction
                                 set_pixel(uint2(idx, 1), rgb);
@@ -312,146 +311,149 @@ Shader "Xantoz/PixelSendCRT"
                             }
                             set_palette_wridx(idx);
                         } else {
-                            uint2 pos = get_pos_noscale();
-                            uint bpp = get_bpp();
-
-                            if (get_palettectrl_paletteactive()) {
-                                if (bpp == 8) {
-                                    for (uint i = 0; i < 16; ++i) {
-                                        set_pixel(pos + uint2(0,NUM_DATALINES), get_palette_color(V[i]));
-                                        incrementPos(pos);
-                                    }
-                                } else if (bpp == 4) {
-                                    for (uint i = 0; i < 16; ++i) {
-                                        uint v1 = (V[i] & 0xf0) >> 4;
-                                        uint v2 = (V[i] & 0x0f) >> 0;
-                                        set_pixel(pos + uint2(0,NUM_DATALINES), get_palette_color(v1));
-                                        incrementPos(pos);
-                                        set_pixel(pos + uint2(0,NUM_DATALINES), get_palette_color(v2));
-                                        incrementPos(pos);
-                                    }
-                                } else if (bpp == 2) {
-                                    for (uint i = 0; i < 16; ++i) {
-                                        uint v1 = (V[i] & 0xc0) >> 6;
-                                        uint v2 = (V[i] & 0x30) >> 4;
-                                        uint v3 = (V[i] & 0x0c) >> 2;
-                                        uint v4 = (V[i] & 0x03) >> 0;
-                                        set_pixel(pos + uint2(0,NUM_DATALINES), get_palette_color(v1));
-                                        incrementPos(pos);
-                                        set_pixel(pos + uint2(0,NUM_DATALINES), get_palette_color(v2));
-                                        incrementPos(pos);
-                                        set_pixel(pos + uint2(0,NUM_DATALINES), get_palette_color(v3));
-                                        incrementPos(pos);
-                                        set_pixel(pos + uint2(0,NUM_DATALINES), get_palette_color(v4));
-                                        incrementPos(pos);
-                                    }
-                                } else if (bpp == 1) {
-                                    for (uint i = 0; i < 16; ++i) {
-                                        uint v1 = (V[i] >> 7) & 0x1;
-                                        uint v2 = (V[i] >> 6) & 0x1;
-                                        uint v3 = (V[i] >> 5) & 0x1;
-                                        uint v4 = (V[i] >> 4) & 0x1;
-                                        uint v5 = (V[i] >> 3) & 0x1;
-                                        uint v6 = (V[i] >> 2) & 0x1;
-                                        uint v7 = (V[i] >> 1) & 0x1;
-                                        uint v8 = (V[i] >> 0) & 0x1;
-                                        set_pixel(pos + uint2(0,NUM_DATALINES), get_palette_color(v1));
-                                        incrementPos(pos);
-                                        set_pixel(pos + uint2(0,NUM_DATALINES), get_palette_color(v2));
-                                        incrementPos(pos);
-                                        set_pixel(pos + uint2(0,NUM_DATALINES), get_palette_color(v3));
-                                        incrementPos(pos);
-                                        set_pixel(pos + uint2(0,NUM_DATALINES), get_palette_color(v4));
-                                        incrementPos(pos);
-                                        set_pixel(pos + uint2(0,NUM_DATALINES), get_palette_color(v5));
-                                        incrementPos(pos);
-                                        set_pixel(pos + uint2(0,NUM_DATALINES), get_palette_color(v6));
-                                        incrementPos(pos);
-                                        set_pixel(pos + uint2(0,NUM_DATALINES), get_palette_color(v7));
-                                        incrementPos(pos);
-                                        set_pixel(pos + uint2(0,NUM_DATALINES), get_palette_color(v8));
-                                        incrementPos(pos);
-                                    }
-                                }
-                            } else {
-                                if (bpp == 8) {
-                                    for (uint i = 0; i < 16; ++i) {
-                                        float3 value = float3(raw_value[i], raw_value[i], raw_value[i]);
-                                        set_pixel(pos + uint2(0,NUM_DATALINES), value);
-                                        incrementPos(pos);
-                                    }
-                                } else if (bpp == 4) {
-                                    for (uint i = 0; i < 16; ++i) {
-                                        float v1 = float((V[i] & 0xf0) >> 4)/16.0;
-                                        float v2 = float((V[i] & 0x0f) >> 0)/16.0;
-                                        float3 val1 = float3(v1, v1, v1);
-                                        float3 val2 = float3(v2, v2, v2);
-
-                                        set_pixel(pos + uint2(0,NUM_DATALINES), val1);
-                                        incrementPos(pos);
-                                        set_pixel(pos + uint2(0,NUM_DATALINES), val2);
-                                        incrementPos(pos);
-                                    }
-                                } else if (bpp == 2) {
-                                    for (uint i = 0; i < 16; ++i) {
-                                        float v1 = float((V[i] & 0xc0) >> 6)/4.0;
-                                        float v2 = float((V[i] & 0x30) >> 4)/4.0;
-                                        float v3 = float((V[i] & 0x0c) >> 2)/4.0;
-                                        float v4 = float((V[i] & 0x03) >> 0)/4.0;
-                                        float3 val1 = float3(v1, v1, v1);
-                                        float3 val2 = float3(v2, v2, v2);
-                                        float3 val3 = float3(v3, v3, v3);
-                                        float3 val4 = float3(v4, v4, v4);
-
-                                        set_pixel(pos + uint2(0,NUM_DATALINES), val1);
-                                        incrementPos(pos);
-                                        set_pixel(pos + uint2(0,NUM_DATALINES), val2);
-                                        incrementPos(pos);
-                                        set_pixel(pos + uint2(0,NUM_DATALINES), val3);
-                                        incrementPos(pos);
-                                        set_pixel(pos + uint2(0,NUM_DATALINES), val4);
-                                        incrementPos(pos);
-                                    }
-                                } else if (bpp == 1) {
-                                    for (uint i = 0; i < 16; ++i) {
-                                        float v1 = float((V[i] >> 7) & 0x1);
-                                        float v2 = float((V[i] >> 6) & 0x1);
-                                        float v3 = float((V[i] >> 5) & 0x1);
-                                        float v4 = float((V[i] >> 4) & 0x1);
-                                        float v5 = float((V[i] >> 3) & 0x1);
-                                        float v6 = float((V[i] >> 2) & 0x1);
-                                        float v7 = float((V[i] >> 1) & 0x1);
-                                        float v8 = float((V[i] >> 0) & 0x1);
-                                        float3 val1 = float3(v1, v1, v1);
-                                        float3 val2 = float3(v2, v2, v2);
-                                        float3 val3 = float3(v3, v3, v3);
-                                        float3 val4 = float3(v4, v4, v4);
-                                        float3 val5 = float3(v5, v5, v5);
-                                        float3 val6 = float3(v6, v6, v6);
-                                        float3 val7 = float3(v7, v7, v7);
-                                        float3 val8 = float3(v8, v8, v8);
-                                        set_pixel(pos + uint2(0,NUM_DATALINES), val1);
-                                        incrementPos(pos);
-                                        set_pixel(pos + uint2(0,NUM_DATALINES), val2);
-                                        incrementPos(pos);
-                                        set_pixel(pos + uint2(0,NUM_DATALINES), val3);
-                                        incrementPos(pos);
-                                        set_pixel(pos + uint2(0,NUM_DATALINES), val4);
-                                        incrementPos(pos);
-                                        set_pixel(pos + uint2(0,NUM_DATALINES), val5);
-                                        incrementPos(pos);
-                                        set_pixel(pos + uint2(0,NUM_DATALINES), val6);
-                                        incrementPos(pos);
-                                        set_pixel(pos + uint2(0,NUM_DATALINES), val7);
-                                        incrementPos(pos);
-                                        set_pixel(pos + uint2(0,NUM_DATALINES), val8);
-                                        incrementPos(pos);
-                                    }
-                                }
-                            }
-
+                            uint2 pos = uint2(0,0);
                             set_pos_noscale(pos);
                         }
+                    } else {
+                        uint2 pos = get_pos_noscale();
+                        uint bpp = get_bpp();
+
+                        if (get_palettectrl_paletteactive()) {
+                            if (bpp == 8) {
+                                for (uint i = 0; i < 16; ++i) {
+                                    set_pixel(pos + uint2(0,NUM_DATALINES), get_palette_color(V[i]));
+                                    incrementPos(pos);
+                                }
+                            } else if (bpp == 4) {
+                                for (uint i = 0; i < 16; ++i) {
+                                    uint v1 = (V[i] & 0xf0) >> 4;
+                                    uint v2 = (V[i] & 0x0f) >> 0;
+                                    set_pixel(pos + uint2(0,NUM_DATALINES), get_palette_color(v1));
+                                    incrementPos(pos);
+                                    set_pixel(pos + uint2(0,NUM_DATALINES), get_palette_color(v2));
+                                    incrementPos(pos);
+                                }
+                            } else if (bpp == 2) {
+                                for (uint i = 0; i < 16; ++i) {
+                                    uint v1 = (V[i] & 0xc0) >> 6;
+                                    uint v2 = (V[i] & 0x30) >> 4;
+                                    uint v3 = (V[i] & 0x0c) >> 2;
+                                    uint v4 = (V[i] & 0x03) >> 0;
+                                    set_pixel(pos + uint2(0,NUM_DATALINES), get_palette_color(v1));
+                                    incrementPos(pos);
+                                    set_pixel(pos + uint2(0,NUM_DATALINES), get_palette_color(v2));
+                                    incrementPos(pos);
+                                    set_pixel(pos + uint2(0,NUM_DATALINES), get_palette_color(v3));
+                                    incrementPos(pos);
+                                    set_pixel(pos + uint2(0,NUM_DATALINES), get_palette_color(v4));
+                                    incrementPos(pos);
+                                }
+                            } else if (bpp == 1) {
+                                for (uint i = 0; i < 16; ++i) {
+                                    uint v1 = (V[i] >> 7) & 0x1;
+                                    uint v2 = (V[i] >> 6) & 0x1;
+                                    uint v3 = (V[i] >> 5) & 0x1;
+                                    uint v4 = (V[i] >> 4) & 0x1;
+                                    uint v5 = (V[i] >> 3) & 0x1;
+                                    uint v6 = (V[i] >> 2) & 0x1;
+                                    uint v7 = (V[i] >> 1) & 0x1;
+                                    uint v8 = (V[i] >> 0) & 0x1;
+                                    set_pixel(pos + uint2(0,NUM_DATALINES), get_palette_color(v1));
+                                    incrementPos(pos);
+                                    set_pixel(pos + uint2(0,NUM_DATALINES), get_palette_color(v2));
+                                    incrementPos(pos);
+                                    set_pixel(pos + uint2(0,NUM_DATALINES), get_palette_color(v3));
+                                    incrementPos(pos);
+                                    set_pixel(pos + uint2(0,NUM_DATALINES), get_palette_color(v4));
+                                    incrementPos(pos);
+                                    set_pixel(pos + uint2(0,NUM_DATALINES), get_palette_color(v5));
+                                    incrementPos(pos);
+                                    set_pixel(pos + uint2(0,NUM_DATALINES), get_palette_color(v6));
+                                    incrementPos(pos);
+                                    set_pixel(pos + uint2(0,NUM_DATALINES), get_palette_color(v7));
+                                    incrementPos(pos);
+                                    set_pixel(pos + uint2(0,NUM_DATALINES), get_palette_color(v8));
+                                    incrementPos(pos);
+                                }
+                            }
+                        } else {
+                            if (bpp == 8) {
+                                for (uint i = 0; i < 16; ++i) {
+                                    float3 value = float3(raw_value[i], raw_value[i], raw_value[i]);
+                                    set_pixel(pos + uint2(0,NUM_DATALINES), value);
+                                    incrementPos(pos);
+                                }
+                            } else if (bpp == 4) {
+                                for (uint i = 0; i < 16; ++i) {
+                                    float v1 = float((V[i] & 0xf0) >> 4)/16.0;
+                                    float v2 = float((V[i] & 0x0f) >> 0)/16.0;
+                                    float3 val1 = float3(v1, v1, v1);
+                                    float3 val2 = float3(v2, v2, v2);
+
+                                    set_pixel(pos + uint2(0,NUM_DATALINES), val1);
+                                    incrementPos(pos);
+                                    set_pixel(pos + uint2(0,NUM_DATALINES), val2);
+                                    incrementPos(pos);
+                                }
+                            } else if (bpp == 2) {
+                                for (uint i = 0; i < 16; ++i) {
+                                    float v1 = float((V[i] & 0xc0) >> 6)/4.0;
+                                    float v2 = float((V[i] & 0x30) >> 4)/4.0;
+                                    float v3 = float((V[i] & 0x0c) >> 2)/4.0;
+                                    float v4 = float((V[i] & 0x03) >> 0)/4.0;
+                                    float3 val1 = float3(v1, v1, v1);
+                                    float3 val2 = float3(v2, v2, v2);
+                                    float3 val3 = float3(v3, v3, v3);
+                                    float3 val4 = float3(v4, v4, v4);
+
+                                    set_pixel(pos + uint2(0,NUM_DATALINES), val1);
+                                    incrementPos(pos);
+                                    set_pixel(pos + uint2(0,NUM_DATALINES), val2);
+                                    incrementPos(pos);
+                                    set_pixel(pos + uint2(0,NUM_DATALINES), val3);
+                                    incrementPos(pos);
+                                    set_pixel(pos + uint2(0,NUM_DATALINES), val4);
+                                    incrementPos(pos);
+                                }
+                            } else if (bpp == 1) {
+                                for (uint i = 0; i < 16; ++i) {
+                                    float v1 = float((V[i] >> 7) & 0x1);
+                                    float v2 = float((V[i] >> 6) & 0x1);
+                                    float v3 = float((V[i] >> 5) & 0x1);
+                                    float v4 = float((V[i] >> 4) & 0x1);
+                                    float v5 = float((V[i] >> 3) & 0x1);
+                                    float v6 = float((V[i] >> 2) & 0x1);
+                                    float v7 = float((V[i] >> 1) & 0x1);
+                                    float v8 = float((V[i] >> 0) & 0x1);
+                                    float3 val1 = float3(v1, v1, v1);
+                                    float3 val2 = float3(v2, v2, v2);
+                                    float3 val3 = float3(v3, v3, v3);
+                                    float3 val4 = float3(v4, v4, v4);
+                                    float3 val5 = float3(v5, v5, v5);
+                                    float3 val6 = float3(v6, v6, v6);
+                                    float3 val7 = float3(v7, v7, v7);
+                                    float3 val8 = float3(v8, v8, v8);
+                                    set_pixel(pos + uint2(0,NUM_DATALINES), val1);
+                                    incrementPos(pos);
+                                    set_pixel(pos + uint2(0,NUM_DATALINES), val2);
+                                    incrementPos(pos);
+                                    set_pixel(pos + uint2(0,NUM_DATALINES), val3);
+                                    incrementPos(pos);
+                                    set_pixel(pos + uint2(0,NUM_DATALINES), val4);
+                                    incrementPos(pos);
+                                    set_pixel(pos + uint2(0,NUM_DATALINES), val5);
+                                    incrementPos(pos);
+                                    set_pixel(pos + uint2(0,NUM_DATALINES), val6);
+                                    incrementPos(pos);
+                                    set_pixel(pos + uint2(0,NUM_DATALINES), val7);
+                                    incrementPos(pos);
+                                    set_pixel(pos + uint2(0,NUM_DATALINES), val8);
+                                    incrementPos(pos);
+                                }
+                            }
+                        }
+
+                        set_pos_noscale(pos);
                     }
                 }
 
