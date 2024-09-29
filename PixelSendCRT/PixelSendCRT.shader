@@ -31,6 +31,9 @@ Shader "Xantoz/PixelSendCRT"
 
     #define CRTTEXTURETYPE float4
     #include "../cginc/flexcrt.cginc"
+
+    // maxvertexcount setting for our geometry shader
+    #define MAXVERTEXCOUNT 146
     
     #define POS_PIXEL uint2(0,0)
     #define CLK_PIXEL uint2(1,0)
@@ -208,9 +211,12 @@ Shader "Xantoz/PixelSendCRT"
             #define set_pixel(pos, value) \
             [unroll] \
             do { \
-                o.vertex = FlexCRTCoordinateOut((pos)); \
-                o.data = (value); \
-                stream.Append(o); \
+                if (geoPrimID*MAXVERTEXCOUNT <= set_pixel_cntr && set_pixel_cntr < (geoPrimID + 1)*MAXVERTEXCOUNT) { \
+                    o.vertex = FlexCRTCoordinateOut((pos)); \
+                    o.data = (value); \
+                    stream.Append(o); \
+                } \
+                ++set_pixel_cntr; \
             } while (0)
 
             uint2 get_pos_noscale()
@@ -278,15 +284,11 @@ Shader "Xantoz/PixelSendCRT"
                 }
             }
 
-            [maxvertexcount(146)]
+            [maxvertexcount(MAXVERTEXCOUNT)]
 	    void geom(triangle v2g input[3], inout PointStream<g2f> stream, uint geoPrimID : SV_PrimitiveID)
 	    {
-                // We only run once as it stands now
-                if (geoPrimID != 0) {
-                    return;
-                }
-
                 g2f o;
+                uint set_pixel_cntr = 0;
 
                 uint prevCLK = get_prev_CLK();
 
