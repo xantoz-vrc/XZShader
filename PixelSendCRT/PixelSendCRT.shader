@@ -272,7 +272,7 @@ Shader "Xantoz/PixelSendCRT"
                     // palette values are on the second line
                     return get_pixel(uint2(idx, 1));
                 } else {
-                    return pow(float3(idx, idx, idx), 2.2f);
+                    return pow(float3(idx, idx, idx)/255.0f, 2.2f);
                 }
             }
 
