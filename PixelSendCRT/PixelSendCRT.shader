@@ -266,13 +266,13 @@ Shader "Xantoz/PixelSendCRT"
                 return uint(px.r);
             }
 
-            float3 get_palette_color(uint idx)
+            float3 get_palette_color(uint idx, float maxcolor)
             {
                 if (get_palettectrl_paletteactive()) {
                     // palette values are on the second line
                     return get_pixel(uint2(idx, 1));
                 } else {
-                    return pow(float3(idx, idx, idx)/255.0f, 2.2f);
+                    return pow(float3(idx, idx, idx)/maxcolor, 2.2f);
                 }
             }
 
@@ -326,19 +326,20 @@ Shader "Xantoz/PixelSendCRT"
                     } else {
                         uint2 pos = get_pos_noscale();
                         uint bpp = get_bpp();
+                        float maxcolor = pow(2, bpp);
 
                         if (bpp == 8) {
                             for (uint i = 0; i < BYTES_PER_SEND; ++i) {
-                                set_pixel(pos + uint2(0,NUM_DATALINES), get_palette_color(V[i]));
+                                set_pixel(pos + uint2(0,NUM_DATALINES), get_palette_color(V[i], maxcolor));
                                 incrementPos(pos);
                             }
                         } else if (bpp == 4) {
                             for (uint i = 0; i < BYTES_PER_SEND; ++i) {
                                 uint v1 = (V[i] & 0xf0) >> 4;
                                 uint v2 = (V[i] & 0x0f) >> 0;
-                                set_pixel(pos + uint2(0,NUM_DATALINES), get_palette_color(v1));
+                                set_pixel(pos + uint2(0,NUM_DATALINES), get_palette_color(v1, maxcolor));
                                 incrementPos(pos);
-                                set_pixel(pos + uint2(0,NUM_DATALINES), get_palette_color(v2));
+                                set_pixel(pos + uint2(0,NUM_DATALINES), get_palette_color(v2, maxcolor));
                                 incrementPos(pos);
                             }
                         } else if (bpp == 2) {
@@ -347,13 +348,13 @@ Shader "Xantoz/PixelSendCRT"
                                 uint v2 = (V[i] & 0x30) >> 4;
                                 uint v3 = (V[i] & 0x0c) >> 2;
                                 uint v4 = (V[i] & 0x03) >> 0;
-                                set_pixel(pos + uint2(0,NUM_DATALINES), get_palette_color(v1));
+                                set_pixel(pos + uint2(0,NUM_DATALINES), get_palette_color(v1, maxcolor));
                                 incrementPos(pos);
-                                set_pixel(pos + uint2(0,NUM_DATALINES), get_palette_color(v2));
+                                set_pixel(pos + uint2(0,NUM_DATALINES), get_palette_color(v2, maxcolor));
                                 incrementPos(pos);
-                                set_pixel(pos + uint2(0,NUM_DATALINES), get_palette_color(v3));
+                                set_pixel(pos + uint2(0,NUM_DATALINES), get_palette_color(v3, maxcolor));
                                 incrementPos(pos);
-                                set_pixel(pos + uint2(0,NUM_DATALINES), get_palette_color(v4));
+                                set_pixel(pos + uint2(0,NUM_DATALINES), get_palette_color(v4, maxcolor));
                                 incrementPos(pos);
                             }
                         } else if (bpp == 1) {
@@ -366,21 +367,21 @@ Shader "Xantoz/PixelSendCRT"
                                 uint v6 = (V[i] >> 2) & 0x1;
                                 uint v7 = (V[i] >> 1) & 0x1;
                                 uint v8 = (V[i] >> 0) & 0x1;
-                                set_pixel(pos + uint2(0,NUM_DATALINES), get_palette_color(v1));
+                                set_pixel(pos + uint2(0,NUM_DATALINES), get_palette_color(v1, maxcolor));
                                 incrementPos(pos);
-                                set_pixel(pos + uint2(0,NUM_DATALINES), get_palette_color(v2));
+                                set_pixel(pos + uint2(0,NUM_DATALINES), get_palette_color(v2, maxcolor));
                                 incrementPos(pos);
-                                set_pixel(pos + uint2(0,NUM_DATALINES), get_palette_color(v3));
+                                set_pixel(pos + uint2(0,NUM_DATALINES), get_palette_color(v3, maxcolor));
                                 incrementPos(pos);
-                                set_pixel(pos + uint2(0,NUM_DATALINES), get_palette_color(v4));
+                                set_pixel(pos + uint2(0,NUM_DATALINES), get_palette_color(v4, maxcolor));
                                 incrementPos(pos);
-                                set_pixel(pos + uint2(0,NUM_DATALINES), get_palette_color(v5));
+                                set_pixel(pos + uint2(0,NUM_DATALINES), get_palette_color(v5, maxcolor));
                                 incrementPos(pos);
-                                set_pixel(pos + uint2(0,NUM_DATALINES), get_palette_color(v6));
+                                set_pixel(pos + uint2(0,NUM_DATALINES), get_palette_color(v6, maxcolor));
                                 incrementPos(pos);
-                                set_pixel(pos + uint2(0,NUM_DATALINES), get_palette_color(v7));
+                                set_pixel(pos + uint2(0,NUM_DATALINES), get_palette_color(v7, maxcolor));
                                 incrementPos(pos);
-                                set_pixel(pos + uint2(0,NUM_DATALINES), get_palette_color(v8));
+                                set_pixel(pos + uint2(0,NUM_DATALINES), get_palette_color(v8, maxcolor));
                                 incrementPos(pos);
                             }
                         }
