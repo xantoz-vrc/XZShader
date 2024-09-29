@@ -34,13 +34,15 @@ Shader "Xantoz/PixelSendCRT"
 
     // maxvertexcount setting for our geometry shader
     #define MAXVERTEXCOUNT 146
+
+    #define BYTES_PER_SEND 16
     
     #define POS_PIXEL uint2(0,0)
     #define CLK_PIXEL uint2(1,0)
     #define BITDEPTH_PIXEL uint2(2,0)
 
     // R channel: Palette mode active (not grayscale)
-    // G channel on: Unused (used to be: in palette writing mode)
+    // G channel: Unused (used to be: on means in palette writing mode)
     // B channel: Unused (reserved for maybe some sort of palette wridx reset or so)
     #define PALETTECTRL_PIXEL uint2(3,0)
     // R channel: Which palette index are we writing to next
@@ -84,8 +86,10 @@ Shader "Xantoz/PixelSendCRT"
     uint _CLK;
     uint _Reset;
 
-    void GetValues(inout float values[16])
+    void GetValues(inout float values[BYTES_PER_SEND])
     {
+        _Static_assert(BYTES_PER_SEND == 16, "Hardcoded to BYTES_PER_SEND == 16 in this case");
+
        values[0]  = _V0;
        values[1]  = _V1;
        values[2]  = _V2;
@@ -136,9 +140,9 @@ Shader "Xantoz/PixelSendCRT"
         return width > 16;
     }
 
-    void GetValues(inout float values[16])
+    void GetValues(inout float values[BYTES_PER_SEND])
     {
-        for (uint i = 0; i < 16; ++i) {
+        for (uint i = 0; i < BYTES_PER_SEND; ++i) {
             values[i] = asfloat(half3ToUint(GetFromGrabPass(uint2(i, 0))));
         }
     }
@@ -147,9 +151,9 @@ Shader "Xantoz/PixelSendCRT"
     uint GetReset() { return half3ToUint(GetFromGrabPass(uint2(1,1))); }
 #endif
 
-    void ValuesToUint(in float values[16], out uint uvalues[16])
+    void ValuesToUint(in float values[BYTES_PER_SEND], out uint uvalues[BYTES_PER_SEND])
     {
-        for (uint i = 0; i < 16; ++i) {
+        for (uint i = 0; i < BYTES_PER_SEND; ++i) {
             // We use round here since the animator portion might struggle to get the float quite on-mark for whatever
             // reason (this happens for 255 currently due to the hack we had to avoid cycleOffset looping 255 back to 0)
             uvalues[i] = round(values[i]*255.0);
@@ -293,13 +297,12 @@ Shader "Xantoz/PixelSendCRT"
                 uint prevCLK = get_prev_CLK();
 
                 if (prevCLK != GetCLK()) {
-                    float raw_value[16];
+                    float raw_value[BYTES_PER_SEND];
                     GetValues(raw_value);
-                    uint V[16];
+                    uint V[BYTES_PER_SEND];
                     ValuesToUint(raw_value, V);
 
                     if (GetReset() != 0) {
-
                         if (V[0] == SETPIXEL_COMMAND) {
                             uint x = V[1]; uint y = V[2];
                             uint r = V[3]; uint g = V[4]; uint b = V[5];// uint a = V[6];
@@ -309,7 +312,7 @@ Shader "Xantoz/PixelSendCRT"
                         } else if (V[0] == PALETTEWRITE_COMMAND) {
                             uint idx = get_palette_wridx();
                             // We have 15 bytes over which luckily manages to divide by 3 so we get 5 RGB colors at a time
-                            for (uint i = 1; i < 16; i += 3) {
+                            for (uint i = 1; i < BYTES_PER_SEND; i += 3) {
                                 float3 rgb = float3(V[i], V[i+1], V[i+2])/255;  // Or do we use the raw values directly? (going to be slightly off I think due to not rounding up for 255 due to the hack that deals with the animtor issues)
                                 rgb = pow(rgb, 2.2f); // Gamma correction
                                 set_pixel(uint2(idx, 1), rgb);
@@ -325,12 +328,12 @@ Shader "Xantoz/PixelSendCRT"
                         uint bpp = get_bpp();
 
                         if (bpp == 8) {
-                            for (uint i = 0; i < 16; ++i) {
+                            for (uint i = 0; i < BYTES_PER_SEND; ++i) {
                                 set_pixel(pos + uint2(0,NUM_DATALINES), get_palette_color(V[i]));
                                 incrementPos(pos);
                             }
                         } else if (bpp == 4) {
-                            for (uint i = 0; i < 16; ++i) {
+                            for (uint i = 0; i < BYTES_PER_SEND; ++i) {
                                 uint v1 = (V[i] & 0xf0) >> 4;
                                 uint v2 = (V[i] & 0x0f) >> 0;
                                 set_pixel(pos + uint2(0,NUM_DATALINES), get_palette_color(v1));
@@ -339,7 +342,7 @@ Shader "Xantoz/PixelSendCRT"
                                 incrementPos(pos);
                             }
                         } else if (bpp == 2) {
-                            for (uint i = 0; i < 16; ++i) {
+                            for (uint i = 0; i < BYTES_PER_SEND; ++i) {
                                 uint v1 = (V[i] & 0xc0) >> 6;
                                 uint v2 = (V[i] & 0x30) >> 4;
                                 uint v3 = (V[i] & 0x0c) >> 2;
@@ -354,7 +357,7 @@ Shader "Xantoz/PixelSendCRT"
                                 incrementPos(pos);
                             }
                         } else if (bpp == 1) {
-                            for (uint i = 0; i < 16; ++i) {
+                            for (uint i = 0; i < BYTES_PER_SEND; ++i) {
                                 uint v1 = (V[i] >> 7) & 0x1;
                                 uint v2 = (V[i] >> 6) & 0x1;
                                 uint v3 = (V[i] >> 5) & 0x1;
