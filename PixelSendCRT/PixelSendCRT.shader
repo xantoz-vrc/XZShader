@@ -34,7 +34,7 @@ Shader "Xantoz/PixelSendCRT"
 
     // maxvertexcount setting for our geometry shader
     #define MAXVERTEXCOUNT 146
-    #define INSTANCECOUNT 12
+    #define INSTANCECOUNT 32
 
     #define BYTES_PER_SEND 16
     
@@ -219,7 +219,10 @@ Shader "Xantoz/PixelSendCRT"
             #define set_pixel(pos, value) \
             [unroll] \
             do { \
-                if (geoPrimID*MAXVERTEXCOUNT <= set_pixel_cntr && set_pixel_cntr < (geoPrimID + 1)*MAXVERTEXCOUNT) { \
+                uint _v = geoPrimID + instanceID; \
+                uint _c0 = _v*MAXVERTEXCOUNT; \
+                uint _c1 = (_v + 1)*MAXVERTEXCOUNT; \
+                if (_c0 <= set_pixel_cntr && set_pixel_cntr < _c1) { \
                     o.vertex = FlexCRTCoordinateOut((pos)); \
                     o.data = (value); \
                     stream.Append(o); \
@@ -295,8 +298,9 @@ Shader "Xantoz/PixelSendCRT"
                 }
             }
 
+            [instance(INSTANCECOUNT)]
             [maxvertexcount(MAXVERTEXCOUNT)]
-	    void geom(triangle v2g input[3], inout PointStream<g2f> stream, uint geoPrimID : SV_PrimitiveID)
+	    void geom(triangle v2g input[3], inout PointStream<g2f> stream, uint geoPrimID : SV_PrimitiveID, uint instanceID : SV_GSInstanceID)
 	    {
                 g2f o;
                 uint set_pixel_cntr = 0;
