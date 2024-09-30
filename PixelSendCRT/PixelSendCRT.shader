@@ -34,6 +34,7 @@ Shader "Xantoz/PixelSendCRT"
 
     // maxvertexcount setting for our geometry shader
     #define MAXVERTEXCOUNT 146
+    #define INSTANCECOUNT 12
 
     #define BYTES_PER_SEND 16
     
@@ -47,6 +48,9 @@ Shader "Xantoz/PixelSendCRT"
     #define PALETTECTRL_PIXEL uint2(3,0)
     // R channel: Which palette index are we writing to next
     #define PALETTEWRIDX_PIXEL uint2(4,0)
+
+    // R channel non-zero: RLE with the same value repeated twice being the escape sequence (with exceptions that the escape sequence can't appear in the last two bytes of a 16-byte chunk)
+    #define COMPRESSIONCTRL_PIXEL uint2(5,0)
 
     #define SETPIXEL_COMMAND 0x80
     #define PALETTEWRITE_COMMAND 0xc0
@@ -276,6 +280,9 @@ Shader "Xantoz/PixelSendCRT"
                 }
             }
 
+            float3 get_compressionctrl() { return get_pixel(COMPRESSIONCTRL_PIXEL); }
+            bool get_compressionctrl_rle() { return get_compressionctrl().r > 0.1f; }
+
             void incrementPos(inout uint2 pos)
             {
                 if (pos.x >= uint(WIDTH)-1) {
@@ -328,61 +335,66 @@ Shader "Xantoz/PixelSendCRT"
                         uint bpp = get_bpp();
                         float maxcolor = pow(2, bpp);
 
-                        if (bpp == 8) {
-                            for (uint i = 0; i < BYTES_PER_SEND; ++i) {
-                                set_pixel(pos + uint2(0,NUM_DATALINES), get_palette_color(V[i], maxcolor));
-                                incrementPos(pos);
+                        for (uint i = 0; i < BYTES_PER_SEND;) {
+                            uint W = V[i];
+                            uint repeats = 1;
+                            if (get_compressionctrl_rle() && i+2 < BYTES_PER_SEND && V[i] == V[i+1]) {
+                                repeats = V[i+2];
+                                i += 3;
+                            } else {
+                                repeats = 1;
+                                i += 1;
                             }
-                        } else if (bpp == 4) {
-                            for (uint i = 0; i < BYTES_PER_SEND; ++i) {
-                                uint v1 = (V[i] & 0xf0) >> 4;
-                                uint v2 = (V[i] & 0x0f) >> 0;
-                                set_pixel(pos + uint2(0,NUM_DATALINES), get_palette_color(v1, maxcolor));
-                                incrementPos(pos);
-                                set_pixel(pos + uint2(0,NUM_DATALINES), get_palette_color(v2, maxcolor));
-                                incrementPos(pos);
-                            }
-                        } else if (bpp == 2) {
-                            for (uint i = 0; i < BYTES_PER_SEND; ++i) {
-                                uint v1 = (V[i] & 0xc0) >> 6;
-                                uint v2 = (V[i] & 0x30) >> 4;
-                                uint v3 = (V[i] & 0x0c) >> 2;
-                                uint v4 = (V[i] & 0x03) >> 0;
-                                set_pixel(pos + uint2(0,NUM_DATALINES), get_palette_color(v1, maxcolor));
-                                incrementPos(pos);
-                                set_pixel(pos + uint2(0,NUM_DATALINES), get_palette_color(v2, maxcolor));
-                                incrementPos(pos);
-                                set_pixel(pos + uint2(0,NUM_DATALINES), get_palette_color(v3, maxcolor));
-                                incrementPos(pos);
-                                set_pixel(pos + uint2(0,NUM_DATALINES), get_palette_color(v4, maxcolor));
-                                incrementPos(pos);
-                            }
-                        } else if (bpp == 1) {
-                            for (uint i = 0; i < BYTES_PER_SEND; ++i) {
-                                uint v1 = (V[i] >> 7) & 0x1;
-                                uint v2 = (V[i] >> 6) & 0x1;
-                                uint v3 = (V[i] >> 5) & 0x1;
-                                uint v4 = (V[i] >> 4) & 0x1;
-                                uint v5 = (V[i] >> 3) & 0x1;
-                                uint v6 = (V[i] >> 2) & 0x1;
-                                uint v7 = (V[i] >> 1) & 0x1;
-                                uint v8 = (V[i] >> 0) & 0x1;
-                                set_pixel(pos + uint2(0,NUM_DATALINES), get_palette_color(v1, maxcolor));
-                                incrementPos(pos);
-                                set_pixel(pos + uint2(0,NUM_DATALINES), get_palette_color(v2, maxcolor));
-                                incrementPos(pos);
-                                set_pixel(pos + uint2(0,NUM_DATALINES), get_palette_color(v3, maxcolor));
-                                incrementPos(pos);
-                                set_pixel(pos + uint2(0,NUM_DATALINES), get_palette_color(v4, maxcolor));
-                                incrementPos(pos);
-                                set_pixel(pos + uint2(0,NUM_DATALINES), get_palette_color(v5, maxcolor));
-                                incrementPos(pos);
-                                set_pixel(pos + uint2(0,NUM_DATALINES), get_palette_color(v6, maxcolor));
-                                incrementPos(pos);
-                                set_pixel(pos + uint2(0,NUM_DATALINES), get_palette_color(v7, maxcolor));
-                                incrementPos(pos);
-                                set_pixel(pos + uint2(0,NUM_DATALINES), get_palette_color(v8, maxcolor));
-                                incrementPos(pos);
+                            for (uint j = 0; j < repeats; ++j) {
+                                if (bpp == 8) {
+                                    set_pixel(pos + uint2(0,NUM_DATALINES), get_palette_color(W, maxcolor));
+                                    incrementPos(pos);
+                                } else if (bpp == 4) {
+                                    uint v1 = (W & 0xf0) >> 4;
+                                    uint v2 = (W & 0x0f) >> 0;
+                                    set_pixel(pos + uint2(0,NUM_DATALINES), get_palette_color(v1, maxcolor));
+                                    incrementPos(pos);
+                                    set_pixel(pos + uint2(0,NUM_DATALINES), get_palette_color(v2, maxcolor));
+                                    incrementPos(pos);
+                                } else if (bpp == 2) {
+                                    uint v1 = (W & 0xc0) >> 6;
+                                    uint v2 = (W & 0x30) >> 4;
+                                    uint v3 = (W & 0x0c) >> 2;
+                                    uint v4 = (W & 0x03) >> 0;
+                                    set_pixel(pos + uint2(0,NUM_DATALINES), get_palette_color(v1, maxcolor));
+                                    incrementPos(pos);
+                                    set_pixel(pos + uint2(0,NUM_DATALINES), get_palette_color(v2, maxcolor));
+                                    incrementPos(pos);
+                                    set_pixel(pos + uint2(0,NUM_DATALINES), get_palette_color(v3, maxcolor));
+                                    incrementPos(pos);
+                                    set_pixel(pos + uint2(0,NUM_DATALINES), get_palette_color(v4, maxcolor));
+                                    incrementPos(pos);
+                                } else if (bpp == 1) {
+                                    uint v1 = (W >> 7) & 0x1;
+                                    uint v2 = (W >> 6) & 0x1;
+                                    uint v3 = (W >> 5) & 0x1;
+                                    uint v4 = (W >> 4) & 0x1;
+                                    uint v5 = (W >> 3) & 0x1;
+                                    uint v6 = (W >> 2) & 0x1;
+                                    uint v7 = (W >> 1) & 0x1;
+                                    uint v8 = (W >> 0) & 0x1;
+                                    set_pixel(pos + uint2(0,NUM_DATALINES), get_palette_color(v1, maxcolor));
+                                    incrementPos(pos);
+                                    set_pixel(pos + uint2(0,NUM_DATALINES), get_palette_color(v2, maxcolor));
+                                    incrementPos(pos);
+                                    set_pixel(pos + uint2(0,NUM_DATALINES), get_palette_color(v3, maxcolor));
+                                    incrementPos(pos);
+                                    set_pixel(pos + uint2(0,NUM_DATALINES), get_palette_color(v4, maxcolor));
+                                    incrementPos(pos);
+                                    set_pixel(pos + uint2(0,NUM_DATALINES), get_palette_color(v5, maxcolor));
+                                    incrementPos(pos);
+                                    set_pixel(pos + uint2(0,NUM_DATALINES), get_palette_color(v6, maxcolor));
+                                    incrementPos(pos);
+                                    set_pixel(pos + uint2(0,NUM_DATALINES), get_palette_color(v7, maxcolor));
+                                    incrementPos(pos);
+                                    set_pixel(pos + uint2(0,NUM_DATALINES), get_palette_color(v8, maxcolor));
+                                    incrementPos(pos);
+                                }
                             }
                         }
 
