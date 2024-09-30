@@ -88,7 +88,7 @@ Shader "Xantoz/PixelSendCRT"
 
     void GetValues(inout float values[BYTES_PER_SEND])
     {
-        _Static_assert(BYTES_PER_SEND == 16, "Hardcoded to BYTES_PER_SEND == 16 in this case");
+       // _Static_assert(BYTES_PER_SEND == 16, "Hardcoded to BYTES_PER_SEND == 16 in this case");
 
        values[0]  = _V0;
        values[1]  = _V1;
