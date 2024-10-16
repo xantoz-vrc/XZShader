@@ -323,7 +323,7 @@ Shader "Xantoz/PixelSendCRT"
                         } else if (V[0] == PALETTEWRITE_COMMAND) {
                             uint idx = get_palette_wridx();
                             // We have 15 bytes over which luckily manages to divide by 3 so we get 5 RGB colors at a time
-                            for (uint i = 1; i < BYTES_PER_SEND; i += 3) {
+                            for (uint i = 1; (i+2) < BYTES_PER_SEND; i += 3) {
                                 float3 rgb = float3(V[i], V[i+1], V[i+2])/255;  // Or do we use the raw values directly? (going to be slightly off I think due to not rounding up for 255 due to the hack that deals with the animtor issues)
                                 rgb = pow(rgb, 2.2f); // Gamma correction
                                 set_pixel(uint2(idx, 1), rgb);
