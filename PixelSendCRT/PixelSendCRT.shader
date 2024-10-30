@@ -337,7 +337,7 @@ Shader "Xantoz/PixelSendCRT"
                     } else {
                         uint2 pos = get_pos_noscale();
                         uint bpp = get_bpp();
-                        float maxcolor = pow(2, bpp);
+                        float maxcolor = pow(2, bpp) - 1;
 
                         for (uint i = 0; i < BYTES_PER_SEND;) {
                             uint W = V[i];
