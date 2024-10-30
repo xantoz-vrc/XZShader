@@ -22,6 +22,15 @@ Shader "Xantoz/PixelSendCRT"
         _VE ("VE", Float) = 0.0
         _VF ("VF", Float) = 0.0
 
+        _VG ("VG", Float) = 0.0
+        _VH ("VH", Float) = 0.0
+        _VI ("VI", Float) = 0.0
+        _VJ ("VJ", Float) = 0.0
+        _VK ("VK", Float) = 0.0
+        _VL ("VL", Float) = 0.0
+        _VM ("VM", Float) = 0.0
+        _VN ("VN", Float) = 0.0
+
         [ToggleUI]_CLK("Clock Signal (DDR)", Integer) = 0
         [ToggleUI]_Reset("Reset", Integer) = 0
     }
@@ -36,7 +45,7 @@ Shader "Xantoz/PixelSendCRT"
     #define MAXVERTEXCOUNT 146
     #define INSTANCECOUNT 32
 
-    #define BYTES_PER_SEND 16
+    #define BYTES_PER_SEND 24
     
     #define POS_PIXEL uint2(0,0)
     #define CLK_PIXEL uint2(1,0)
@@ -87,6 +96,15 @@ Shader "Xantoz/PixelSendCRT"
     float _VE;
     float _VF;
 
+    float _VG;
+    float _VH;
+    float _VI;
+    float _VJ;
+    float _VK;
+    float _VL;
+    float _VM;
+    float _VN;
+
     uint _CLK;
     uint _Reset;
 
@@ -110,6 +128,14 @@ Shader "Xantoz/PixelSendCRT"
        values[13] = _VD;
        values[14] = _VE;
        values[15] = _VF;
+       values[16] = _VG;
+       values[17] = _VH;
+       values[18] = _VI;
+       values[19] = _VJ;
+       values[20] = _VK;
+       values[21] = _VL;
+       values[22] = _VM;
+       values[23] = _VN;
     }
 
     uint GetCLK()

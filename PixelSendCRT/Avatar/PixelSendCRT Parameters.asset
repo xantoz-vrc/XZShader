@@ -12,6 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: -1506855854, guid: 67cc4cb7839cd3741b63733d5adf0442, type: 3}
   m_Name: PixelSendCRT Parameters
   m_EditorClassIdentifier: 
+  isEmpty: 0
   parameters:
   - name: PixelSendCRT/CLK
     valueType: 2
@@ -99,6 +100,46 @@ MonoBehaviour:
     defaultValue: 0
     networkSynced: 1
   - name: PixelSendCRT/VF
+    valueType: 0
+    saved: 0
+    defaultValue: 0
+    networkSynced: 1
+  - name: PixelSendCRT/VG
+    valueType: 0
+    saved: 0
+    defaultValue: 0
+    networkSynced: 1
+  - name: PixelSendCRT/VH
+    valueType: 0
+    saved: 0
+    defaultValue: 0
+    networkSynced: 1
+  - name: PixelSendCRT/VI
+    valueType: 0
+    saved: 0
+    defaultValue: 0
+    networkSynced: 1
+  - name: PixelSendCRT/VJ
+    valueType: 0
+    saved: 0
+    defaultValue: 0
+    networkSynced: 1
+  - name: PixelSendCRT/VK
+    valueType: 0
+    saved: 0
+    defaultValue: 0
+    networkSynced: 1
+  - name: PixelSendCRT/VL
+    valueType: 0
+    saved: 0
+    defaultValue: 0
+    networkSynced: 1
+  - name: PixelSendCRT/VM
+    valueType: 0
+    saved: 0
+    defaultValue: 0
+    networkSynced: 1
+  - name: PixelSendCRT/VN
     valueType: 0
     saved: 0
     defaultValue: 0

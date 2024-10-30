@@ -12,6 +12,8 @@ public class CreatePixelSendCRTAnimator : MonoBehaviour
     private static string basePath = "Assets/XZShader/PixelSendCRT/Avatar/Anim/";
     private static string parameterPrefix = "PixelSendCRT/";
 
+    private static readonly int BYTES_PER_SEND = 24;
+
     // Wipe the AnimatorController clean: remove all parameters, layers, and states
     private static void wipeAnimatorController(AnimatorController animatorController)
     {
@@ -107,6 +109,15 @@ public class CreatePixelSendCRTAnimator : MonoBehaviour
         return stateMachine;
     }
 
+    private static char NumToChar(int i)
+    {
+        if (i <= 9) {
+            return (char)('0' + i);
+        } else {
+            return (char)('A' + (i - 10));
+        }
+    }
+
     // [MenuItem("GameObject/Generate Animator Controller for PixelSendCRT")]
     [MenuItem("XZMenu/CreatePixelSendCRTAnimator")]
     static void CreateController()
@@ -116,9 +127,10 @@ public class CreatePixelSendCRTAnimator : MonoBehaviour
         var controller = getAnimatorController(controllerPath);
 
         // Add parameters
-        for (int i = 0; i < 16; ++i) {
-            string hex = i.ToString("X");
-            string V = $"V{hex}";
+        for (int i = 0; i < BYTES_PER_SEND; ++i) {
+            char ch = NumToChar(i);
+            string V = $"V{ch}";
+            Debug.Log(V);
             controller.AddParameter(parameterPrefix + V, AnimatorControllerParameterType.Int);
             string layerName = parameterPrefix + V;
             var rootStateMachine = createNewLayer(controller, controllerPath, layerName);

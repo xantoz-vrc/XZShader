@@ -20,6 +20,15 @@ Shader "Xantoz/PixelSendCRTGrabPass"
         _VD ("VD", Float) = 0.0
         _VE ("VE", Float) = 0.0
         _VF ("VF", Float) = 0.0
+
+        _VG ("VG", Float) = 0.0
+        _VH ("VH", Float) = 0.0
+        _VI ("VI", Float) = 0.0
+        _VJ ("VJ", Float) = 0.0
+        _VK ("VK", Float) = 0.0
+        _VL ("VL", Float) = 0.0
+        _VM ("VM", Float) = 0.0
+        _VN ("VN", Float) = 0.0
         
         [ToggleUI]_CLK("Clock Signal (DDR)", Integer) = 0
         [ToggleUI]_Reset("Reset", Integer) = 0
@@ -51,23 +60,32 @@ Shader "Xantoz/PixelSendCRTGrabPass"
         float4 _PixelSendCRTGrabPass_TexelSize;
 
         // Params
-            float _V0;
-            float _V1;
-            float _V2;
-            float _V3;
-            float _V4;
-            float _V5;
-            float _V6;
-            float _V7;
+        float _V0;
+        float _V1;
+        float _V2;
+        float _V3;
+        float _V4;
+        float _V5;
+        float _V6;
+        float _V7;
 
-            float _V8;
-            float _V9;
-            float _VA;
-            float _VB;
-            float _VC;
-            float _VD;
-            float _VE;
-            float _VF;
+        float _V8;
+        float _V9;
+        float _VA;
+        float _VB;
+        float _VC;
+        float _VD;
+        float _VE;
+        float _VF;
+
+        float _VG;
+        float _VH;
+        float _VI;
+        float _VJ;
+        float _VK;
+        float _VL;
+        float _VM;
+        float _VN;
 
         uint _CLK;
         uint _Reset;
@@ -146,6 +164,23 @@ Shader "Xantoz/PixelSendCRTGrabPass"
 		        col.rgb = uintToHalf3(asuint(_VE));
                     } else if (xy.x == 15) {
 		        col.rgb = uintToHalf3(asuint(_VF));
+
+                    } else if (xy.x == 16) {
+		        col.rgb = uintToHalf3(asuint(_VG));
+                    } else if (xy.x == 17) {
+		        col.rgb = uintToHalf3(asuint(_VH));
+                    } else if (xy.x == 18) {
+		        col.rgb = uintToHalf3(asuint(_VI));
+                    } else if (xy.x == 19) {
+		        col.rgb = uintToHalf3(asuint(_VJ));
+                    } else if (xy.x == 20) {
+		        col.rgb = uintToHalf3(asuint(_VK));
+                    } else if (xy.x == 21) {
+		        col.rgb = uintToHalf3(asuint(_VL));
+                    } else if (xy.x == 22) {
+		        col.rgb = uintToHalf3(asuint(_VM));
+                    } else if (xy.x == 23) {
+		        col.rgb = uintToHalf3(asuint(_VN));
 
                     } else {
                         discard;
