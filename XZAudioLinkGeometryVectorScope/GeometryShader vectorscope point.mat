@@ -2,20 +2,25 @@
 %TAG !u! tag:unity3d.com,2011:
 --- !u!21 &2100000
 Material:
-  serializedVersion: 6
+  serializedVersion: 8
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_Name: GeometryShader vectorscope point
   m_Shader: {fileID: 4800000, guid: f34f3bf4ade732294813d51d3339824c, type: 3}
-  m_ShaderKeywords: _OUTMODE_POINT
+  m_Parent: {fileID: 0}
+  m_ModifiedSerializedProperties: 0
+  m_ValidKeywords:
+  - _OUTMODE_POINT
+  m_InvalidKeywords: []
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 0
   m_DoubleSidedGI: 0
   m_CustomRenderQueue: -1
   stringTagMap: {}
   disabledShaderPasses: []
+  m_LockedProperties: 
   m_SavedProperties:
     serializedVersion: 3
     m_TexEnvs:
@@ -55,8 +60,9 @@ Material:
         m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
+    m_Ints: []
     m_Floats:
-    - _3D: 1
+    - _3D: 0
     - _AlphaMultiplier: 0.5
     - _Amplitude_Scale: 2
     - _BumpScale: 1
@@ -86,3 +92,4 @@ Material:
     - _Color_Mul_Band2: {r: 0, g: 0.59607846, b: 1.4980392, a: 1}
     - _Color_Mul_Band3: {r: 1.4980392, g: 1.4901961, b: 0, a: 1}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
+  m_BuildTextureStacks: []
